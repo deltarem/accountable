@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Read(./.env)"
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@anthropic-plugin-directory": true
+  }
+}
