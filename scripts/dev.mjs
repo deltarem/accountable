@@ -27,13 +27,18 @@ export function needsInstall(dir) {
   return statSync(lock).mtimeMs > installed;
 }
 
-export function portIsFree(port, host = '127.0.0.1') {
+/** null when the port can be used, otherwise the error code (EADDRINUSE, EACCES...). */
+export function portProblem(port, host = '127.0.0.1') {
   return new Promise((resolve) => {
     const server = net.createServer();
-    server.once('error', () => resolve(false));
-    server.once('listening', () => server.close(() => resolve(true)));
+    server.once('error', (error) => resolve(error.code ?? 'ERROR'));
+    server.once('listening', () => server.close(() => resolve(null)));
     server.listen(port, host);
   });
+}
+
+export async function portIsFree(port, host = '127.0.0.1') {
+  return (await portProblem(port, host)) === null;
 }
 
 function start(command, args, env) {
@@ -96,11 +101,17 @@ export async function main() {
     ['backend', backendPort, 'BACKEND_PORT'],
     ['frontend', frontendPort, 'FRONTEND_PORT'],
   ]) {
-    if (!(await portIsFree(port))) {
-      console.error(
-        `Port ${port} is already in use, so the ${name} can't start. ` +
-          `Stop whatever is using it, or set ${envName} to another port.`,
-      );
+    const problem = await portProblem(port);
+    if (problem) {
+      // Windows can reserve whole port ranges (Hyper-V, WSL, Docker); binding
+      // there fails with EACCES even though nothing is using the port.
+      const why =
+        problem === 'EADDRINUSE'
+          ? `Port ${port} is already in use, so the ${name} can't start. Stop whatever is using it, or set`
+          : problem === 'EACCES'
+            ? `Port ${port} is blocked by the system, so the ${name} can't start (on Windows, see "netsh interface ipv4 show excludedportrange protocol=tcp"). Set`
+            : `Port ${port} can't be used (${problem}), so the ${name} can't start. Set`;
+      console.error(`${why} ${envName} to another port, for example: ${envName}=${port + 90} npm run dev`);
       process.exit(1);
     }
   }
