@@ -36,6 +36,9 @@ async function namesFrom(port: number): Promise<string[]> {
 }
 
 test('changes are kept after a refresh and a restart, and seed resets them', async ({ page }) => {
+  // Two cold backend starts (about 12 seconds each on Windows) and a reseed
+  // take this past the usual 45-second limit.
+  test.slow();
   await page.goto('/organizations');
   await page.getByRole('button', { name: 'New organization' }).click();
   await page.getByRole('dialog').getByLabel(/^Name/).fill('Kept After Restart');

@@ -1,4 +1,4 @@
-The MVP is built (phases 1 to 8 of `docs/changes/mvp/plan.md`). Two checks by hand are still open; see the end. `npm test` fails at its first step until `scripts/check-trace.mjs` reads the current change's plan; see the last log entry.
+The MVP is built (phases 1 to 8 of `docs/changes/mvp/plan.md`). Two checks by hand are still open; see the end. `npm run check` passes.
 
 ## How to run
 
@@ -31,6 +31,7 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - 2026-11-23: `docs/frontend-architecture.md` written: layers, folder layout, providers and routes, the data layer (query keys, invalidation, errors, the server's clock), forms and validation, the pipeline board's drag flow, the dashboard, tables, styling, formatting, accessibility, testing, and how to add to it.
 - 2026-11-23: `docs/backend-architecture.md` written: layers, folder layout, the data model and delete rules, a request end to end, the stage rules, timelines, dashboard figures, validation and errors, the clock, startup and sample data, configuration, the API, testing, and how to add to it.
 - 2026-11-23: Docs reorganized for future changes. `docs/spec.md` now describes the whole product as it stands: it brings in the problem, users, constraints, scope and success criteria (`SC-01` to `SC-12`) from the MVP's intent, keeps every requirement ID, and is the reference for every change. The MVP's `intent.md` and `plan.md` moved to `docs/changes/mvp/`; each change gets its own `docs/changes/<branch name>/`. `AGENTS.md` says to read the spec first and only the current change's folder. `docs/REVIEW.md` flags code the spec doesn't describe. No code changed, so `scripts/check-trace.mjs` still reads `docs/plan.md`, which no longer exists: `npm test` fails at the traceability check until it reads `docs/changes/<current branch>/plan.md`.
+- 2026-11-23: `npm run check` passes again. `scripts/check-trace.mjs` reads the Traceability rows of every `docs/changes/*/plan.md`. The linked lists on contact and organization pages show placeholder rows while loading instead of "No contacts yet" (UI-EMPTY-05). The pipeline board keeps its dropped order until the deals list changes again, without an effect. The TanStack Table lint warning is disabled on that one line, with the reason. The persistence end-to-end test is marked slow, because two cold backend starts went past 45 seconds under load.
 
 ## Notes from the build
 

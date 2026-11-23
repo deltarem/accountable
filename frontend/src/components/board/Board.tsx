@@ -57,6 +57,14 @@ export function Board({
   const [dragColumns, setDragColumns] = useState<Columns | null>(null);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [origin, setOrigin] = useState<{ stage: StageKey; index: number } | null>(null);
+  // The deals list at the moment of a drop. The board keeps its dropped order
+  // until the list changes (the optimistic update, or the rollback when the
+  // server refuses), so the card doesn't flick back for a frame.
+  const [droppedOn, setDroppedOn] = useState<Deal[] | null>(null);
+  if (droppedOn !== null && droppedOn !== deals) {
+    setDroppedOn(null);
+    setDragColumns(null);
+  }
   const byId = useMemo(() => new Map(deals.map((d) => [d.id, d])), [deals]);
   const serverColumns = useMemo(() => toColumns(deals), [deals]);
   const columns = dragColumns ?? serverColumns;
@@ -110,11 +118,15 @@ export function Board({
       }
     }
     setActiveId(null);
-    setDragColumns(null);
     setOrigin(null);
-    if (!over || !stage) return;
-    const index = final[stage].indexOf(id);
-    if (!origin || origin.stage !== stage || origin.index !== index) onMove(id, stage, index);
+    const index = over && stage ? final[stage].indexOf(id) : -1;
+    if (!stage || index < 0 || (origin && origin.stage === stage && origin.index === index)) {
+      setDragColumns(null);
+      return;
+    }
+    setDragColumns(final);
+    setDroppedOn(deals);
+    onMove(id, stage, index);
   };
 
   const onDragCancel = () => {

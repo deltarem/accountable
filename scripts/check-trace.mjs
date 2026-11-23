@@ -1,10 +1,11 @@
 // The traceability check: runs first in `npm test`.
 //
-// Fails if an ID in docs/spec.md has no row in docs/plan.md's Traceability
-// section, if a row names an ID the spec doesn't have (SC-01 to SC-12 are the
-// intent's success criteria), or if a row has no phase or no proof.
+// Reads the Traceability section of every docs/changes/<branch>/plan.md. Fails
+// if an ID in docs/spec.md has no row in any of them, if a row names an ID the
+// spec doesn't have (SC-01 to SC-12 are the MVP intent's success criteria), or
+// if a row has no phase or no proof.
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -29,9 +30,10 @@ export function traceRows(planText) {
   return rows;
 }
 
-export function checkTrace(specText, planText) {
+// planTexts is one plan's text or a list of them, one per change.
+export function checkTrace(specText, planTexts) {
   const ids = specIds(specText);
-  const rows = traceRows(planText);
+  const rows = [planTexts].flat().flatMap(traceRows);
   const problems = [];
   const rowIds = new Set();
   for (const row of rows) {
@@ -54,8 +56,12 @@ export function checkTrace(specText, planText) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const spec = readFileSync(path.join(ROOT, 'docs', 'spec.md'), 'utf8');
-  const plan = readFileSync(path.join(ROOT, 'docs', 'plan.md'), 'utf8');
-  const { problems, idCount, rowCount } = checkTrace(spec, plan);
+  const changes = path.join(ROOT, 'docs', 'changes');
+  const plans = readdirSync(changes)
+    .map((name) => path.join(changes, name, 'plan.md'))
+    .filter((file) => existsSync(file))
+    .map((file) => readFileSync(file, 'utf8'));
+  const { problems, idCount, rowCount } = checkTrace(spec, plans);
   if (problems.length) {
     console.error('Traceability check failed:');
     for (const p of problems) console.error(`  - ${p}`);

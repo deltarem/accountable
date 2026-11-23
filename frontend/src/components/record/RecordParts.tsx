@@ -65,20 +65,55 @@ export function FactList({ items }: { items: { label: string; value: ReactNode }
   );
 }
 
-/** Linked records as rows with links, with an optional "New" button. */
+/**
+ * Linked records as rows with links, with an optional "New" button. While the
+ * record loads it shows placeholder rows, not the empty text (UI-EMPTY-05).
+ */
 export function LinkedList({
   title,
   rows,
   emptyText,
   onNew,
   newLabel,
+  loading,
 }: {
   title: string;
   rows: { id: number; to: string; name: string; detail?: ReactNode; aside?: ReactNode }[];
   emptyText: string;
   onNew?: () => void;
   newLabel?: string;
+  loading?: boolean;
 }) {
+  let body: ReactNode;
+  if (loading) {
+    body = (
+      <ul className={styles.rows}>
+        {[0, 1].map((i) => (
+          <li key={i} className={styles.row}>
+            <Skeleton width="60%" />
+          </li>
+        ))}
+      </ul>
+    );
+  } else if (rows.length === 0) {
+    body = <EmptyState compact message={emptyText} />;
+  } else {
+    body = (
+      <ul className={styles.rows}>
+        {rows.map((row) => (
+          <li key={row.id} className={styles.row}>
+            <div className={styles.rowMain}>
+              <Link to={row.to} className={styles.rowName}>
+                {row.name}
+              </Link>
+              {row.detail ? <span className={styles.rowDetail}>{row.detail}</span> : null}
+            </div>
+            {row.aside ? <div className={styles.rowAside}>{row.aside}</div> : null}
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <section className={styles.linked} aria-label={title}>
       <div className={styles.linkedHead}>
@@ -89,23 +124,7 @@ export function LinkedList({
           </Button>
         ) : null}
       </div>
-      {rows.length === 0 ? (
-        <EmptyState compact message={emptyText} />
-      ) : (
-        <ul className={styles.rows}>
-          {rows.map((row) => (
-            <li key={row.id} className={styles.row}>
-              <div className={styles.rowMain}>
-                <Link to={row.to} className={styles.rowName}>
-                  {row.name}
-                </Link>
-                {row.detail ? <span className={styles.rowDetail}>{row.detail}</span> : null}
-              </div>
-              {row.aside ? <div className={styles.rowAside}>{row.aside}</div> : null}
-            </li>
-          ))}
-        </ul>
-      )}
+      {body}
     </section>
   );
 }

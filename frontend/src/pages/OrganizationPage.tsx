@@ -77,6 +77,7 @@ export function OrganizationPage() {
             <LinkedList
               title="Contacts"
               emptyText="No contacts yet"
+              loading={!org}
               onNew={org ? () => openForm({ kind: 'contact', defaults: { organization_id: org.id } }) : undefined}
               newLabel="New contact at this organization"
               rows={(org?.contacts ?? []).map((c) => ({
@@ -90,6 +91,7 @@ export function OrganizationPage() {
             <LinkedList
               title="Deals"
               emptyText="No deals yet"
+              loading={!org}
               onNew={org ? () => openForm({ kind: 'deal', defaults: { organization_id: org.id } }) : undefined}
               newLabel="New deal with this organization"
               rows={(org?.deals ?? []).map((d) => ({

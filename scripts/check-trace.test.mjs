@@ -29,3 +29,9 @@ test('fails on a row with no phase or no proof', () => {
   assert.ok(problems.includes('DEC-01 has no phase'));
   assert.ok(problems.includes('API-17 has no proof'));
 });
+
+test('reads rows from more than one change plan', () => {
+  const later = '# Plan\n\n## Traceability\n\n| ID | Requirement | Phase | Proof |\n|---|---|---|---|\n| API-17 | b | P1 | t |\n';
+  const result = checkTrace(spec, [plan('| DEC-01 | a | P1 | t |'), later]);
+  assert.deepEqual(result.problems, []);
+});

@@ -72,6 +72,7 @@ export function ContactPage() {
             <LinkedList
               title="Deals as main contact"
               emptyText="No deals with this contact yet"
+              loading={!contact}
               onNew={
                 contact
                   ? () =>

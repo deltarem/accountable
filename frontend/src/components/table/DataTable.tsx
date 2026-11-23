@@ -58,6 +58,9 @@ export function DataTable<T>({
   const [sorting, setSorting] = useState<SortingState>(initialSort ?? [{ id: 'name', desc: false }]);
   // A stable array: TanStack Table treats a new array as new data on every render.
   const rows = useMemo(() => (data ?? []).filter((row) => (filterRows ? filterRows(row) : true)), [data, filterRows]);
+  // React Compiler is not in the build, and the table instance is only used
+  // here, never passed to a memoized child, so the stale-UI risk does not apply.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: rows,
     columns,
