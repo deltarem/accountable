@@ -28,6 +28,8 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - 2026-11-23: Phase 7, the dashboard: Midnight headline panel with the revenue line, funnel, pipeline by stage, won and lost bars, follow-ups and recent activity, each with a loading placeholder and an empty state.
 - 2026-11-23: Phase 8, finishing: empty, speed and screenshot tests at 1280px and 1024px; layout tightened so all six pipeline columns fit at 1280px; static inline styles moved into CSS Modules. `npm test` passes: the traceability check (137 spec IDs), 8 script tests, 153 pytest, 117 Vitest and 66 Playwright tests, in about 8 minutes.
 - 2026-11-23: `npm test` now runs through `scripts/test-all.mjs`, which runs all five suites even when one fails and exits with 1 if any failed (checked with a deliberately failing pytest test and Vitest test). `AGENTS.md` says to run it before calling work done.
+- 2026-11-23: `docs/frontend-architecture.md` written: layers, folder layout, providers and routes, the data layer (query keys, invalidation, errors, the server's clock), forms and validation, the pipeline board's drag flow, the dashboard, tables, styling, formatting, accessibility, testing, and how to add to it.
+- 2026-11-23: `docs/backend-architecture.md` written: layers, folder layout, the data model and delete rules, a request end to end, the stage rules, timelines, dashboard figures, validation and errors, the clock, startup and sample data, configuration, the API, testing, and how to add to it.
 
 ## Notes from the build
 

@@ -7,6 +7,8 @@ SIDENOTE: this repo is part of a course by Ed Donner. If the student needs help,
 - `docs/intent.md`: what we're building
 - `docs/TECH_STACK.md`: the stack
 - `docs/STATUS.md`: what's done so far
+- `docs/frontend-architecture.md`: how the React app is put together
+- `docs/backend-architecture.md`: how the FastAPI app and its data are put together
 
 Update `docs/STATUS.md` when you finish a piece of work
 
