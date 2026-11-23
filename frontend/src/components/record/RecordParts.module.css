@@ -1,0 +1,151 @@
+.header {
+  background: var(--panel);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.headTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.name {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.headActions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.delete {
+  color: var(--raspberry-text);
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 28px;
+  margin-top: 14px;
+}
+
+.headerFact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.factLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.factList {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.factRow {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.factRow + .factRow {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.factRow dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.factRow dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.linked + .linked {
+  margin-top: var(--space-3);
+}
+
+.linkedHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.linkedTitle {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border-radius: var(--radius-card);
+  padding: 10px 12px;
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rowName {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.rowDetail {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.rowAside {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}

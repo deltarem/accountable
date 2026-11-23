@@ -1,0 +1,39 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 59, 76, 0.45);
+  z-index: 60;
+}
+
+.content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  background: var(--panel);
+  border-radius: var(--radius-panel);
+  padding: var(--space-3);
+  box-shadow: 0 24px 60px rgba(7, 59, 76, 0.3);
+  z-index: 61;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+
+.body {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}

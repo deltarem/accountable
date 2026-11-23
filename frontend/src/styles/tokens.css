@@ -1,0 +1,73 @@
+/* Brand tokens (DES-01 to DES-04). Named by role, so a dark mode only has to
+   redefine them. Contrast figures are in docs/spec.md, Design. */
+:root {
+  /* Surfaces */
+  --page: #f0f4f5;
+  --panel: #ffffff;
+  --card: #f3f7f8;
+  --line: #e8eef0;
+
+  /* Ink */
+  --ink: #073b4c;
+  --muted: #4d6973;
+  --on-dark: #cdd8db;
+  --on-dark-muted: #9fb4ba;
+  --dark-grid: #1c5568;
+
+  /* Brand colours */
+  --sea: #06d6a0;
+  --marigold: #ffc145;
+  --coral: #f78c6b;
+  --cerulean: #118ab2;
+  --raspberry: #ef476f;
+  --midnight: #073b4c;
+  --mist: #cdd8db;
+  --lost: #8fa3aa;
+
+  /* Darker shades for small text, and pale tints for badges (DES-02) */
+  --sea-text: #067a5c;
+  --sea-tint: #e6fbf5;
+  --marigold-text: #8a5a00;
+  --marigold-tint: #fff6e3;
+  --coral-text: #b4472a;
+  --coral-tint: #feeee9;
+  --cerulean-text: #0d6e8f;
+  --cerulean-tint: #e7f3f7;
+  --raspberry-text: #c2264f;
+  --raspberry-tint: #fdecf0;
+  --midnight-tint: #e8eef0;
+
+  /* Stages (DEC-05): solid header colour and its text */
+  --stage-new: #0d6e8f;
+  --stage-new-ink: #ffffff;
+  --stage-qualified: var(--marigold);
+  --stage-qualified-ink: var(--ink);
+  --stage-proposal: var(--coral);
+  --stage-proposal-ink: var(--ink);
+  --stage-negotiation: var(--midnight);
+  --stage-negotiation-ink: #ffffff;
+  --stage-won: var(--sea);
+  --stage-won-ink: var(--ink);
+  --stage-lost: var(--lost);
+  --stage-lost-ink: var(--ink);
+
+  /* Type (DES-03) */
+  --sans: 'Instrument Sans', system-ui, sans-serif;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Shape and spacing (DES-04) */
+  --radius-panel: 20px;
+  --radius-card: 14px;
+  --radius-control: 12px;
+  --radius-pill: 999px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --shadow-panel: 0 1px 2px rgba(7, 59, 76, 0.06);
+  --shadow-lift: 0 14px 30px rgba(7, 59, 76, 0.25);
+  --shadow-pop: 0 8px 24px rgba(7, 59, 76, 0.18);
+  --focus-ring: 0 0 0 2px var(--panel), 0 0 0 4px var(--sea);
+  --rail-width: 72px;
+}

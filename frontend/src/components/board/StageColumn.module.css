@@ -1,0 +1,53 @@
+.column {
+  background: var(--panel);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 180px;
+}
+
+.add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--card);
+  border: 0;
+  border-radius: var(--radius-control);
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.add:hover {
+  background: var(--line);
+}
+
+.cards {
+  flex: 1;
+  min-height: 80px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px;
+  margin: -2px;
+}
+
+.empty {
+  flex: 1;
+  min-height: 120px;
+  max-height: 200px;
+  border-radius: var(--radius-card);
+  border: 2px dashed var(--mist);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}

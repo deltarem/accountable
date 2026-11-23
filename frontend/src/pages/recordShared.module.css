@@ -1,0 +1,19 @@
+.back {
+  margin: 4px 0 14px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 4px 8px 4px 2px;
+  border-radius: 8px;
+}
+
+.link:hover {
+  color: var(--ink);
+  text-decoration: none;
+}

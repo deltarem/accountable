@@ -1,0 +1,73 @@
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name count'
+    'value value'
+    'expected expected';
+  align-items: center;
+  column-gap: 6px;
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.name {
+  grid-area: name;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prob {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.count {
+  grid-area: count;
+  justify-self: end;
+  font: 600 12px var(--mono);
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.value {
+  grid-area: value;
+  font: 500 16px var(--mono);
+  margin-top: 6px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expected {
+  grid-area: expected;
+  font: 400 12px var(--mono);
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* In narrower columns the count moves down beside the expected revenue, so
+   the stage name and its probability keep the full width. */
+@media (max-width: 1360px) {
+  .header {
+    grid-template-areas:
+      'name name'
+      'value value'
+      'expected count';
+    padding: 12px;
+  }
+
+  .name {
+    font-size: 15px;
+  }
+}

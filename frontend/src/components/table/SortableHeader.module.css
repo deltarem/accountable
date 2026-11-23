@@ -1,0 +1,32 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border-radius: 8px;
+  font: inherit;
+  color: inherit;
+}
+
+.button:hover {
+  color: var(--ink);
+}
+
+.right {
+  flex-direction: row;
+}
+
+.icon {
+  opacity: 0.45;
+}
+
+.active {
+  color: var(--ink);
+}
+
+.active .icon {
+  opacity: 1;
+}

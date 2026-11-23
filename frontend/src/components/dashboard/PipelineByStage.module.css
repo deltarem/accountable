@@ -1,0 +1,41 @@
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  text-align: left;
+  font: inherit;
+  transition: transform 120ms ease;
+}
+
+.row:hover {
+  transform: translateX(2px);
+}
+
+.name {
+  font-weight: 600;
+}
+
+.value {
+  font: 500 15px var(--mono);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta {
+  font-size: 12px;
+}
+
+.expected {
+  font: 400 12px var(--mono);
+  text-align: right;
+}

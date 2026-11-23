@@ -1,0 +1,18 @@
+.shell {
+  min-height: 100vh;
+  padding-left: var(--rail-width);
+}
+
+.main {
+  padding: 28px var(--space-4) var(--space-4);
+  min-width: 0;
+  max-width: 1600px;
+}
+
+/* At laptop widths, a little less padding so all six pipeline columns fit at 1280px. */
+@media (max-width: 1320px) {
+  .main {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+}

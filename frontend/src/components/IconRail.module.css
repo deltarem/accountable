@@ -1,0 +1,34 @@
+.rail {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--rail-width);
+  background: var(--midnight);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 20px 0;
+  z-index: 10;
+}
+
+.mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--sea);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 17px;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+
+.mark:hover {
+  text-decoration: none;
+}
+
+.mark:focus-visible {
+  box-shadow: 0 0 0 2px var(--midnight), 0 0 0 4px var(--sea);
+}

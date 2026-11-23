@@ -1,0 +1,114 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 12px;
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.body {
+  min-width: 0;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.text {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  padding-top: 5px;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.followUp {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  background: var(--card);
+  border-radius: 10px;
+  padding: 8px 10px;
+  width: fit-content;
+}
+
+.overdue {
+  color: var(--raspberry-text);
+  font-weight: 600;
+}
+
+.menuButton {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.menuButton:hover,
+.menuButton[data-state='open'] {
+  background: var(--card);
+  color: var(--ink);
+}
+
+.menu {
+  background: var(--panel);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
+  padding: 6px;
+  min-width: 140px;
+  z-index: 30;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+
+.menuItem[data-highlighted] {
+  background: var(--card);
+}
+
+.danger {
+  color: var(--raspberry-text);
+}
+
+.gap {
+  height: 8px;
+}

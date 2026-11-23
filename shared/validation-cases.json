@@ -1,0 +1,79 @@
+{
+  "about": "Good and bad request bodies for every form field. pytest checks them against the Pydantic models and Vitest against the zod schemas, so the two sets of rules can't drift apart (ARC-11). Each case starts from the form's base body and applies `set`. A value of {\"repeat\": \"x\", \"times\": 201} means that character repeated.",
+  "forms": {
+    "organization": {
+      "base": { "name": "Acme Ltd", "website": null, "industry": null, "notes": null },
+      "cases": [
+        { "set": { "name": "Acme Ltd" }, "valid": true },
+        { "set": { "name": "  Acme  " }, "valid": true },
+        { "set": { "name": "" }, "valid": false, "field": "name", "message": "Enter a name" },
+        { "set": { "name": "   " }, "valid": false, "field": "name", "message": "Enter a name" },
+        { "set": { "name": null }, "valid": false, "field": "name", "message": "Enter a name" },
+        { "set": { "name": { "repeat": "x", "times": 200 } }, "valid": true },
+        { "set": { "name": { "repeat": "x", "times": 201 } }, "valid": false, "field": "name", "message": "Use 200 characters or fewer" },
+        { "set": { "website": "acme.example" }, "valid": true },
+        { "set": { "website": "https://acme.example" }, "valid": true },
+        { "set": { "website": "" }, "valid": true },
+        { "set": { "industry": "Software" }, "valid": true },
+        { "set": { "notes": { "repeat": "n", "times": 5000 } }, "valid": true },
+        { "set": { "notes": { "repeat": "n", "times": 5001 } }, "valid": false, "field": "notes", "message": "Use 5.000 characters or fewer" }
+      ]
+    },
+    "contact": {
+      "base": { "name": "Maria Lopez", "email": null, "phone": null, "job_title": null, "organization_id": null, "status": "lead" },
+      "cases": [
+        { "set": {}, "valid": true },
+        { "set": { "name": "" }, "valid": false, "field": "name", "message": "Enter a name" },
+        { "set": { "name": { "repeat": "m", "times": 201 } }, "valid": false, "field": "name", "message": "Use 200 characters or fewer" },
+        { "set": { "email": "maria@acme.example" }, "valid": true },
+        { "set": { "email": "" }, "valid": true },
+        { "set": { "email": "maria" }, "valid": false, "field": "email", "message": "Enter an email like name@company.com" },
+        { "set": { "email": "maria@acme" }, "valid": false, "field": "email", "message": "Enter an email like name@company.com" },
+        { "set": { "email": "maria @acme.example" }, "valid": false, "field": "email", "message": "Enter an email like name@company.com" },
+        { "set": { "email": "@acme.example" }, "valid": false, "field": "email", "message": "Enter an email like name@company.com" },
+        { "set": { "phone": "+1 555 0100" }, "valid": true },
+        { "set": { "organization_id": 3 }, "valid": true },
+        { "set": { "status": "qualified" }, "valid": true },
+        { "set": { "status": "customer" }, "valid": true },
+        { "set": { "status": "vip" }, "valid": false, "field": "status", "message": "Choose lead, qualified or customer" }
+      ]
+    },
+    "deal": {
+      "base": { "name": "Acme renewal", "organization_id": 1, "contact_id": null, "stage": "new", "value_cents": 0, "probability": 10, "close_date": null },
+      "cases": [
+        { "set": {}, "valid": true },
+        { "set": { "name": "" }, "valid": false, "field": "name", "message": "Enter a name" },
+        { "set": { "organization_id": null }, "valid": false, "field": "organization_id", "message": "Choose an organization" },
+        { "set": { "contact_id": 4 }, "valid": true },
+        { "set": { "stage": "won" }, "valid": true },
+        { "set": { "stage": "done" }, "valid": false, "field": "stage", "message": "Choose a stage" },
+        { "set": { "value_cents": 1250050 }, "valid": true },
+        { "set": { "value_cents": -1 }, "valid": false, "field": "value_cents", "message": "Value can't be negative" },
+        { "set": { "value_cents": -500000 }, "valid": false, "field": "value_cents", "message": "Value can't be negative" },
+        { "set": { "probability": 0 }, "valid": true },
+        { "set": { "probability": 100 }, "valid": true },
+        { "set": { "probability": -1 }, "valid": false, "field": "probability", "message": "Probability must be between 0 and 100" },
+        { "set": { "probability": 101 }, "valid": false, "field": "probability", "message": "Probability must be between 0 and 100" },
+        { "set": { "probability": 120 }, "valid": false, "field": "probability", "message": "Probability must be between 0 and 100" },
+        { "set": { "close_date": "2026-12-12" }, "valid": true }
+      ]
+    },
+    "activity": {
+      "base": { "type": "call", "contact_id": 1, "deal_id": null, "description": "Agreed a two-year term", "occurred_at": "2026-11-23T14:05:00", "follow_up_date": null, "follow_up_done": false },
+      "cases": [
+        { "set": {}, "valid": true },
+        { "set": { "type": "note" }, "valid": true },
+        { "set": { "type": "email" }, "valid": true },
+        { "set": { "type": "fax" }, "valid": false, "field": "type", "message": "Choose note, call or email" },
+        { "set": { "contact_id": null, "deal_id": 2 }, "valid": true },
+        { "set": { "contact_id": null, "deal_id": null }, "valid": false, "field": "record", "message": "Choose a contact or a deal" },
+        { "set": { "contact_id": 1, "deal_id": 2 }, "valid": false, "field": "record", "message": "Choose a contact or a deal" },
+        { "set": { "description": "" }, "valid": false, "field": "description", "message": "Describe what happened" },
+        { "set": { "description": "   " }, "valid": false, "field": "description", "message": "Describe what happened" },
+        { "set": { "description": { "repeat": "d", "times": 5001 } }, "valid": false, "field": "description", "message": "Use 5.000 characters or fewer" },
+        { "set": { "occurred_at": null }, "valid": false, "field": "occurred_at", "message": "Enter when it happened" },
+        { "set": { "follow_up_date": "2026-11-30" }, "valid": true }
+      ]
+    }
+  }
+}

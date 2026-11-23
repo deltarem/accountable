@@ -1,0 +1,70 @@
+.chartWrap {
+  position: relative;
+  min-width: 0;
+}
+
+.tooltip {
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  line-height: 1.5;
+}
+
+.emptyOverlay {
+  position: absolute;
+  inset: 0 0 24px 52px;
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-size: 19px;
+  color: var(--muted);
+  text-align: center;
+  pointer-events: none;
+}
+
+.onDark {
+  color: var(--on-dark-muted);
+}
+
+.wlLabels {
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wonLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sea-text);
+}
+
+.lostLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.legend {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}

@@ -1,0 +1,77 @@
+.fields,
+.compact {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.compact {
+  gap: 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.types {
+  display: flex;
+  gap: 6px;
+}
+
+.type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.type:hover {
+  color: var(--ink);
+}
+
+.on {
+  background: var(--midnight);
+  color: #fff;
+  box-shadow: none;
+}
+
+.on:hover {
+  color: #fff;
+}
+
+.type:has(input:focus-visible) {
+  box-shadow: var(--focus-ring);
+}
+
+.log {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  padding: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.log :global(textarea),
+.log :global(input) {
+  background: var(--panel);
+}
+
+.logTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.logActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}

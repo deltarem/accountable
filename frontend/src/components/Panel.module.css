@@ -1,0 +1,38 @@
+.panel {
+  background: var(--panel);
+  border-radius: var(--radius-panel);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-panel);
+  min-width: 0;
+}
+
+.dark {
+  background: var(--midnight);
+  color: var(--on-dark);
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.dark .title {
+  color: #fff;
+}
+
+.note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dark .note {
+  color: var(--on-dark-muted);
+}

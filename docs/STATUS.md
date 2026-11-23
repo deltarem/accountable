@@ -1,4 +1,14 @@
-The project has not yet started.
+The MVP is built (phases 1 to 8 of `docs/plan.md`) and `npm test` passes. Two checks by hand are still open; see the end.
+
+## How to run
+
+You need Node 24 or later and uv. Google Chrome is needed only for the end-to-end tests.
+
+- `npm run dev` installs what's missing on the first run, starts both servers and prints the address (http://127.0.0.1:5173). Ctrl+C stops both.
+- `npm run seed` resets the database (`data/accountable.db`) to the sample data. Add `-- --empty` for no data at all.
+- `npm test` runs the traceability check, the `dev.mjs` tests, pytest, Vitest and Playwright. The end-to-end tests start their own servers on ports 8100 and 5273 with their own database, so your data is never touched. Screenshots for review land in `test-results/screens/`.
+
+## Log
 
 - 2026-11-23: `docs/intent.md` filled in after an interview: delete rules, stage probabilities, required fields, timeline roll-up, pipeline columns, dashboard range, sample data size, date/money formats, and new success criteria (validation, keyboard use, speed, empty states).
 - 2026-11-23: `docs/spec.md` written: concerns at the top, data model, API, screens, design (brand colours with contrast-checked shades, type, shape, formats), sample data and testing.
@@ -9,3 +19,24 @@ The project has not yet started.
 - 2026-11-23: `docs/plan.md` written: files that change, 8 phases with commit points, 13 risks, and the backend, frontend and end-to-end tests mapped to the success criteria. No code yet.
 - 2026-11-23: Mockup B (Command deck) chosen because it looks the most professional. `docs/spec.md` updated to match: icon rail, Midnight headline panel and totals strip, solid stage blocks, new wireframes, 20px panels, contrast pairs for the stage blocks; `docs/plan.md` updated to follow it.
 - 2026-11-23: Requirement IDs added to `docs/spec.md` (136 IDs, plus SC-01 to SC-12 for the intent's success criteria). `docs/plan.md` now lists the IDs each phase delivers, closes the 20 coverage gaps (new tests: offline, navigation, records, errors, dev script, meta, startup, transactions), and has a Traceability section; `scripts/check-trace.mjs` is planned to keep it complete.
+- 2026-11-23: Phase 1, skeleton: root npm workspace, uv project (Python 3.12), `scripts/dev.mjs` with its tests (start, answer through Vite, stop frees both ports), `scripts/check-trace.mjs`, brand tokens, bundled fonts, the app shell and icon rail.
+- 2026-11-23: Phase 2, data, rules and API: SQLAlchemy Core tables, one stage-change function for the form and the board, delete rules in the services, timelines, dashboard figures, every endpoint, and the sample data. On 23 Nov 2026 it gives mockup B's figures: $1.130.000 open in 14 deals, $529.500 expected, $668.000 won over 12 months, a funnel of 100/94/76/56/34%, 4 overdue follow-ups. 153 pytest tests.
+- 2026-11-23: Phase 3, frontend foundation: API client and query hooks with invalidation, formats, money parsing, zod schemas checked against `shared/validation-cases.json`, dialogs, form fields, the searchable select, toasts.
+- 2026-11-23: Phase 4, tables, forms and deleting: TanStack Table with search, sorting, row actions and the "12 of 25" footer; the four forms; delete dialogs that load the impact first.
+- 2026-11-23: Phase 5, record pages with linked lists, timelines (deal roll-up on contacts and organizations), logging, editing and deleting activities, follow-up checkboxes.
+- 2026-11-23: Phase 6, the pipeline board with dnd-kit: mouse and keyboard moves, drops onto empty columns, optimistic totals, rollback with a message on failure.
+- 2026-11-23: Phase 7, the dashboard: Midnight headline panel with the revenue line, funnel, pipeline by stage, won and lost bars, follow-ups and recent activity, each with a loading placeholder and an empty state.
+- 2026-11-23: Phase 8, finishing: empty, speed and screenshot tests at 1280px and 1024px; layout tightened so all six pipeline columns fit at 1280px; static inline styles moved into CSS Modules. `npm test` passes: the traceability check (137 spec IDs), 8 script tests, 153 pytest, 117 Vitest and 66 Playwright tests, in about 8 minutes.
+
+## Notes from the build
+
+- **Library versions (risk 13).** npm's latest majors moved past the APIs the spec was written against, so these majors are pinned: React Router 7, TanStack Table 8, Vite 7, Vitest 3, TypeScript 5. The rest are current (React 19, TanStack Query 5, dnd-kit, Recharts 3, Radix, cmdk, React Hook Form 7, zod 4). `@hookform/resolvers` was left out: the forms use a small zod resolver of their own (`lib/schemas.ts`), which turns typed money into cents before validating.
+- **TanStack Table needs a stable `data` array.** A new array on every render set off its auto-reset and froze the page whenever a dialog opened. The rows are memoized and auto-reset is off.
+- **Keyboard moves on the board.** dnd-kit's default keyboard getter compares rectangles, and the 2-degree tilt of the dragged card made cards in the same column look "to the right". `components/board/keyboard.ts` moves left and right between columns and up and down within one.
+- **Speed test.** Screens are timed by clicking in the app. A full page reload on the development server also fetches every source module one by one, which measures Vite rather than the app.
+- **Brand colours in charts (risk 12).** The palette check fails for the stage colours, as the plan expected (light Marigold, near-grey Midnight, Marigold and Coral close together). Every coloured mark has its stage name beside it, and segments have 2px gaps.
+
+## Still to check by hand
+
+- **Ctrl+C on Windows:** press Ctrl+C on `npm run dev`, then check that no Python or Node process is left and both ports are free. The automated test covers the same shutdown through a `stop` message, because a test can't press Ctrl+C.
+- **Criterion 12, the walk-through:** run `npm run dev` from a fresh clone and use every section and action with the browser's console open. The screenshots in `test-results/screens/` have been compared with mockup B, but a person still needs to use the app end to end.
