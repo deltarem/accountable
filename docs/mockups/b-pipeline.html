@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accountable - Mockup B - Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup B: "Command deck". Each column is a white panel topped with a solid block of its stage colour. */
+  :root {
+    --page: #F0F4F5; --panel: #FFFFFF; --ink: #073B4C; --muted: #4D6973; --line: #E8EEF0; --card: #F3F7F8;
+    --sea: #06D6A0; --rasp: #EF476F; --rasp-text: #C2264F; --rasp-tint: #FDECF0; --coral: #F78C6B; --coral-tint: #FEEEE9;
+    --mist: #CDD8DB;
+    --sans: "Instrument Sans", system-ui, sans-serif; --serif: "Instrument Serif", Georgia, serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 var(--sans); }
+  .shell { display: grid; grid-template-columns: 72px 1fr; min-height: 100vh; }
+  .rail { background: var(--ink); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 8px; }
+  .mark { width: 36px; height: 36px; border-radius: 10px; background: var(--sea); display: grid; place-items: center; color: var(--ink); font-weight: 700; font-size: 17px; margin-bottom: 20px; }
+  .rail a { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--mist); }
+  .rail a.on { background: var(--sea); color: var(--ink); }
+  .rail svg { width: 20px; height: 20px; }
+  main { padding: 28px 32px 32px; min-width: 0; position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .crumb { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: 28px; font-weight: 600; margin: 2px 0 0; letter-spacing: -0.01em; }
+  .btn { font: 600 14px var(--sans); border: 0; border-radius: 12px; padding: 11px 18px; background: var(--ink); color: #fff; }
+  .strip { display: grid; grid-template-columns: auto auto auto 1fr; gap: 36px; align-items: center; background: var(--ink); color: var(--mist); border-radius: 20px; padding: 18px 24px; margin-bottom: 20px; }
+  .strip .label { font-size: 12px; color: #9FB4BA; }
+  .strip .fig { font: 500 22px var(--mono); color: #fff; letter-spacing: -0.02em; }
+  .strip .fig.green { color: var(--sea); }
+  .stack { display: flex; gap: 2px; height: 14px; }
+  .stack div { border-radius: 4px; }
+  .stack-wrap .label { margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .board { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; height: 690px; }
+  .col { background: var(--panel); border-radius: 20px; padding: 10px; display: flex; flex-direction: column; min-height: 0; box-shadow: 0 1px 2px rgba(7,59,76,.06); }
+  .ch { border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+  .ch .t { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px; }
+  .ch .count { font: 600 12px var(--mono); padding: 1px 8px; border-radius: 999px; background: rgba(255,255,255,.28); }
+  .ch .v { font: 500 16px var(--mono); margin-top: 6px; }
+  .ch .e { font: 400 12px var(--mono); opacity: .9; }
+  .add { font: 600 13px var(--sans); color: var(--ink); background: var(--card); border: 0; border-radius: 12px; padding: 8px; margin-bottom: 10px; }
+  .cards { overflow: hidden; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .card { background: var(--card); border-radius: 14px; padding: 12px; }
+  .card .val { font: 500 16px var(--mono); letter-spacing: -0.02em; }
+  .card .nm { font-weight: 600; margin-top: 4px; line-height: 1.3; }
+  .card .org { font-size: 12px; color: var(--muted); }
+  .card .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .av { width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: #fff; font: 600 10px var(--sans); display: grid; place-items: center; }
+  .av.none { background: transparent; box-shadow: inset 0 0 0 1.5px var(--mist); }
+  .date { font: 500 11px var(--mono); padding: 3px 8px; border-radius: 999px; background: #fff; color: var(--muted); }
+  .date.late { background: var(--rasp-tint); color: var(--rasp-text); font-weight: 600; }
+  .slot { border-radius: 14px; height: 116px; background: var(--coral-tint); box-shadow: inset 0 0 0 2px var(--coral); flex: none; }
+  .drag { position: absolute; transform: rotate(-2deg); box-shadow: 0 14px 30px rgba(7,59,76,.25); background: #fff; z-index: 5; }
+  .more { font-size: 12px; color: var(--muted); text-align: center; padding: 6px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail">
+    <div class="mark">A</div>
+    <a href="b-dashboard.html" title="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></a>
+    <a class="on" href="#" title="Pipeline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/></svg></a>
+    <a href="#" title="Deals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></a>
+    <a href="#" title="Contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg></a>
+    <a href="#" title="Organizations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v8h4M18 9h2a2 2 0 0 1 2 2v11h-4M10 6h4M10 10h4M10 14h4M10 18h4"/></svg></a>
+  </nav>
+
+  <main id="main">
+    <div class="top">
+      <div><div class="crumb">Accountable · Mockup B · Command deck</div><h1>Pipeline</h1></div>
+      <button class="btn">+ New deal</button>
+    </div>
+    <div class="strip">
+      <div><div class="label">Open pipeline</div><div class="fig">$1.130.000,00</div></div>
+      <div><div class="label">Expected revenue</div><div class="fig green">$529.500,00</div></div>
+      <div><div class="label">Open deals</div><div class="fig">14</div></div>
+      <div class="stack-wrap"><div class="label"><span>Open value by stage</span><span>New · Qualified · Proposal · Negotiation</span></div>
+        <div class="stack"><div style="flex:120;background:#118AB2"></div><div style="flex:310;background:#FFC145"></div><div style="flex:340;background:#F78C6B"></div><div style="flex:360;background:#CDD8DB"></div></div></div>
+    </div>
+    <div class="board" id="board"></div>
+  </main>
+</div>
+<script src="pipeline-data.js"></script>
+<script>
+const money2 = n => '$' + n.toLocaleString('de-DE', {minimumFractionDigits:2});
+const head = { new:['#0D6E8F','#fff'], qualified:['#FFC145','#073B4C'], proposal:['#F78C6B','#073B4C'], negotiation:['#073B4C','#fff'], won:['#06D6A0','#073B4C'], lost:['#8FA3AA','#073B4C'] };
+const initials = n => n.split(' ').map(p => p[0]).join('');
+const cardHtml = d => `
+  <div class="val">${money2(d.v)}</div><div class="nm">${d.name}</div><div class="org">${d.org}</div>
+  <div class="foot">${d.contact ? `<span class="av" title="${d.contact}">${initials(d.contact)}</span>` : '<span class="av none" title="No main contact"></span>'}<span class="date ${d.late ? 'late' : ''}">${d.late ? 'Late · ' : ''}${d.date}</span></div>`;
+document.getElementById('board').innerHTML = STAGES.map(s => {
+  const open = s.p > 0 && s.p < 100, [bg, fg] = head[s.key];
+  const shown = s.deals.filter(d => !d.dragging);
+  const hidden = s.count - shown.filter(d => !d.slot).length - (s.deals.some(d => d.dragging) ? 1 : 0);
+  return `<div class="col">
+    <div class="ch" style="background:${bg};color:${fg}">
+      <div class="t"><span>${s.n} <span style="font-weight:500;opacity:.85">${s.p}%</span></span><span class="count">${s.count}</span></div>
+      <div class="v">${money2(s.total)}</div>
+      <div class="e">${open ? 'exp ' + money2(s.total*s.p/100) : (s.key === 'won' ? 'Closed, won' : 'Closed, lost')}</div>
+    </div>
+    ${open ? '<button class="add">+ Add deal</button>' : ''}
+    <div class="cards">${shown.map(d => d.slot ? '<div class="slot"></div>' : `<div class="card">${cardHtml(d)}</div>`).join('')}
+      ${hidden > 0 ? `<div class="more">${hidden} more below</div>` : ''}</div>
+  </div>`;
+}).join('');
+const main = document.getElementById('main'), slot = document.querySelector('.slot');
+const mr = main.getBoundingClientRect(), sr = slot.getBoundingClientRect();
+const g = document.createElement('div'); g.className = 'card drag'; g.innerHTML = cardHtml(DRAGGED);
+g.style.width = sr.width + 'px'; g.style.left = (sr.left - mr.left - 10) + 'px'; g.style.top = (sr.top - mr.top - 8) + 'px';
+main.appendChild(g);
+</script>
+</body>
+</html>

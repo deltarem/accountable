@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accountable - Mockup A - Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup A: "Ledger". Pale columns, white cards, colour on a small stage dot only. */
+  :root {
+    --page: #F0F4F5; --panel: #FFFFFF; --ink: #073B4C; --muted: #4D6973; --line: #E8EEF0; --col: #F5F8F9;
+    --sea: #06D6A0; --sea-text: #067A5C; --sea-tint: #E6FBF5;
+    --coral-tint: #FEEEE9; --rasp-text: #C2264F; --rasp-tint: #FDECF0; --ceru-text: #0D6E8F;
+    --mist: #CDD8DB;
+    --sans: "Instrument Sans", system-ui, sans-serif; --serif: "Instrument Serif", Georgia, serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 var(--sans); }
+  .shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+  .side { background: var(--ink); color: var(--mist); padding: 24px 16px; position: relative; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 19px; color: var(--mist); padding: 4px 10px 28px; }
+  .mark { width: 28px; height: 28px; border-radius: 8px; background: var(--sea); display: grid; place-items: center; color: var(--ink); font-weight: 700; font-size: 15px; }
+  .nav a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: var(--mist); text-decoration: none; font-weight: 500; margin-bottom: 2px; }
+  .nav a.on { background: #0E4B5E; color: var(--sea); }
+  .nav svg { width: 18px; height: 18px; }
+  .side .foot { position: absolute; bottom: 24px; left: 26px; font-size: 12px; color: #8FA3AA; }
+  main { padding: 32px; min-width: 0; }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  h1 { font-size: 28px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .btn { font: 600 14px var(--sans); border: 0; border-radius: 10px; padding: 10px 16px; background: var(--sea); color: var(--ink); display: inline-flex; gap: 8px; align-items: center; }
+  .panel { background: var(--panel); border-radius: 16px; padding: 24px; box-shadow: 0 1px 2px rgba(7,59,76,.06); }
+  .totals { display: flex; gap: 40px; margin-bottom: 20px; align-items: baseline; }
+  .totals .label { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .totals .fig { font: 500 22px var(--mono); letter-spacing: -0.02em; }
+  .board { display: grid; grid-template-columns: repeat(6, minmax(168px, 1fr)); gap: 12px; height: 700px; }
+  .col { background: var(--col); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; min-height: 0; }
+  .col.target { background: var(--coral-tint); }
+  .ch { padding: 2px 4px 10px; }
+  .ch .t { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .ch .t .p { margin-left: auto; font: 500 12px var(--mono); color: var(--muted); }
+  .ch .n { font-size: 12px; color: var(--muted); margin: 2px 0 0 18px; }
+  .ch .v { font: 500 13px var(--mono); margin: 6px 0 0 18px; }
+  .ch .e { font: 400 12px var(--mono); color: var(--muted); margin-left: 18px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .add { font: 500 13px var(--sans); color: var(--muted); background: transparent; border: 1px dashed var(--mist); border-radius: 10px; padding: 7px; margin-bottom: 10px; }
+  .cards { overflow: hidden; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(7,59,76,.08); }
+  .card .nm { font-weight: 600; font-size: 13px; line-height: 1.3; }
+  .card .org { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .card .val { font: 500 14px var(--mono); margin-top: 8px; }
+  .card .meta { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .card .date { font-family: var(--mono); font-size: 11px; }
+  .late .date { color: var(--rasp-text); font-weight: 500; }
+  .badge { font: 600 11px var(--sans); padding: 1px 7px; border-radius: 999px; background: var(--rasp-tint); color: var(--rasp-text); }
+  .slot { border: 2px dashed #F78C6B; border-radius: 12px; height: 132px; flex: none; }
+  .drag { position: absolute; width: 176px; transform: rotate(2deg); box-shadow: 0 12px 28px rgba(7,59,76,.22); z-index: 5; }
+  .more { font-size: 12px; color: var(--muted); text-align: center; padding: 6px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><span class="mark">A</span>Accountable</div>
+    <nav class="nav">
+      <a href="a-dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</a>
+      <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/></svg>Pipeline</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Deals</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg>Contacts</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v8h4M18 9h2a2 2 0 0 1 2 2v11h-4M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>Organizations</a>
+    </nav>
+    <div class="foot">Mockup A · Ledger</div>
+  </aside>
+
+  <main>
+    <div class="head"><h1>Pipeline</h1><button class="btn">+ New deal</button></div>
+    <div class="panel" style="position:relative">
+      <div class="totals">
+        <div><div class="label">Open pipeline</div><div class="fig">$1.130.000,00</div></div>
+        <div><div class="label">Expected revenue</div><div class="fig">$529.500,00</div></div>
+        <div><div class="label">Open deals</div><div class="fig">14</div></div>
+      </div>
+      <div class="board" id="board"></div>
+    </div>
+  </main>
+</div>
+<script src="pipeline-data.js"></script>
+<script>
+const money2 = n => '$' + n.toLocaleString('de-DE', {minimumFractionDigits:2});
+const board = document.getElementById('board');
+board.innerHTML = STAGES.map(s => {
+  const open = s.p > 0 && s.p < 100;
+  const shown = s.deals.filter(d => !d.dragging);
+  const hidden = s.count - shown.filter(d => !d.slot).length - (s.deals.some(d => d.dragging) ? 1 : 0);
+  const cards = shown.map(d => d.slot ? '<div class="slot"></div>' : `
+    <div class="card ${d.late ? 'late' : ''}">
+      <div class="nm">${d.name}</div><div class="org">${d.org}</div>
+      <div class="val">${money2(d.v)}</div>
+      <div class="meta"><span class="date">${d.date}</span>${d.late ? '<span class="badge">Late</span>' : ''}</div>
+      ${d.contact ? `<div class="meta">${d.contact}</div>` : ''}
+    </div>`).join('');
+  return `<div class="col ${s.target ? 'target' : ''}">
+    <div class="ch"><div class="t"><span class="dot" style="background:${s.c}"></span>${s.n}<span class="p">${s.p}%</span></div>
+      <div class="n">${s.count} deals</div>
+      <div class="v">${money2(s.total)}</div>
+      ${open ? `<div class="e">exp ${money2(s.total*s.p/100)}</div>` : '<div class="e">&nbsp;</div>'}
+    </div>
+    ${open ? '<button class="add">+ Add deal</button>' : ''}
+    <div class="cards">${cards}${hidden > 0 ? `<div class="more">${hidden} more below</div>` : ''}</div>
+  </div>`;
+}).join('');
+// The card being dragged, lifted over the Proposal column
+const d = DRAGGED;
+const ghost = document.createElement('div');
+ghost.className = 'card drag late';
+ghost.innerHTML = `<div class="nm">${d.name}</div><div class="org">${d.org}</div><div class="val">${money2(d.v)}</div><div class="meta"><span class="date">${d.date}</span><span class="badge">Late</span></div><div class="meta">${d.contact}</div>`;
+const target = board.children[2].querySelector('.slot');
+const pr = board.parentElement.getBoundingClientRect(), tr = target.getBoundingClientRect();
+ghost.style.left = (tr.left - pr.left + 8) + "px"; ghost.style.top = (tr.top - pr.top - 6) + "px";
+board.parentElement.appendChild(ghost);
+</script>
+</body>
+</html>

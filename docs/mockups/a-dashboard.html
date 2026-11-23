@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accountable - Mockup A - Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup A: "Ledger". The spec's layout as written: Midnight sidebar, quiet white panels, colour only where it carries meaning. */
+  :root {
+    --page: #F0F4F5; --panel: #FFFFFF; --ink: #073B4C; --muted: #4D6973; --line: #E8EEF0;
+    --sea: #06D6A0; --sea-text: #067A5C; --sea-tint: #E6FBF5;
+    --mari: #FFC145; --mari-text: #8A5A00; --mari-tint: #FFF6E3;
+    --coral: #F78C6B; --coral-text: #B4472A; --coral-tint: #FEEEE9;
+    --ceru: #118AB2; --ceru-text: #0D6E8F; --ceru-tint: #E7F3F7;
+    --rasp: #EF476F; --rasp-text: #C2264F; --rasp-tint: #FDECF0;
+    --mist: #CDD8DB; --lost: #8FA3AA;
+    --sans: "Instrument Sans", system-ui, sans-serif; --serif: "Instrument Serif", Georgia, serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 var(--sans); }
+  .shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+  .side { background: var(--ink); color: var(--mist); padding: 24px 16px; position: relative; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 19px; color: var(--mist); padding: 4px 10px 28px; }
+  .mark { width: 28px; height: 28px; border-radius: 8px; background: var(--sea); display: grid; place-items: center; color: var(--ink); font-weight: 700; font-size: 15px; }
+  .nav a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: var(--mist); text-decoration: none; font-weight: 500; margin-bottom: 2px; }
+  .nav a.on { background: #0E4B5E; color: var(--sea); }
+  .nav svg { width: 18px; height: 18px; }
+  .side .foot { position: absolute; bottom: 24px; left: 26px; font-size: 12px; color: #8FA3AA; }
+  main { padding: 32px; max-width: 1440px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+  h1 { font-size: 28px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .sub { font-family: var(--serif); font-size: 20px; color: var(--muted); margin-top: 2px; }
+  .btn { font: 600 14px var(--sans); border: 0; border-radius: 10px; padding: 10px 16px; background: var(--sea); color: var(--ink); display: inline-flex; gap: 8px; align-items: center; }
+  .grid { display: grid; gap: 24px; }
+  .tiles { grid-template-columns: repeat(4, 1fr); margin-bottom: 24px; }
+  .panel { background: var(--panel); border-radius: 16px; padding: 24px; box-shadow: 0 1px 2px rgba(7,59,76,.06); }
+  .tile .label { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .tile .fig { font: 500 32px/1.2 var(--mono); margin: 8px 0 6px; letter-spacing: -0.02em; }
+  .tile .ctx { font-size: 13px; color: var(--muted); }
+  .up { color: var(--sea-text); font-weight: 600; }
+  .alert { color: var(--rasp-text); font-weight: 600; }
+  .row2 { grid-template-columns: 2fr 1fr; margin-bottom: 24px; }
+  .row3 { grid-template-columns: 1fr 1fr; margin-bottom: 24px; }
+  .ph { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+  .ph h2 { font-size: 16px; font-weight: 600; margin: 0; }
+  .ph .note { font-size: 12px; color: var(--muted); }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  svg text { font-family: var(--sans); }
+  .mono { font-family: var(--mono); }
+  .funnel-row { display: grid; grid-template-columns: 96px 1fr 130px 44px; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; }
+  .bar-track { height: 22px; border-radius: 6px; background: transparent; }
+  .bar-fill { height: 22px; border-radius: 6px; }
+  .num { font-family: var(--mono); font-size: 13px; text-align: right; }
+  .pct { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; }
+  .stack { display: flex; gap: 2px; height: 28px; margin: 4px 0 20px; }
+  .stack div { border-radius: 6px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 12px; font-weight: 500; color: var(--muted); text-align: left; padding: 0 0 8px; }
+  th.r, td.r { text-align: right; }
+  td { padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  td.r { font-family: var(--mono); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: 0; }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { display: grid; grid-template-columns: 24px 1fr auto; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); align-items: start; }
+  .list li:first-child { border-top: 0; padding-top: 0; }
+  .check { width: 18px; height: 18px; border-radius: 5px; background: var(--line); margin-top: 1px; }
+  .what { font-weight: 500; }
+  .where { font-size: 12px; color: var(--ceru-text); }
+  .when { font-size: 12px; font-family: var(--mono); color: var(--muted); text-align: right; white-space: nowrap; }
+  .when.late { color: var(--rasp-text); font-weight: 500; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+  .icon { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; }
+  .icon svg { width: 13px; height: 13px; }
+  .tip { position: absolute; background: var(--ink); color: #fff; font-size: 12px; padding: 8px 10px; border-radius: 8px; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><span class="mark">A</span>Accountable</div>
+    <nav class="nav">
+      <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</a>
+      <a href="a-pipeline.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/></svg>Pipeline</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Deals</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg>Contacts</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v8h4M18 9h2a2 2 0 0 1 2 2v11h-4M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>Organizations</a>
+    </nav>
+    <div class="foot">Mockup A · Ledger</div>
+  </aside>
+
+  <main>
+    <div class="head">
+      <div><h1>Dashboard</h1><div class="sub">Monday, 23 Nov 2026</div></div>
+    </div>
+
+    <section class="grid tiles">
+      <div class="panel tile"><div class="label">Open pipeline</div><div class="fig">$1.130.000</div><div class="ctx">14 open deals</div></div>
+      <div class="panel tile"><div class="label">Expected revenue</div><div class="fig">$529.500</div><div class="ctx">Value times probability of close</div></div>
+      <div class="panel tile"><div class="label">Won this month</div><div class="fig">$86.000</div><div class="ctx"><span class="up">&#8593; 37%</span> on October</div></div>
+      <div class="panel tile"><div class="label">Follow-ups due</div><div class="fig"><span class="alert">4</span> <span style="font: 500 18px var(--sans);color:var(--muted)">overdue</span></div><div class="ctx">2 due today</div></div>
+    </section>
+
+    <section class="grid row2">
+      <div class="panel">
+        <div class="ph"><h2>Revenue won</h2><span class="note">Last 12 months · $668.000 in total</span></div>
+        <div id="rev" style="position:relative"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>Deals won and lost</h2><div class="legend"><span><i style="background:var(--sea)"></i>Won</span><span><i style="background:var(--lost)"></i>Lost</span></div></div>
+        <div id="wl"></div>
+      </div>
+    </section>
+
+    <section class="grid row3">
+      <div class="panel">
+        <div class="ph"><h2>Sales funnel</h2><span class="note">Value that reached each stage</span></div>
+        <div id="funnel"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>Pipeline by stage</h2><span class="note">Open deals today</span></div>
+        <div class="stack" id="stack"></div>
+        <table>
+          <thead><tr><th>Stage</th><th class="r">Deals</th><th class="r">Value</th><th class="r">Expected</th></tr></thead>
+          <tbody id="stages"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid row3">
+      <div class="panel">
+        <div class="ph"><h2>Follow-ups</h2><span class="note">Overdue and next 7 days</span></div>
+        <ul class="list">
+          <li><span class="check"></span><div><div class="what">Call back about contract terms</div><div class="where">Pinecrest Hotels booking engine</div></div><div class="when late">5 days overdue</div></li>
+          <li><span class="check"></span><div><div class="what">Send revised pricing</div><div class="where">Larch Software support renewal</div></div><div class="when late">3 days overdue</div></li>
+          <li><span class="check"></span><div><div class="what">Confirm budget sign-off</div><div class="where">Northgate Finance compliance suite</div></div><div class="when late">2 days overdue</div></li>
+          <li><span class="check"></span><div><div class="what">Email the case study</div><div class="where">Priya Raman</div></div><div class="when late">1 day overdue</div></li>
+          <li><span class="check"></span><div><div class="what">Call about onboarding</div><div class="where">Daniel Okafor</div></div><div class="when">Today</div></li>
+          <li><span class="check"></span><div><div class="what">Check proposal feedback</div><div class="where">Kestrel Manufacturing shop-floor tablets</div></div><div class="when">Today</div></li>
+          <li><span class="check"></span><div><div class="what">Book the product demo</div><div class="where">Brightline Health telehealth add-on</div></div><div class="when">In 3 days</div></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>Recent activity</h2><span class="note">Newest first</span></div>
+        <ul class="list" id="feed"></ul>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const C = { sea:'#06D6A0', seaDark:'#04A47A', mari:'#FFC145', coral:'#F78C6B', ceru:'#118AB2', ink:'#073B4C', lost:'#8FA3AA', line:'#E8EEF0', muted:'#4D6973', mist:'#CDD8DB' };
+const months = ['Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'];
+const rev = [18,32,24,46,71,38,95,29,54,112,63,86];
+const won = [1,1,1,1,2,1,1,1,1,1,1,1];
+const lost = [0,0,1,0,0,0,1,0,0,1,0,0];
+const money = n => '$' + n.toLocaleString('de-DE');
+const money2 = n => '$' + n.toLocaleString('de-DE', {minimumFractionDigits:2});
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+function areaChart(host, w, h) {
+  const pad = {l:48, r:12, t:16, b:28}, iw = w-pad.l-pad.r, ih = h-pad.t-pad.b, max = 120;
+  const svg = el('svg', {width:w, height:h, viewBox:`0 0 ${w} ${h}`}, host);
+  const defs = el('defs', {}, svg); const g = el('linearGradient', {id:'fa', x1:0, y1:0, x2:0, y2:1}, defs);
+  el('stop', {offset:0, 'stop-color':C.sea, 'stop-opacity':.25}, g); el('stop', {offset:1, 'stop-color':C.sea, 'stop-opacity':0}, g);
+  [0,40,80,120].forEach(v => { const y = pad.t + ih - v/max*ih; el('line', {x1:pad.l, x2:w-pad.r, y1:y, y2:y, stroke:C.line}, svg); const t = el('text', {x:pad.l-10, y:y+4, 'text-anchor':'end', 'font-size':11, fill:C.muted}, svg); t.textContent = v ? `$${v}k` : '$0'; });
+  const x = i => pad.l + i*(iw/11), y = v => pad.t + ih - v/max*ih;
+  const pts = rev.map((v,i) => [x(i), y(v)]);
+  const path = pts.map((p,i) => (i?'L':'M')+p[0]+' '+p[1]).join(' ');
+  el('path', {d: path + ` L ${x(11)} ${pad.t+ih} L ${x(0)} ${pad.t+ih} Z`, fill:'url(#fa)'}, svg);
+  el('path', {d: path, fill:'none', stroke:C.seaDark, 'stroke-width':2.5, 'stroke-linejoin':'round'}, svg);
+  months.forEach((m,i) => { const t = el('text', {x:x(i), y:h-8, 'text-anchor':'middle', 'font-size':11, fill:C.muted}, svg); t.textContent = m; });
+  // hover state shown on September, as it would look
+  const hx = x(6), hy = y(95);
+  el('line', {x1:hx, x2:hx, y1:pad.t, y2:pad.t+ih, stroke:C.mist, 'stroke-dasharray':'3 3'}, svg);
+  el('circle', {cx:hx, cy:hy, r:5, fill:'#fff', stroke:C.seaDark, 'stroke-width':2.5}, svg);
+  el('circle', {cx:x(11), cy:y(86), r:4, fill:C.seaDark}, svg);
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.style.left = (hx - 178) + "px"; tip.style.top = (hy - 30) + "px";
+  tip.innerHTML = '<b>Jun 2026</b><br><span class="mono">$95.000,00</span> · 1 deal won'; host.appendChild(tip);
+}
+function wonLost(host, w, h) {
+  const pad = {l:24, r:4, t:12, b:28}, iw = w-pad.l-pad.r, ih = h-pad.t-pad.b, max = 2;
+  const svg = el('svg', {width:w, height:h}, host);
+  [0,1,2].forEach(v => { const y = pad.t + ih - v/max*ih; el('line', {x1:pad.l, x2:w-pad.r, y1:y, y2:y, stroke:C.line}, svg); const t = el('text', {x:pad.l-8, y:y+4, 'text-anchor':'end', 'font-size':11, fill:C.muted}, svg); t.textContent = v; });
+  const slot = iw/12, bw = 8;
+  months.forEach((m,i) => {
+    const cx = pad.l + slot*i + slot/2;
+    const hw = won[i]/max*ih; el('rect', {x:cx-bw-1, y:pad.t+ih-hw, width:bw, height:hw, rx:3, fill:C.sea}, svg);
+    if (lost[i]) { const hl = lost[i]/max*ih; el('rect', {x:cx+1, y:pad.t+ih-hl, width:bw, height:hl, rx:3, fill:C.lost}, svg); }
+    if (i % 2 === 1) { const t = el('text', {x:cx, y:h-8, 'text-anchor':'middle', 'font-size':11, fill:C.muted}, svg); t.textContent = m; }
+  });
+}
+const stages = [
+  {n:'New', c:C.ceru, deals:4, v:120000, p:10},
+  {n:'Qualified', c:C.mari, deals:4, v:310000, p:25},
+  {n:'Proposal', c:C.coral, deals:3, v:340000, p:50},
+  {n:'Negotiation', c:C.ink, deals:3, v:360000, p:75},
+];
+const funnel = [['New',C.ceru,1948000],['Qualified',C.mari,1828000],['Proposal',C.coral,1483000],['Negotiation',C.ink,1083000],['Won',C.sea,668000]];
+
+areaChart(document.getElementById('rev'), 700, 250);
+wonLost(document.getElementById('wl'), 316, 250);
+document.getElementById('funnel').innerHTML = funnel.map(([n,c,v]) =>
+  `<div class="funnel-row"><span>${n}</span><div class="bar-track"><div class="bar-fill" style="width:${v/1948000*100}%;background:${c}"></div></div><span class="num">${money(v)}</span><span class="pct">${Math.round(v/1948000*100)}%</span></div>`).join('');
+const total = stages.reduce((a,s)=>a+s.v,0);
+document.getElementById('stack').innerHTML = stages.map(s => `<div style="flex:${s.v};background:${s.c}"></div>`).join('');
+document.getElementById('stages').innerHTML = stages.map(s =>
+  `<tr><td><span class="dot" style="background:${s.c}"></span>${s.n} <span style="color:var(--muted);font-size:12px">${s.p}%</span></td><td class="r">${s.deals}</td><td class="r">${money(s.v)}</td><td class="r">${money(s.v*s.p/100)}</td></tr>`).join('') +
+  `<tr><td style="font-weight:600">Open pipeline</td><td class="r" style="font-weight:600">14</td><td class="r" style="font-weight:600">${money(total)}</td><td class="r" style="font-weight:600">${money(529500)}</td></tr>`;
+
+const ic = {
+  stage: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  call: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>',
+  email: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+  note: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  status: '<path d="M20 6 9 17l-5-5"/>'
+};
+const feed = [
+  ['stage', C.ink, '#fff', 'Moved from Proposal to Negotiation', 'Brightline Health telehealth add-on', '23 Nov 2026, 10:12'],
+  ['call', C.ceru, '#fff', 'Call: agreed a two-year term', 'Northgate Finance compliance suite', '23 Nov 2026, 09:30'],
+  ['email', C.coral, C.ink, 'Email: sent the proposal', 'Kestrel Manufacturing shop-floor tablets', '20 Nov 2026, 16:40'],
+  ['status', C.sea, C.ink, 'Status changed from Qualified to Customer', 'Elena Fischer', '18 Nov 2026, 11:05'],
+  ['stage', C.sea, C.ink, 'Moved from Negotiation to Won', 'Fernwood Retail store analytics', '18 Nov 2026, 11:05'],
+  ['note', C.ink, '#fff', 'Note: wants a phased rollout', 'Harbor Logistics warehouse sensors', '17 Nov 2026, 15:22'],
+];
+document.getElementById('feed').innerHTML = feed.map(([k,bg,fg,what,where,when]) =>
+  `<li><span class="icon" style="background:${bg};color:${fg}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg></span><div><div class="what">${what}</div><div class="where">${where}</div></div><div class="when">${when}</div></li>`).join('');
+</script>
+</body>
+</html>

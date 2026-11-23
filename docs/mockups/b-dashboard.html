@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accountable - Mockup B - Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup B: "Command deck". Slim icon rail, one Midnight headline panel, bolder blocks of stage colour. */
+  :root {
+    --page: #F0F4F5; --panel: #FFFFFF; --ink: #073B4C; --ink-2: #0B4A5E; --muted: #4D6973; --line: #E8EEF0;
+    --sea: #06D6A0; --sea-text: #067A5C; --mari: #FFC145; --coral: #F78C6B; --ceru: #118AB2; --ceru-text: #0D6E8F;
+    --rasp: #EF476F; --rasp-text: #C2264F; --rasp-tint: #FDECF0; --mari-text: #8A5A00; --mari-tint: #FFF6E3;
+    --mist: #CDD8DB; --lost: #8FA3AA;
+    --sans: "Instrument Sans", system-ui, sans-serif; --serif: "Instrument Serif", Georgia, serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 var(--sans); }
+  .shell { display: grid; grid-template-columns: 72px 1fr; min-height: 100vh; }
+  .rail { background: var(--ink); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 8px; }
+  .mark { width: 36px; height: 36px; border-radius: 10px; background: var(--sea); display: grid; place-items: center; color: var(--ink); font-weight: 700; font-size: 17px; margin-bottom: 20px; }
+  .rail a { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--mist); }
+  .rail a.on { background: var(--sea); color: var(--ink); }
+  .rail svg { width: 20px; height: 20px; }
+  main { padding: 28px 32px 32px; min-width: 0; }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .crumb { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: 28px; font-weight: 600; margin: 2px 0 0; letter-spacing: -0.01em; }
+  .date { font-family: var(--serif); font-size: 22px; color: var(--muted); }
+  .hero { background: var(--ink); color: var(--mist); border-radius: 20px; padding: 28px; display: grid; grid-template-columns: 360px 1fr; gap: 32px; margin-bottom: 24px; }
+  .figs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 20px; align-content: start; }
+  .figs .label { font-size: 12px; font-weight: 500; color: #9FB4BA; }
+  .figs .fig { font: 500 28px/1.2 var(--mono); color: #fff; margin: 6px 0 4px; letter-spacing: -0.02em; }
+  .figs .fig.green { color: var(--sea); }
+  .figs .ctx { font-size: 12px; color: #9FB4BA; }
+  .chip { display: inline-block; font: 600 12px var(--sans); padding: 2px 8px; border-radius: 999px; }
+  .chip.up { background: rgba(6,214,160,.16); color: var(--sea); }
+  .chip.bad { background: var(--rasp); color: #fff; }
+  .hero h2 { font-size: 16px; font-weight: 600; margin: 0; color: #fff; }
+  .hero .ph { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .hero .ph .note { font-size: 12px; color: #9FB4BA; }
+  .grid { display: grid; gap: 24px; margin-bottom: 24px; }
+  .three { grid-template-columns: 1.15fr 1fr 1fr; }
+  .two { grid-template-columns: 1.2fr 1fr; }
+  .panel { background: var(--panel); border-radius: 20px; padding: 24px; box-shadow: 0 1px 2px rgba(7,59,76,.06); }
+  .ph { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+  .ph h2 { font-size: 16px; font-weight: 600; margin: 0; }
+  .ph .note { font-size: 12px; color: var(--muted); }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  svg text { font-family: var(--sans); }
+  .steps { display: flex; align-items: flex-end; gap: 6px; height: 200px; }
+  .step { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; }
+  .step .blk { border-radius: 8px; }
+  .step .sv { font: 500 12px var(--mono); }
+  .step .sn { font-size: 12px; color: var(--muted); }
+  .step .sp { font: 500 18px var(--mono); }
+  .stage-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 10px 12px; border-radius: 12px; margin-bottom: 6px; align-items: center; }
+  .stage-row .n { font-weight: 600; }
+  .stage-row .v { font: 500 15px var(--mono); text-align: right; }
+  .stage-row .m { font-size: 12px; }
+  .stage-row .e { font: 400 12px var(--mono); text-align: right; }
+  .group { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; }
+  .group:first-of-type { margin-top: 0; }
+  .fu { display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; background: #F5F8F9; margin-bottom: 6px; }
+  .fu.over { background: var(--rasp-tint); }
+  .box { width: 18px; height: 18px; border-radius: 6px; background: #fff; box-shadow: inset 0 0 0 2px var(--mist); }
+  .fu .what { font-weight: 500; }
+  .fu .where { font-size: 12px; color: var(--ceru-text); }
+  .fu .when { font: 500 12px var(--mono); color: var(--muted); }
+  .fu.over .when { color: var(--rasp-text); }
+  .feed { list-style: none; margin: 0; padding: 0; position: relative; }
+  .feed li { display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding-bottom: 16px; }
+  .feed .ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; }
+  .feed .ic svg { width: 15px; height: 15px; }
+  .feed .what { font-weight: 500; }
+  .feed .sub { font-size: 12px; color: var(--muted); }
+  .feed .sub a { color: var(--ceru-text); text-decoration: none; }
+  .tip { position: absolute; background: #fff; color: var(--ink); font-size: 12px; padding: 8px 10px; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.25); pointer-events: none; }
+  .mono { font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail">
+    <div class="mark">A</div>
+    <a class="on" href="#" title="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></a>
+    <a href="b-pipeline.html" title="Pipeline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/></svg></a>
+    <a href="#" title="Deals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></a>
+    <a href="#" title="Contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg></a>
+    <a href="#" title="Organizations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v8h4M18 9h2a2 2 0 0 1 2 2v11h-4M10 6h4M10 10h4M10 14h4M10 18h4"/></svg></a>
+  </nav>
+
+  <main>
+    <div class="top">
+      <div><div class="crumb">Accountable · Mockup B · Command deck</div><h1>Dashboard</h1></div>
+      <div class="date">Monday, 23 Nov 2026</div>
+    </div>
+
+    <section class="hero">
+      <div class="figs">
+        <div><div class="label">Open pipeline</div><div class="fig">$1.130.000</div><div class="ctx">14 open deals</div></div>
+        <div><div class="label">Expected revenue</div><div class="fig">$529.500</div><div class="ctx">Value times probability</div></div>
+        <div><div class="label">Won this month</div><div class="fig green">$86.000</div><div class="ctx"><span class="chip up">&#8593; 37%</span> on October</div></div>
+        <div><div class="label">Follow-ups due</div><div class="fig"><span style="color:#EF476F">4</span> <span style="font: 500 16px var(--sans); color:#9FB4BA">overdue</span></div><div class="ctx">2 due today</div></div>
+      </div>
+      <div>
+        <div class="ph"><h2>Revenue won</h2><span class="note">Last 12 months · $668.000</span></div>
+        <div id="rev" style="position:relative"></div>
+      </div>
+    </section>
+
+    <section class="grid three">
+      <div class="panel">
+        <div class="ph"><h2>Sales funnel</h2><span class="note">Value reaching each stage</span></div>
+        <div class="steps" id="steps"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>Pipeline by stage</h2><span class="note">Open today</span></div>
+        <div id="stagerows"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>Won and lost</h2><div class="legend"><span><i style="background:var(--sea)"></i>Won</span><span><i style="background:var(--lost)"></i>Lost</span></div></div>
+        <div id="wl"></div>
+      </div>
+    </section>
+
+    <section class="grid two">
+      <div class="panel">
+        <div class="ph"><h2>Follow-ups</h2><span class="note">7 to do</span></div>
+        <div class="group">Overdue</div>
+        <div class="fu over"><span class="box"></span><div><div class="what">Call back about contract terms</div><div class="where">Pinecrest Hotels · Booking engine</div></div><span class="when">5 days overdue</span></div>
+        <div class="fu over"><span class="box"></span><div><div class="what">Send revised pricing</div><div class="where">Larch Software · Support renewal</div></div><span class="when">3 days overdue</span></div>
+        <div class="fu over"><span class="box"></span><div><div class="what">Confirm budget sign-off</div><div class="where">Northgate Finance · Compliance suite</div></div><span class="when">2 days overdue</span></div>
+        <div class="fu over"><span class="box"></span><div><div class="what">Email the case study</div><div class="where">Priya Raman</div></div><span class="when">1 day overdue</span></div>
+        <div class="group">Today</div>
+        <div class="fu"><span class="box"></span><div><div class="what">Call about onboarding</div><div class="where">Daniel Okafor</div></div><span class="when">Today</span></div>
+        <div class="fu"><span class="box"></span><div><div class="what">Check proposal feedback</div><div class="where">Kestrel Manufacturing · Shop-floor tablets</div></div><span class="when">Today</span></div>
+        <div class="group">Next 7 days</div>
+        <div class="fu"><span class="box"></span><div><div class="what">Book the product demo</div><div class="where">Brightline Health · Telehealth add-on</div></div><span class="when">In 3 days</span></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>Recent activity</h2><span class="note">Newest first</span></div>
+        <ul class="feed" id="feed"></ul>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const C = { sea:'#06D6A0', mari:'#FFC145', coral:'#F78C6B', ceru:'#118AB2', ink:'#073B4C', lost:'#8FA3AA', line:'#E8EEF0', muted:'#4D6973', mist:'#CDD8DB', grid:'#1C5568', dim:'#9FB4BA' };
+const months = ['Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'];
+const rev = [18,32,24,46,71,38,95,29,54,112,63,86];
+const won = [1,1,1,1,2,1,1,1,1,1,1,1];
+const lost = [0,0,1,0,0,0,1,0,0,1,0,0];
+const money = n => '$' + n.toLocaleString('de-DE');
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+// Revenue: a Sea Green line with a dot per month on the dark panel, the current month labelled
+(function () {
+  const host = document.getElementById('rev'), w = host.clientWidth, h = 232;
+  const pad = {l:44, r:24, t:24, b:26}, iw = w-pad.l-pad.r, ih = h-pad.t-pad.b, max = 120;
+  const svg = el('svg', {width:w, height:h}, host);
+  [0,40,80,120].forEach(v => { const y = pad.t+ih-v/max*ih; el('line', {x1:pad.l, x2:w-pad.r, y1:y, y2:y, stroke:C.grid}, svg); const t = el('text', {x:pad.l-10, y:y+4, 'text-anchor':'end', 'font-size':11, fill:C.dim}, svg); t.textContent = v ? `$${v}k` : '$0'; });
+  const x = i => pad.l + 12 + i*((iw-24)/11), y = v => pad.t+ih-v/max*ih;
+  el('path', {d: rev.map((v,i) => (i?'L':'M')+x(i)+' '+y(v)).join(' '), fill:'none', stroke:C.sea, 'stroke-width':2.5, 'stroke-linejoin':'round'}, svg);
+  rev.forEach((v,i) => {
+    el('circle', {cx:x(i), cy:y(v), r: i===11 ? 6 : 4, fill: i===11 ? C.sea : C.ink, stroke:C.sea, 'stroke-width':2}, svg);
+    const t = el('text', {x:x(i), y:h-6, 'text-anchor':'middle', 'font-size':11, fill:C.dim}, svg); t.textContent = months[i];
+  });
+  const t = el('text', {x:x(11), y:y(86)-14, 'text-anchor':'middle', 'font-size':12, 'font-weight':600, fill:'#fff'}, svg); t.textContent = '$86k';
+  const tip = document.createElement('div'); tip.className = 'tip';
+  tip.style.left = (x(4) - 182) + 'px'; tip.style.top = (y(71) - 58) + 'px';
+  tip.innerHTML = '<b>Apr 2026</b><br><span class="mono">$71.000,00</span> · 2 deals won'; host.appendChild(tip);
+})();
+
+// Won and lost: won above the line, lost below it
+(function () {
+  const host = document.getElementById('wl'), w = host.clientWidth, h = 200;
+  const pad = {l:20, r:4, t:8, b:22}, mid = 120, unit = 40;
+  const svg = el('svg', {width:w, height:h}, host);
+  el('line', {x1:pad.l, x2:w-pad.r, y1:mid, y2:mid, stroke:C.mist}, svg);
+  const slot = (w-pad.l-pad.r)/12, bw = 12;
+  months.forEach((m,i) => {
+    const x = pad.l + slot*i + (slot-bw)/2;
+    el('rect', {x, y:mid-won[i]*unit-1, width:bw, height:won[i]*unit, rx:4, fill:C.sea}, svg);
+    if (lost[i]) el('rect', {x, y:mid+1, width:bw, height:lost[i]*unit, rx:4, fill:C.lost}, svg);
+    if (i%2===1) { const t = el('text', {x:x+bw/2, y:h-4, 'text-anchor':'middle', 'font-size':11, fill:C.muted}, svg); t.textContent = m; }
+  });
+  [['13 won', mid-90, '#067A5C'], ['3 lost', mid+30, C.muted]].forEach(([s,y,c]) => { const t = el('text', {x:pad.l, y, 'font-size':12, 'font-weight':600, fill:c}, svg); t.textContent = s; });
+})();
+
+const funnel = [['New',C.ceru,1948000],['Qualified',C.mari,1828000],['Proposal',C.coral,1483000],['Negotiation',C.ink,1083000],['Won',C.sea,668000]];
+document.getElementById('steps').innerHTML = funnel.map(([n,c,v]) =>
+  `<div class="step"><div class="sp">${Math.round(v/1948000*100)}%</div><div class="blk" style="height:${v/1948000*120}px;background:${c}"></div><div class="sn">${n}</div><div class="sv">${money(v)}</div></div>`).join('');
+
+const stages = [
+  {n:'New', bg:'#0D6E8F', fg:'#fff', deals:4, v:120000, p:10},
+  {n:'Qualified', bg:'#FFC145', fg:C.ink, deals:4, v:310000, p:25},
+  {n:'Proposal', bg:'#F78C6B', fg:C.ink, deals:3, v:340000, p:50},
+  {n:'Negotiation', bg:C.ink, fg:'#fff', deals:3, v:360000, p:75},
+];
+document.getElementById('stagerows').innerHTML = stages.map(s =>
+  `<div class="stage-row" style="background:${s.bg};color:${s.fg}"><span class="n">${s.n} · ${s.p}%</span><span class="v">${money(s.v)}</span><span class="m">${s.deals} deals</span><span class="e">exp ${money(s.v*s.p/100)}</span></div>`).join('');
+
+const ic = {
+  stage: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  call: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>',
+  email: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+  note: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  status: '<path d="M20 6 9 17l-5-5"/>'
+};
+const feed = [
+  ['stage', C.ink, '#fff', 'Moved from Proposal to Negotiation', 'Brightline Health · Telehealth add-on', '23 Nov 2026, 10:12'],
+  ['call', C.ceru, '#fff', 'Call: agreed a two-year term', 'Northgate Finance · Compliance suite', '23 Nov 2026, 09:30'],
+  ['email', C.coral, C.ink, 'Email: sent the proposal', 'Kestrel Manufacturing · Shop-floor tablets', '20 Nov 2026, 16:40'],
+  ['status', C.sea, C.ink, 'Status changed from Qualified to Customer', 'Elena Fischer', '18 Nov 2026, 11:05'],
+  ['stage', C.sea, C.ink, 'Moved from Negotiation to Won', 'Fernwood Retail · Store analytics', '18 Nov 2026, 11:05'],
+  ['note', C.ink, '#fff', 'Note: wants a phased rollout', 'Harbor Logistics · Warehouse sensors', '17 Nov 2026, 15:22'],
+  ['call', C.ceru, '#fff', 'Call: intro with the new IT lead', 'Grace Liu', '16 Nov 2026, 13:10'],
+];
+document.getElementById('feed').innerHTML = feed.map(([k,bg,fg,what,where,when]) =>
+  `<li><span class="ic" style="background:${bg};color:${fg}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg></span><div><div class="what">${what}</div><div class="sub"><a href="#">${where}</a> · <span class="mono">${when}</span></div></div></li>`).join('');
+</script>
+</body>
+</html>

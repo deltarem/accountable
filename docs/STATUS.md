@@ -1,1 +1,11 @@
 The project has not yet started.
+
+- 2026-11-23: `docs/intent.md` filled in after an interview: delete rules, stage probabilities, required fields, timeline roll-up, pipeline columns, dashboard range, sample data size, date/money formats, and new success criteria (validation, keyboard use, speed, empty states).
+- 2026-11-23: `docs/spec.md` written: concerns at the top, data model, API, screens, design (brand colours with contrast-checked shades, type, shape, formats), sample data and testing.
+- 2026-11-23: All 14 concerns in `docs/spec.md` accepted as written and renamed "Decisions"; spec checked against the intent's problem and open questions (new section at the end).
+- 2026-11-23: Architecture section added to `docs/spec.md`: overview, code layout and 16 architecture decisions (layers, delete handling, money in cents, events table, pipeline ordering, data fetching, validation, clock, seeding, test isolation, styling, libraries).
+- 2026-11-23: Screen structures added to `docs/spec.md`: text wireframes of the app shell, dashboard, pipeline, tables, record pages, form dialog and delete dialog, each with the components it is built from.
+- 2026-11-23: Three mockups of the dashboard and pipeline in `docs/mockups/` (A Ledger, B Command deck, C Open plan), each page with a Playwright screenshot beside it. Fixed the spec's sample data: 13 won and 3 lost, since 12 months each with a win need at least 12 wins.
+- 2026-11-23: `docs/plan.md` written: files that change, 8 phases with commit points, 13 risks, and the backend, frontend and end-to-end tests mapped to the success criteria. No code yet.
+- 2026-11-23: Mockup B (Command deck) chosen because it looks the most professional. `docs/spec.md` updated to match: icon rail, Midnight headline panel and totals strip, solid stage blocks, new wireframes, 20px panels, contrast pairs for the stage blocks; `docs/plan.md` updated to follow it.
+- 2026-11-23: Requirement IDs added to `docs/spec.md` (136 IDs, plus SC-01 to SC-12 for the intent's success criteria). `docs/plan.md` now lists the IDs each phase delivers, closes the 20 coverage gaps (new tests: offline, navigation, records, errors, dev script, meta, startup, transactions), and has a Traceability section; `scripts/check-trace.mjs` is planned to keep it complete.
