@@ -4,12 +4,7 @@
 
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type {
-  ActivityPayload,
-  ContactPayload,
-  DealPayload,
-  OrganizationPayload,
-} from '../lib/schemas';
+import type { ActivityPayload, ContactPayload, DealPayload, OrganizationPayload } from '../lib/schemas';
 import { applyMove } from '../lib/board';
 import { api } from './client';
 import type {
@@ -106,10 +101,10 @@ function useSave<TBody, TResult>(scope: Scope, fn: (body: TBody) => Promise<TRes
 }
 
 export const useSaveOrganization = () =>
-  useSave(
-    'organization',
-    ({ id, body }: { id?: number; body: OrganizationPayload }) =>
-      id ? api.put<OrganizationDetail>(`/organizations/${id}`, body) : api.post<OrganizationDetail>('/organizations', body),
+  useSave('organization', ({ id, body }: { id?: number; body: OrganizationPayload }) =>
+    id
+      ? api.put<OrganizationDetail>(`/organizations/${id}`, body)
+      : api.post<OrganizationDetail>('/organizations', body),
   );
 
 export const useSaveContact = () =>

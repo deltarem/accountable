@@ -1,15 +1,39 @@
 import { useNavigate, useParams } from 'react-router';
 
-import { ApiError } from '../api/client';
 import { useOrganization } from '../api/hooks';
+import type { OrganizationDetail } from '../api/types';
 import { StageBadge, StatusBadge } from '../components/Badges';
 import { useForms } from '../components/forms/FormsProvider';
-import { LoadError } from '../components/LoadError';
 import { Panel } from '../components/Panel';
 import { HeaderFact, LinkedList, RecordColumns, RecordHeader } from '../components/record/RecordParts';
 import { Timeline } from '../components/record/Timeline';
 import { displayWebsite, formatMoney } from '../lib/format';
-import { BackLink, MissingRecord } from './recordShared';
+import { BackLink, RecordLoadFailure } from './recordShared';
+
+function OrganizationFacts({ org }: { org: OrganizationDetail }) {
+  return (
+    <>
+      <HeaderFact label="Industry">{org.industry ?? <span className="muted-text">Not set</span>}</HeaderFact>
+      <HeaderFact label="Website">
+        {org.website ? (
+          <a href={org.website} target="_blank" rel="noreferrer noopener">
+            {displayWebsite(org.website)}
+          </a>
+        ) : (
+          <span className="muted-text">Not set</span>
+        )}
+      </HeaderFact>
+      <HeaderFact label="Open value">
+        <span className="mono">{formatMoney(org.open_value_cents)}</span>
+      </HeaderFact>
+      {org.notes ? (
+        <HeaderFact label="Notes">
+          <span className="pre-line">{org.notes}</span>
+        </HeaderFact>
+      ) : null}
+    </>
+  );
+}
 
 export function OrganizationPage() {
   const id = Number(useParams().id);
@@ -20,16 +44,13 @@ export function OrganizationPage() {
 
   if (query.isError) {
     return (
-      <>
-        <BackLink to="/organizations" label="Organizations" />
-        {query.error instanceof ApiError && query.error.status === 404 ? (
-          <MissingRecord what="organization" to="/organizations" />
-        ) : (
-          <Panel>
-            <LoadError what="organization" onRetry={() => query.refetch()} />
-          </Panel>
-        )}
-      </>
+      <RecordLoadFailure
+        what="organization"
+        listPath="/organizations"
+        listLabel="Organizations"
+        error={query.error}
+        onRetry={() => query.refetch()}
+      />
     );
   }
 
@@ -48,30 +69,7 @@ export function OrganizationPage() {
             onDeleted: () => navigate('/organizations', { replace: true }),
           })
         }
-        facts={
-          org ? (
-            <>
-              <HeaderFact label="Industry">{org.industry ?? <span className="muted-text">Not set</span>}</HeaderFact>
-              <HeaderFact label="Website">
-                {org.website ? (
-                  <a href={org.website} target="_blank" rel="noreferrer noopener">
-                    {displayWebsite(org.website)}
-                  </a>
-                ) : (
-                  <span className="muted-text">Not set</span>
-                )}
-              </HeaderFact>
-              <HeaderFact label="Open value">
-                <span className="mono">{formatMoney(org.open_value_cents)}</span>
-              </HeaderFact>
-              {org.notes ? (
-                <HeaderFact label="Notes">
-                  <span className="pre-line">{org.notes}</span>
-                </HeaderFact>
-              ) : null}
-            </>
-          ) : null
-        }
+        facts={org ? <OrganizationFacts org={org} /> : null}
       />
       <RecordColumns
         left={

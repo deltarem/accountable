@@ -1,7 +1,7 @@
 import * as Popover from '@radix-ui/react-popover';
 import { Command } from 'cmdk';
 import { Check, ChevronDown } from 'lucide-react';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useId, useState } from 'react';
 
 import { useFieldIds } from './fields';
 import styles from './RecordSelect.module.css';
@@ -31,6 +31,9 @@ export const RecordSelect = forwardRef<
 >(function RecordSelect({ value, onChange, onBlur, options, placeholder, searchPlaceholder, noneLabel }, ref) {
   const [open, setOpen] = useState(false);
   const ids = useFieldIds();
+  // Radix would point aria-controls at its own popup id, but our explicit
+  // combobox role has to name the popup it controls in the markup itself.
+  const popupId = useId();
   const selected = options.find((o) => o.value === value);
   const groups: { name: string; items: RecordOption[] }[] = [];
   for (const option of options) {
@@ -62,6 +65,7 @@ export const RecordSelect = forwardRef<
           type="button"
           role="combobox"
           aria-expanded={open}
+          aria-controls={open ? popupId : undefined}
           aria-haspopup="listbox"
           id={ids.id}
           aria-invalid={ids.invalid || undefined}
@@ -74,18 +78,25 @@ export const RecordSelect = forwardRef<
             }
           }}
         >
-          <span className={selected ? styles.value : styles.placeholder}>{selected ? selected.label : placeholder}</span>
+          <span className={selected ? styles.value : styles.placeholder}>
+            {selected ? selected.label : placeholder}
+          </span>
           <ChevronDown size={16} aria-hidden className={styles.chevron} />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className={styles.content} align="start" sideOffset={6}>
+        <Popover.Content id={popupId} className={styles.content} align="start" sideOffset={6}>
           <Command label={placeholder}>
             <Command.Input className={styles.search} placeholder={searchPlaceholder} />
             <Command.List className={styles.list}>
               <Command.Empty className={styles.empty}>Nothing matches</Command.Empty>
               {noneLabel ? (
-                <Command.Item value="__none" keywords={[noneLabel]} onSelect={() => choose(null)} className={styles.item}>
+                <Command.Item
+                  value="__none"
+                  keywords={[noneLabel]}
+                  onSelect={() => choose(null)}
+                  className={styles.item}
+                >
                   <span className={styles.muted}>{noneLabel}</span>
                   {value === null ? <Check size={14} aria-hidden /> : null}
                 </Command.Item>

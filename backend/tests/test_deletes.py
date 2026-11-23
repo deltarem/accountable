@@ -67,7 +67,10 @@ def test_impact_counts_match_what_delete_does(api, client):
     org_impact = api.get(f"/api/organizations/{org['id']}/delete-impact")
     before_unlinked = count(contacts, contacts.c.organization_id.is_(None))
     client.delete(f"/api/organizations/{org['id']}")
-    assert count(contacts, contacts.c.organization_id.is_(None)) - before_unlinked == org_impact["contacts"]
+    assert (
+        count(contacts, contacts.c.organization_id.is_(None)) - before_unlinked
+        == org_impact["contacts"]
+    )
     assert count(deals, deals.c.organization_id.is_(None)) == org_impact["deals"]
 
     c_impact = api.get(f"/api/contacts/{contacts_made[0]['id']}/delete-impact")

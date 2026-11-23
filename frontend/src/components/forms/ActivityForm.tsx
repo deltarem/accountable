@@ -1,5 +1,5 @@
 import { Mail, Phone, StickyNote } from 'lucide-react';
-import { useEffect } from "react";
+import { useEffect } from 'react';
 import { type UseFormReturn, useForm } from 'react-hook-form';
 
 import { useSaveActivity } from '../../api/hooks';
@@ -23,7 +23,7 @@ function TypeButtons({ form }: { form: UseFormReturn<ActivityFormValues> }) {
     <div className={styles.types} role="radiogroup" aria-label="Type">
       {TYPES.map(({ key, label, icon: Icon }) => (
         <label key={key} className={`${styles.type} ${current === key ? styles.on : ''}`}>
-          <input type="radio" value={key} className="visually-hidden" {...form.register("type")} />
+          <input type="radio" value={key} className="visually-hidden" {...form.register('type')} />
           <Icon size={15} aria-hidden />
           {label}
         </label>

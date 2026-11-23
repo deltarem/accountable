@@ -16,7 +16,9 @@ def name_maps(conn):
     deal_map = {r["id"]: dict(r) for r in deal_rows}
     contact_map = {
         r["id"]: dict(r)
-        for r in conn.execute(select(contacts.c.id, contacts.c.name, contacts.c.organization_id)).mappings()
+        for r in conn.execute(
+            select(contacts.c.id, contacts.c.name, contacts.c.organization_id)
+        ).mappings()
     }
     org_map = dict(conn.execute(select(organizations.c.id, organizations.c.name)).all())
     return deal_map, contact_map, org_map
@@ -79,7 +81,9 @@ def _contact_own_entries(conn, contact_ids) -> list[dict]:
 
 
 def _sorted(entries: list[dict]) -> list[dict]:
-    return sorted(entries, key=lambda e: (e["occurred_at"], e["kind"] == "activity", e["id"]), reverse=True)
+    return sorted(
+        entries, key=lambda e: (e["occurred_at"], e["kind"] == "activity", e["id"]), reverse=True
+    )
 
 
 def _with_source(entries, deal_map, contact_map, skip_deal=None, skip_contact=None):

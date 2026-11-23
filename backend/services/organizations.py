@@ -17,7 +17,9 @@ def _with_counts(conn, rows) -> list[dict]:
         ).all()
     )
     open_rows = conn.execute(
-        select(deals.c.organization_id, func.count(), func.coalesce(func.sum(deals.c.value_cents), 0))
+        select(
+            deals.c.organization_id, func.count(), func.coalesce(func.sum(deals.c.value_cents), 0)
+        )
         .where(deals.c.stage.in_(OPEN_STAGES))
         .group_by(deals.c.organization_id)
     ).all()
@@ -35,7 +37,11 @@ def _with_counts(conn, rows) -> list[dict]:
 
 def list_organizations() -> list[dict]:
     with db.reading() as conn:
-        rows = conn.execute(select(organizations).order_by(func.lower(organizations.c.name))).mappings().all()
+        rows = (
+            conn.execute(select(organizations).order_by(func.lower(organizations.c.name)))
+            .mappings()
+            .all()
+        )
         return _with_counts(conn, rows)
 
 
@@ -53,8 +59,9 @@ def get_organization(org_id: int) -> dict:
         org_deals = [
             dict(r)
             for r in conn.execute(
-                select(deals.c.id, deals.c.name, deals.c.stage, deals.c.value_cents)
-                .where(deals.c.organization_id == org_id)
+                select(deals.c.id, deals.c.name, deals.c.stage, deals.c.value_cents).where(
+                    deals.c.organization_id == org_id
+                )
             ).mappings()
         ]
         org["deals"] = sorted(org_deals, key=lambda d: (ORDER.index(d["stage"]), d["name"].lower()))
@@ -100,10 +107,14 @@ def delete_organization(org_id: int) -> None:
     with db.transaction() as conn:
         one(conn, organizations, org_id, "organization")
         conn.execute(
-            update(contacts).where(contacts.c.organization_id == org_id).values(organization_id=None, updated_at=at)
+            update(contacts)
+            .where(contacts.c.organization_id == org_id)
+            .values(organization_id=None, updated_at=at)
         )
         conn.execute(
-            update(deals).where(deals.c.organization_id == org_id).values(organization_id=None, updated_at=at)
+            update(deals)
+            .where(deals.c.organization_id == org_id)
+            .values(organization_id=None, updated_at=at)
         )
         conn.execute(delete(organizations).where(organizations.c.id == org_id))
 

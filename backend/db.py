@@ -163,18 +163,18 @@ def reading():
 
 
 __all__ = [
+    "ALL_TABLES",
     "Connection",
+    "activities",
+    "contacts",
+    "create_tables",
+    "db_path",
+    "deals",
+    "dispose_engines",
+    "events",
+    "get_engine",
     "metadata",
     "organizations",
-    "contacts",
-    "deals",
-    "activities",
-    "events",
-    "ALL_TABLES",
-    "get_engine",
-    "dispose_engines",
-    "create_tables",
-    "transaction",
     "reading",
-    "db_path",
+    "transaction",
 ]

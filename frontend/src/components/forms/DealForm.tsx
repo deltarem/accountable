@@ -1,7 +1,7 @@
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { useContacts, useOrganizations, useSaveDeal } from '../../api/hooks';
-import type { Deal, DealDetail } from '../../api/types';
+import type { Contact, Deal, DealDetail } from '../../api/types';
 import { formatMoneyInput } from '../../lib/format';
 import { parseMoney } from '../../lib/money';
 import { type DealFormValues, type DealPayload, dealResolver } from '../../lib/schemas';
@@ -12,6 +12,47 @@ import { DateInput, Field, FormActions, FormGrid, MoneyInput, PercentInput, Stag
 import { type RecordOption, RecordSelect } from '../RecordSelect';
 import { useSubmit } from './useSubmit';
 
+type DealDefaults = { stage?: string; organization_id?: number | null; contact_id?: number | null };
+
+/** The organization and contact the form starts with: the deal's, else the ones it was opened with. */
+function startingLinks(deal: Deal | undefined, defaults: DealDefaults | undefined) {
+  return {
+    organization_id: deal?.organization_id ?? defaults?.organization_id ?? null,
+    contact_id: deal?.contact_id ?? defaults?.contact_id ?? null,
+  };
+}
+
+function dealDefaults(deal: Deal | undefined, defaults: DealDefaults | undefined, today: string | undefined) {
+  const startStage = deal?.stage ?? defaults?.stage ?? 'new';
+  const info = stageInfo(startStage);
+  return {
+    ...startingLinks(deal, defaults),
+    name: deal?.name ?? '',
+    stage: startStage,
+    value_cents: deal ? formatMoneyInput(deal.value_cents) : '',
+    probability: String(deal?.probability ?? info.probability),
+    close_date: deal?.close_date ?? (info.open ? '' : (today ?? '')),
+  } satisfies DealFormValues;
+}
+
+/** UI-FORM-03: the chosen organization's contacts come first, grouped under its name. */
+function contactOptions(
+  contacts: Contact[],
+  organizationId: number | null,
+  orgName: string | undefined,
+): RecordOption[] {
+  const atOrganization = (c: Contact) => c.organization_id === organizationId;
+  const grouped = Boolean(organizationId && orgName);
+  return [...contacts]
+    .sort((a, b) => Number(atOrganization(b)) - Number(atOrganization(a)))
+    .map((c) => ({
+      value: c.id,
+      label: c.name,
+      hint: c.organization_name,
+      group: grouped ? (atOrganization(c) ? `At ${orgName}` : 'Other contacts') : undefined,
+    }));
+}
+
 export function DealForm({
   deal,
   defaults,
@@ -19,7 +60,7 @@ export function DealForm({
   onCancel,
 }: {
   deal?: Deal;
-  defaults?: { stage?: string; organization_id?: number | null; contact_id?: number | null };
+  defaults?: DealDefaults;
   onDone: (saved: DealDetail) => void;
   onCancel: () => void;
 }) {
@@ -27,36 +68,19 @@ export function DealForm({
   const contacts = useContacts();
   const { today } = useTodayValue();
   const save = useSaveDeal();
-  const startStage = deal?.stage ?? defaults?.stage ?? 'new';
   const form = useForm<DealFormValues>({
     resolver: dealResolver,
     mode: 'onTouched',
-    defaultValues: {
-      name: deal?.name ?? '',
-      organization_id: deal?.organization_id ?? defaults?.organization_id ?? null,
-      contact_id: deal?.contact_id ?? defaults?.contact_id ?? null,
-      stage: startStage,
-      value_cents: deal ? formatMoneyInput(deal.value_cents) : '',
-      probability: String(deal?.probability ?? stageInfo(startStage).probability),
-      close_date: deal?.close_date ?? (stageInfo(startStage).open ? '' : (today ?? '')),
-    },
+    defaultValues: dealDefaults(deal, defaults, today),
   });
-  const { register, handleSubmit, control, formState, setError, setValue, watch } = form;
+  const { register, handleSubmit, control, formState, setError, setValue } = form;
   const submit = useSubmit('deal', setError);
   const errors = formState.errors;
-  const organizationId = watch('organization_id');
+  const organizationId = useWatch({ control, name: 'organization_id' });
 
   const orgOptions: RecordOption[] = (organizations.data ?? []).map((o) => ({ value: o.id, label: o.name }));
   const orgName = organizations.data?.find((o) => o.id === organizationId)?.name;
-  // UI-FORM-03: the chosen organization's contacts come first.
-  const contactOptions: RecordOption[] = [...(contacts.data ?? [])]
-    .sort((a, b) => Number(b.organization_id === organizationId) - Number(a.organization_id === organizationId))
-    .map((c) => ({
-      value: c.id,
-      label: c.name,
-      hint: c.organization_name,
-      group: organizationId && orgName ? (c.organization_id === organizationId ? `At ${orgName}` : 'Other contacts') : undefined,
-    }));
+  const contactChoices = contactOptions(contacts.data ?? [], organizationId, orgName);
 
   const stageField = register('stage', {
     onChange: (event) => {
@@ -105,7 +129,7 @@ export function DealForm({
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
-                options={contactOptions}
+                options={contactChoices}
                 placeholder="No main contact"
                 searchPlaceholder="Search contacts"
                 noneLabel="No main contact"

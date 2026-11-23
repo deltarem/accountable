@@ -39,8 +39,8 @@ def test_change_is_none_without_last_month(api):
 def test_twelve_months_of_revenue_and_counts(api, data):
     d = api.get("/api/dashboard")
     months = d["months"]
-    assert [m["month"] for m in months][0] == "2025-12"
-    assert [m["month"] for m in months][-1] == "2026-11"
+    assert months[0]["month"] == "2025-12"
+    assert months[-1]["month"] == "2026-11"
     assert len(months) == 12
     by = {m["month"]: m for m in months}
     assert by["2026-11"]["won_cents"] == 500_000 and by["2026-11"]["won_count"] == 1
@@ -68,7 +68,12 @@ def test_funnel_from_stage_history(api, data):
 def test_pipeline_by_stage(api, data):
     rows = {r["stage"]: r for r in api.get("/api/dashboard")["pipeline_by_stage"]}
     assert [*rows] == ["new", "qualified", "proposal", "negotiation"]
-    assert rows["new"] == {"stage": "new", "count": 1, "value_cents": 1_000_000, "expected_cents": 100_000}
+    assert rows["new"] == {
+        "stage": "new",
+        "count": 1,
+        "value_cents": 1_000_000,
+        "expected_cents": 100_000,
+    }
     assert rows["proposal"]["expected_cents"] == 16_667
     assert rows["qualified"]["count"] == 0 and rows["qualified"]["value_cents"] == 0
 
@@ -89,7 +94,12 @@ def test_follow_up_counts_and_list(api):
     listed = [(f["description"], f["group"]) for f in dash["follow_ups"]]
     assert listed == [("Overdue", "overdue"), ("Today", "today"), ("In a week", "week")]
     today = dash["follow_ups"][1]
-    assert today["record"] == {"kind": "deal", "id": d, "name": "Deal", "organization_name": "Acme Ltd"}
+    assert today["record"] == {
+        "kind": "deal",
+        "id": d,
+        "name": "Deal",
+        "organization_name": "Acme Ltd",
+    }
 
 
 def test_recent_activity_ten_newest_nothing_future(api):

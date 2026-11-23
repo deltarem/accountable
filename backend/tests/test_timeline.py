@@ -9,7 +9,12 @@ def test_deal_timeline_merges_activities_and_stage_changes_newest_first(api, mon
     api.activity("Latest", deal_id=d["id"], occurred_at="2026-11-23T15:00:00")
     api.activity("Middle", deal_id=d["id"], occurred_at="2026-11-10T09:00:00")
     tl = api.get(f"/api/deals/{d['id']}")["timeline"]
-    assert [e["description"] or e["kind"] for e in tl] == ["Latest", "stage_change", "Middle", "Old call"]
+    assert [e["description"] or e["kind"] for e in tl] == [
+        "Latest",
+        "stage_change",
+        "Middle",
+        "Old call",
+    ]
     assert all(e["source"] is None for e in tl)
 
 

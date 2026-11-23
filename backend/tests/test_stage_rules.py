@@ -6,7 +6,11 @@ def events_of(api, deal_id):
 
 
 def status_events(api, contact_id):
-    return [e for e in api.get(f"/api/contacts/{contact_id}")["timeline"] if e["kind"] == "status_change"]
+    return [
+        e
+        for e in api.get(f"/api/contacts/{contact_id}")["timeline"]
+        if e["kind"] == "status_change"
+    ]
 
 
 @pytest.fixture(params=["put", "move"])
@@ -26,7 +30,10 @@ def test_every_stage_change_writes_one_event(api, change):
     d = change(d, "qualified")
     d = change(d, "proposal")
     evs = events_of(api, d["id"])
-    assert [(e["from_value"], e["to_value"]) for e in evs] == [("qualified", "proposal"), ("new", "qualified")]
+    assert [(e["from_value"], e["to_value"]) for e in evs] == [
+        ("qualified", "proposal"),
+        ("new", "qualified"),
+    ]
 
 
 def test_no_event_without_a_change(api, change):

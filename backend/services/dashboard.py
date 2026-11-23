@@ -1,6 +1,7 @@
 """Everything GET /api/dashboard returns, worked out when asked for (API-15)."""
 
 from datetime import date, timedelta
+from typing import TypedDict
 
 from sqlalchemy import select
 
@@ -8,9 +9,17 @@ from backend import clock, db
 from backend.db import activities, deals, events
 from backend.money import round_half_up_div, total_expected_cents
 from backend.services.stages import OPEN_STAGES, STAGES
-from backend.services.timeline import name_maps, all_entries, record_ref, activity_entry
+from backend.services.timeline import activity_entry, all_entries, name_maps, record_ref
 
 FUNNEL_STAGES = [*OPEN_STAGES, "won"]
+
+
+class Month(TypedDict):
+    month: str
+    won_cents: int
+    won_count: int
+    lost_cents: int
+    lost_count: int
 
 
 def month_start(d: date) -> date:
@@ -88,11 +97,13 @@ def get_dashboard() -> dict:
     open_deals = [d for d in all_deals if STAGES[d["stage"]].open]
 
     # Revenue won and won/lost counts per month, the last 12 months including this one.
-    months = []
+    months: list[Month] = []
     for i in range(12):
         start = add_months(window_start, i)
         end = add_months(start, 1)
-        in_month = [d for d in all_deals if d["close_date"] is not None and start <= d["close_date"] < end]
+        in_month = [
+            d for d in all_deals if d["close_date"] is not None and start <= d["close_date"] < end
+        ]
         won = [d for d in in_month if d["stage"] == "won"]
         lost = [d for d in in_month if d["stage"] == "lost"]
         months.append(
@@ -112,7 +123,9 @@ def get_dashboard() -> dict:
     due = [
         a
         for a in acts
-        if a["follow_up_date"] is not None and not a["follow_up_done"] and a["follow_up_date"] <= week_end
+        if a["follow_up_date"] is not None
+        and not a["follow_up_done"]
+        and a["follow_up_date"] <= week_end
     ]
     due.sort(key=lambda a: (a["follow_up_date"], a["occurred_at"], a["id"]))
     follow_ups = []

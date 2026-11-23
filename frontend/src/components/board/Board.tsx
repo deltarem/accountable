@@ -17,7 +17,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { Deal } from '../../api/types';
 import { type Columns, findColumn, toColumns } from '../../lib/board';
@@ -60,12 +60,6 @@ export function Board({
   const byId = useMemo(() => new Map(deals.map((d) => [d.id, d])), [deals]);
   const serverColumns = useMemo(() => toColumns(deals), [deals]);
   const columns = dragColumns ?? serverColumns;
-
-  // After a drop, keep the dropped order until the deals list catches up
-  // (the optimistic update, or the rollback when the server refuses).
-  useEffect(() => {
-    if (activeId === null) setDragColumns(null);
-  }, [deals, activeId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -116,15 +110,11 @@ export function Board({
       }
     }
     setActiveId(null);
-    if (!over || !stage) {
-      setDragColumns(null);
-      setOrigin(null);
-      return;
-    }
-    setDragColumns(final);
+    setDragColumns(null);
+    setOrigin(null);
+    if (!over || !stage) return;
     const index = final[stage].indexOf(id);
     if (!origin || origin.stage !== stage || origin.index !== index) onMove(id, stage, index);
-    setOrigin(null);
   };
 
   const onDragCancel = () => {
@@ -146,7 +136,8 @@ export function Board({
       accessibility={{
         announcements: ANNOUNCE,
         screenReaderInstructions: {
-          draggable: 'To move a deal, press Space. Use the arrow keys to move it, then Space to drop it. Press Enter to open it.',
+          draggable:
+            'To move a deal, press Space. Use the arrow keys to move it, then Space to drop it. Press Enter to open it.',
         },
       }}
     >

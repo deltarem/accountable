@@ -74,8 +74,11 @@ export function SortableDealCard({
     // Where the card would land: a gap the size of the card, tinted in the column's stage colour.
     ...(isDragging ? { background: stage.badgeTint, boxShadow: `inset 0 0 0 2px ${stage.fill}` } : {}),
   };
+  // dnd-kit's attributes already make the card a focusable button; the role
+  // and tabIndex are repeated so they are visible in the markup, and a div is
+  // used because an article cannot take an interactive role.
   return (
-    <article
+    <div
       ref={setNodeRef}
       style={style}
       className={`${styles.card} ${isDragging ? styles.placeholder : ''}`}
@@ -83,6 +86,8 @@ export function SortableDealCard({
       data-deal-id={deal.id}
       {...attributes}
       {...listeners}
+      role="button"
+      tabIndex={0}
       aria-roledescription="deal card"
       aria-label={`${deal.name}, ${formatMoney(deal.value_cents)}`}
       onClick={() => {
@@ -94,7 +99,7 @@ export function SortableDealCard({
       }}
     >
       <CardBody deal={deal} today={today} />
-    </article>
+    </div>
   );
 }
 

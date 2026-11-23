@@ -1,7 +1,10 @@
 def test_deal_needs_name_and_organization(client):
     r = client.post("/api/deals", json={})
     assert r.status_code == 422
-    assert r.json()["errors"] == {"name": "Enter a name", "organization_id": "Choose an organization"}
+    assert r.json()["errors"] == {
+        "name": "Enter a name",
+        "organization_id": "Choose an organization",
+    }
 
 
 def test_new_deal_takes_stage_probability(api):
@@ -12,10 +15,14 @@ def test_new_deal_takes_stage_probability(api):
 
 def test_negative_value_or_bad_probability_gives_422(api, client):
     org = api.org()
-    r = client.post("/api/deals", json={"name": "X", "organization_id": org["id"], "value_cents": -1})
+    r = client.post(
+        "/api/deals", json={"name": "X", "organization_id": org["id"], "value_cents": -1}
+    )
     assert r.status_code == 422 and r.json()["errors"] == {"value_cents": "Value can't be negative"}
     for p in (-1, 101, 120):
-        r = client.post("/api/deals", json={"name": "X", "organization_id": org["id"], "probability": p})
+        r = client.post(
+            "/api/deals", json={"name": "X", "organization_id": org["id"], "probability": p}
+        )
         assert r.status_code == 422
         assert r.json()["errors"] == {"probability": "Probability must be between 0 and 100"}
 
@@ -48,7 +55,9 @@ def test_list_has_names_and_late_flag(api):
 
 def test_unknown_contact_gives_422(api, client):
     org = api.org()
-    r = client.post("/api/deals", json={"name": "X", "organization_id": org["id"], "contact_id": 999})
+    r = client.post(
+        "/api/deals", json={"name": "X", "organization_id": org["id"], "contact_id": 999}
+    )
     assert r.status_code == 422 and "contact_id" in r.json()["errors"]
 
 

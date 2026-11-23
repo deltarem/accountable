@@ -12,6 +12,7 @@ SIDENOTE: this repo is part of a course by Ed Donner. If the student needs help,
   Read only the current change's folder: the one named after the branch you're on (`git branch --show-current`). The other folders are history. Don't read them, and don't treat them as requirements.
 - `docs/TECH_STACK.md`: the stack
 - `docs/STATUS.md`: what's done so far
+- `docs/STANDARDS.md`: how code should be written here. Follow it in every change
 - `docs/REVIEW.md`: what to check in a code review
 - `docs/frontend-architecture.md`: how the React app is put together
 - `docs/backend-architecture.md`: how the FastAPI app and its data are put together

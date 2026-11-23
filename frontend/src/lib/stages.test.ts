@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { STAGES, expectedRevenue, isLate, isOpen, stage, totals } from './stages';
+import { OPEN_STAGE_KEYS, STAGES, STAGE_KEYS, expectedRevenue, isLate, isOpen, stage, status, totals } from './stages';
 
 test('usual probabilities', () => {
   expect(Object.fromEntries(STAGES.map((s) => [s.key, s.probability]))).toEqual({
@@ -60,5 +60,27 @@ describe('expected revenue', () => {
       { stage: 'lost', value_cents: 5_000, probability: 0 },
     ]);
     expect(t).toEqual({ count: 2, valueCents: 1_033_333, expectedCents: 116_667 });
+  });
+});
+
+test('stage keys in board order, and the open ones', () => {
+  expect(STAGE_KEYS).toEqual(['new', 'qualified', 'proposal', 'negotiation', 'won', 'lost']);
+  expect(OPEN_STAGE_KEYS).toEqual(['new', 'qualified', 'proposal', 'negotiation']);
+});
+
+test('an unknown stage falls back to New rather than breaking the screen', () => {
+  expect(stage('archived').key).toBe('new');
+  expect(isOpen('archived')).toBe(true);
+});
+
+describe('contact statuses', () => {
+  test('each status has its name and badge colours', () => {
+    expect(status('lead')).toEqual({ key: 'lead', name: 'Lead', text: '#0D6E8F', tint: '#E7F3F7' });
+    expect(status('qualified').name).toBe('Qualified');
+    expect(status('customer').name).toBe('Customer');
+  });
+
+  test('an unknown status falls back to Lead', () => {
+    expect(status('vip').key).toBe('lead');
   });
 });

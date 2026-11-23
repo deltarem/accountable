@@ -51,7 +51,9 @@ async def on_validation_error(_request: Request, exc: RequestValidationError):
 
 @app.exception_handler(ValidationFailed)
 async def on_rule_error(_request: Request, exc: ValidationFailed):
-    return JSONResponse(status_code=422, content={"detail": "Check the highlighted fields", "errors": exc.errors})
+    return JSONResponse(
+        status_code=422, content={"detail": "Check the highlighted fields", "errors": exc.errors}
+    )
 
 
 @app.exception_handler(NotFound)

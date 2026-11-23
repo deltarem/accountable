@@ -68,7 +68,10 @@ function TimelineEntry({ entry }: { entry: Entry }) {
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content className={styles.menu} align="end" sideOffset={4}>
-                  <DropdownMenu.Item className={styles.menuItem} onSelect={() => openForm({ kind: 'activity', record: entry })}>
+                  <DropdownMenu.Item
+                    className={styles.menuItem}
+                    onSelect={() => openForm({ kind: 'activity', record: entry })}
+                  >
                     <Pencil size={14} aria-hidden /> Edit
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
@@ -99,7 +102,12 @@ function TimelineEntry({ entry }: { entry: Entry }) {
             {!entry.follow_up_done && today && entry.follow_up_date < today ? (
               <span className={styles.overdue}>{formatRelative(entry.follow_up_date, today)}</span>
             ) : null}
-            <FollowUpCheckbox activityId={entry.id} done={entry.follow_up_done} label="Done" description={entry.description ?? ''} />
+            <FollowUpCheckbox
+              activityId={entry.id}
+              done={entry.follow_up_done}
+              label="Done"
+              description={entry.description ?? ''}
+            />
           </div>
         ) : null}
       </div>

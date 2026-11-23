@@ -38,11 +38,15 @@ def get_contact(contact_id: int) -> dict:
                     deals.c.value_cents,
                     organizations.c.name.label("organization_name"),
                 )
-                .select_from(deals.outerjoin(organizations, deals.c.organization_id == organizations.c.id))
+                .select_from(
+                    deals.outerjoin(organizations, deals.c.organization_id == organizations.c.id)
+                )
                 .where(deals.c.contact_id == contact_id)
             ).mappings()
         ]
-        contact["deals"] = sorted(contact_deals, key=lambda d: (ORDER.index(d["stage"]), d["name"].lower()))
+        contact["deals"] = sorted(
+            contact_deals, key=lambda d: (ORDER.index(d["stage"]), d["name"].lower())
+        )
         contact["timeline"] = contact_timeline(conn, contact_id)
         return contact
 
@@ -70,7 +74,9 @@ def update_contact(contact_id: int, data: ContactIn) -> dict:
         _check_links(conn, data)
         values = data.model_dump()
         new_status = values.pop("status")
-        conn.execute(update(contacts).where(contacts.c.id == contact_id).values(**values, updated_at=at))
+        conn.execute(
+            update(contacts).where(contacts.c.id == contact_id).values(**values, updated_at=at)
+        )
         if new_status != current["status"]:
             write_status_change(conn, current, new_status, at)
     return get_contact(contact_id)
@@ -80,7 +86,9 @@ def delete_impact(contact_id: int) -> dict:
     with db.reading() as conn:
         contact = one(conn, contacts, contact_id, "contact")
         n_acts = conn.execute(
-            select(func.count()).select_from(activities).where(activities.c.contact_id == contact_id)
+            select(func.count())
+            .select_from(activities)
+            .where(activities.c.contact_id == contact_id)
         ).scalar_one()
         n_deals = conn.execute(
             select(func.count()).select_from(deals).where(deals.c.contact_id == contact_id)
@@ -95,5 +103,9 @@ def delete_contact(contact_id: int) -> None:
         one(conn, contacts, contact_id, "contact")
         conn.execute(delete(activities).where(activities.c.contact_id == contact_id))
         conn.execute(delete(events).where(events.c.contact_id == contact_id))
-        conn.execute(update(deals).where(deals.c.contact_id == contact_id).values(contact_id=None, updated_at=at))
+        conn.execute(
+            update(deals)
+            .where(deals.c.contact_id == contact_id)
+            .values(contact_id=None, updated_at=at)
+        )
         conn.execute(delete(contacts).where(contacts.c.id == contact_id))

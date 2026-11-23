@@ -25,7 +25,13 @@ export function Panel({
     <Tag className={classes} aria-labelledby={labelledBy}>
       {title || note ? (
         <div className={styles.head}>
-          {title ? <h2 className={styles.title} id={labelledBy}>{title}</h2> : <span />}
+          {title ? (
+            <h2 className={styles.title} id={labelledBy}>
+              {title}
+            </h2>
+          ) : (
+            <span />
+          )}
           {note ? <div className={styles.note}>{note}</div> : null}
         </div>
       ) : null}

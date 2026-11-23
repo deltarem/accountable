@@ -1,8 +1,10 @@
 import { ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router';
 
+import { ApiError } from '../api/client';
 import { buttonClass } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
+import { LoadError } from '../components/LoadError';
 import { Panel } from '../components/Panel';
 import styles from './recordShared.module.css';
 
@@ -30,5 +32,33 @@ export function MissingRecord({ what, to }: { what: string; to: string }) {
         }
       />
     </Panel>
+  );
+}
+
+/** A record page whose record failed to load: "doesn't exist" for a 404, otherwise an error with a retry. */
+export function RecordLoadFailure({
+  what,
+  listPath,
+  listLabel,
+  error,
+  onRetry,
+}: {
+  what: string;
+  listPath: string;
+  listLabel: string;
+  error: unknown;
+  onRetry: () => void;
+}) {
+  return (
+    <>
+      <BackLink to={listPath} label={listLabel} />
+      {error instanceof ApiError && error.status === 404 ? (
+        <MissingRecord what={what} to={listPath} />
+      ) : (
+        <Panel>
+          <LoadError what={what} onRetry={onRetry} />
+        </Panel>
+      )}
+    </>
   );
 }

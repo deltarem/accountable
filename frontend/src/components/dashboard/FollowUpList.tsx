@@ -16,7 +16,8 @@ const GROUPS = [
 export function RecordName({ record }: { record: RecordRef | null }) {
   if (!record) return null;
   const to = record.kind === 'deal' ? `/deals/${record.id}` : `/contacts/${record.id}`;
-  const text = record.kind === 'deal' && record.organization_name ? `${record.organization_name} · ${record.name}` : record.name;
+  const text =
+    record.kind === 'deal' && record.organization_name ? `${record.organization_name} · ${record.name}` : record.name;
   return (
     <Link to={to} className={styles.where}>
       {text}
@@ -31,17 +32,26 @@ function FollowUpGroup({ title, items, today }: { title: string; items: FollowUp
       <h3 className={styles.group}>{title}</h3>
       <ul className={styles.list}>
         {items.map((f) => (
-          <li key={f.id} className={`${styles.row} ${f.group === 'overdue' ? styles.over : ''}`} data-testid="follow-up">
-            <FollowUpCheckbox activityId={f.id} done={false} label="Mark done" description={f.description ?? ''} hideLabel />
+          <li
+            key={f.id}
+            className={`${styles.row} ${f.group === 'overdue' ? styles.over : ''}`}
+            data-testid="follow-up"
+          >
+            <FollowUpCheckbox
+              activityId={f.id}
+              done={false}
+              label="Mark done"
+              description={f.description ?? ''}
+              hideLabel
+            />
             <div className={styles.main}>
               <div className={styles.what}>{f.description}</div>
               <RecordName record={f.record} />
             </div>
             <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <span className={styles.when} tabIndex={0}>
-                  {formatRelative(f.follow_up_date ?? today, today)}
-                </span>
+              {/* A button so keyboard users can focus it to read the full date. */}
+              <Tooltip.Trigger className={styles.when}>
+                {formatRelative(f.follow_up_date ?? today, today)}
               </Tooltip.Trigger>
               <Tooltip.Portal>
                 <Tooltip.Content className={styles.tip} sideOffset={6}>

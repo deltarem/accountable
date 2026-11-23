@@ -9,6 +9,18 @@ import { Field, FormActions, FormGrid, SelectInput, TextInput } from '../fields'
 import { RecordSelect } from '../RecordSelect';
 import { useSubmit } from './useSubmit';
 
+/** The contact's own values when editing; blanks, or the given organization, for a new one. */
+function contactDefaults(contact: Contact | undefined, organizationId: number | null | undefined): ContactFormValues {
+  return {
+    name: contact?.name ?? '',
+    email: contact?.email ?? '',
+    phone: contact?.phone ?? '',
+    job_title: contact?.job_title ?? '',
+    organization_id: contact?.organization_id ?? organizationId ?? null,
+    status: contact?.status ?? 'lead',
+  };
+}
+
 export function ContactForm({
   contact,
   defaults,
@@ -25,14 +37,7 @@ export function ContactForm({
   const form = useForm<ContactFormValues>({
     resolver: contactResolver,
     mode: 'onTouched',
-    defaultValues: {
-      name: contact?.name ?? '',
-      email: contact?.email ?? '',
-      phone: contact?.phone ?? '',
-      job_title: contact?.job_title ?? '',
-      organization_id: contact?.organization_id ?? defaults?.organization_id ?? null,
-      status: contact?.status ?? 'lead',
-    },
+    defaultValues: contactDefaults(contact, defaults?.organization_id),
   });
   const { register, handleSubmit, control, formState, setError } = form;
   const submit = useSubmit('contact', setError);

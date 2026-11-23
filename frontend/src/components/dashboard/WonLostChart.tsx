@@ -30,7 +30,15 @@ function WonLostTooltip({ active, payload }: { active?: boolean; payload?: { pay
 }
 
 /** UI-DASH-05: deals won above the centre line, deals lost below it. */
-export function WonLostChart({ months, wonCount, lostCount }: { months: MonthFigures[]; wonCount: number; lostCount: number }) {
+export function WonLostChart({
+  months,
+  wonCount,
+  lostCount,
+}: {
+  months: MonthFigures[];
+  wonCount: number;
+  lostCount: number;
+}) {
   const rows: Row[] = months.map((m) => ({ ...m, won: m.won_count, lost: -m.lost_count }));
   const top = Math.max(1, ...months.map((m) => m.won_count));
   const bottom = Math.max(1, ...months.map((m) => m.lost_count));
@@ -42,7 +50,13 @@ export function WonLostChart({ months, wonCount, lostCount }: { months: MonthFig
         <span className={styles.lostLabel}>{lostCount} lost</span>
       </div>
       <ResponsiveContainer width="100%" height={200} initialDimension={{ width: 320, height: 200 }}>
-        <BarChart data={rows} stackOffset="sign" margin={{ top: 8, right: 4, bottom: 0, left: 52 }} barCategoryGap="30%" accessibilityLayer>
+        <BarChart
+          data={rows}
+          stackOffset="sign"
+          margin={{ top: 8, right: 4, bottom: 0, left: 52 }}
+          barCategoryGap="30%"
+          accessibilityLayer
+        >
           <XAxis
             dataKey="month"
             tickFormatter={formatMonthShort}
@@ -54,8 +68,24 @@ export function WonLostChart({ months, wonCount, lostCount }: { months: MonthFig
           <YAxis hide domain={[-bottom * 1.6, top * 1.15]} />
           <ReferenceLine y={0} stroke="#CDD8DB" />
           <Tooltip content={<WonLostTooltip />} cursor={{ fill: 'rgba(7, 59, 76, 0.05)' }} />
-          <Bar dataKey="won" name="Won" stackId="a" fill={SEA} radius={[4, 4, 0, 0]} maxBarSize={14} isAnimationActive={false} />
-          <Bar dataKey="lost" name="Lost" stackId="a" fill={LOST} radius={[4, 4, 0, 0]} maxBarSize={14} isAnimationActive={false} />
+          <Bar
+            dataKey="won"
+            name="Won"
+            stackId="a"
+            fill={SEA}
+            radius={[4, 4, 0, 0]}
+            maxBarSize={14}
+            isAnimationActive={false}
+          />
+          <Bar
+            dataKey="lost"
+            name="Lost"
+            stackId="a"
+            fill={LOST}
+            radius={[4, 4, 0, 0]}
+            maxBarSize={14}
+            isAnimationActive={false}
+          />
         </BarChart>
       </ResponsiveContainer>
       {empty ? <p className={styles.emptyOverlay}>No deals won or lost in the last 12 months</p> : null}

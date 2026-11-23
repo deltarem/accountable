@@ -5,14 +5,16 @@ import sys
 import threading
 from collections import Counter
 from datetime import date, timedelta
+from itertools import pairwise
 
 import pytest
 from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 
 from backend import db
 from backend.db import activities, contacts, deals, events, organizations
 from backend.seed import seed_database
-from backend.services.stages import OPEN_STAGES, ORDER, STAGES
+from backend.services.stages import ORDER, STAGES
 
 TODAY = date(2026, 11, 23)
 
@@ -35,7 +37,14 @@ def test_counts_and_stage_split(seeded):
     assert Counter(c["status"] for c in all_contacts) == {"lead": 9, "qualified": 7, "customer": 9}
     assert sum(1 for c in all_contacts if c["organization_id"] is None) == 3
     stages = Counter(d["stage"] for d in rows(deals))
-    assert stages == {"new": 4, "qualified": 4, "proposal": 3, "negotiation": 3, "won": 13, "lost": 3}
+    assert stages == {
+        "new": 4,
+        "qualified": 4,
+        "proposal": 3,
+        "negotiation": 3,
+        "won": 13,
+        "lost": 3,
+    }
     values = [d["value_cents"] for d in rows(deals)]
     assert min(values) == 2_500_00 and max(values) == 180_000_00
     assert 55 <= len(rows(activities)) <= 70
@@ -67,14 +76,16 @@ def test_every_customer_has_a_won_deal(seeded):
 def test_events_end_at_current_stage_and_positions_are_set(seeded):
     evs = rows(events)
     for d in rows(deals):
-        own = sorted((e for e in evs if e["deal_id"] == d["id"]), key=lambda e: (e["occurred_at"], e["id"]))
+        own = sorted(
+            (e for e in evs if e["deal_id"] == d["id"]), key=lambda e: (e["occurred_at"], e["id"])
+        )
         if d["stage"] == "new":
             assert own == []
             continue
         assert own, d["name"]
         assert own[0]["from_value"] == "new"
         assert own[-1]["to_value"] == d["stage"]
-        for a, b in zip(own, own[1:]):
+        for a, b in pairwise(own):
             assert a["to_value"] == b["from_value"]
     for stage in ORDER:
         pos = sorted(d["position"] for d in rows(deals) if d["stage"] == stage)
@@ -93,7 +104,11 @@ def test_follow_up_mix(seeded):
 
 
 def test_two_hand_set_probabilities(seeded):
-    differ = [d for d in rows(deals) if STAGES[d["stage"]].open and d["probability"] != STAGES[d["stage"]].probability]
+    differ = [
+        d
+        for d in rows(deals)
+        if STAGES[d["stage"]].open and d["probability"] != STAGES[d["stage"]].probability
+    ]
     assert len(differ) == 2
 
 
@@ -103,7 +118,13 @@ def test_figures_match_the_mockup(seeded, client):
     assert d["open_deal_count"] == 14
     assert d["won_total_cents"] == 668_000_00
     assert d["overdue_count"] == 4
-    assert [f["value_cents"] for f in d["funnel"]] == [1_948_000_00, 1_828_000_00, 1_483_000_00, 1_083_000_00, 668_000_00]
+    assert [f["value_cents"] for f in d["funnel"]] == [
+        1_948_000_00,
+        1_828_000_00,
+        1_483_000_00,
+        1_083_000_00,
+        668_000_00,
+    ]
 
 
 def test_seeding_twice_gives_the_same_data(seeded):
@@ -125,7 +146,9 @@ def test_command_line_resets(fresh_db):
     db.dispose_engines()
     subprocess.run([sys.executable, "-m", "backend.seed"], check=True, capture_output=True)
     assert len(rows(organizations)) == 10
-    subprocess.run([sys.executable, "-m", "backend.seed", "--empty"], check=True, capture_output=True)
+    subprocess.run(
+        [sys.executable, "-m", "backend.seed", "--empty"], check=True, capture_output=True
+    )
     assert rows(organizations) == []
 
 
@@ -138,7 +161,7 @@ def test_seeding_while_another_connection_reads(seeded):
             while not stop.is_set():
                 with db.reading() as conn:
                     conn.execute(select(func.count()).select_from(deals)).scalar_one()
-        except Exception as exc:  # pragma: no cover - reported below
+        except SQLAlchemyError as exc:  # pragma: no cover - reported below
             errors.append(exc)
 
     thread = threading.Thread(target=reader)

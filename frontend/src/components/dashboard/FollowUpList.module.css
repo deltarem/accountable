@@ -53,6 +53,11 @@ section:first-child > .group {
   color: var(--muted);
   white-space: nowrap;
   border-radius: 6px;
+  /* Looks like plain text: the button only exists to show the tooltip. */
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: default;
 }
 
 .over .when {

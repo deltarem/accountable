@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { useSetDone } from '../../api/hooks';
 import { useToast } from '../Toaster';
@@ -23,9 +23,14 @@ export function FollowUpCheckbox({
   const toast = useToast();
   // The box flips at once, in local state. Waiting for the mutation to report
   // "pending" left it unticked for a moment, because TanStack Query notifies
-  // on a later tick. It follows the server's value again whenever that changes.
+  // on a later tick. It follows the server's value again whenever that changes,
+  // adjusted during render so the stale value is never shown.
   const [checked, setChecked] = useState(done);
-  useEffect(() => setChecked(done), [done]);
+  const [serverDone, setServerDone] = useState(done);
+  if (done !== serverDone) {
+    setServerDone(done);
+    setChecked(done);
+  }
   return (
     <label className={styles.label}>
       <input

@@ -1,16 +1,14 @@
 import { Link, useNavigate, useParams } from 'react-router';
 
-import { ApiError } from '../api/client';
 import { useContact } from '../api/hooks';
 import { StageBadge, StatusBadge } from '../components/Badges';
 import { LogActivityForm } from '../components/forms/ActivityForm';
 import { useForms } from '../components/forms/FormsProvider';
-import { LoadError } from '../components/LoadError';
 import { Panel } from '../components/Panel';
 import { HeaderFact, LinkedList, RecordColumns, RecordHeader } from '../components/record/RecordParts';
 import { Timeline } from '../components/record/Timeline';
 import { formatMoney } from '../lib/format';
-import { BackLink, MissingRecord } from './recordShared';
+import { BackLink, RecordLoadFailure } from './recordShared';
 
 export function ContactPage() {
   const id = Number(useParams().id);
@@ -21,16 +19,13 @@ export function ContactPage() {
 
   if (query.isError) {
     return (
-      <>
-        <BackLink to="/contacts" label="Contacts" />
-        {query.error instanceof ApiError && query.error.status === 404 ? (
-          <MissingRecord what="contact" to="/contacts" />
-        ) : (
-          <Panel>
-            <LoadError what="contact" onRetry={() => query.refetch()} />
-          </Panel>
-        )}
-      </>
+      <RecordLoadFailure
+        what="contact"
+        listPath="/contacts"
+        listLabel="Contacts"
+        error={query.error}
+        onRetry={() => query.refetch()}
+      />
     );
   }
 

@@ -11,7 +11,9 @@
   line-height: 1.2;
   white-space: nowrap;
   text-decoration: none;
-  transition: background-color 120ms ease, opacity 120ms ease;
+  transition:
+    background-color 120ms ease,
+    opacity 120ms ease;
 }
 
 .button:hover {

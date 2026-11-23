@@ -50,7 +50,10 @@ def failing(monkeypatch):
 
 def snapshot():
     with db.reading() as conn:
-        return {t.name: [tuple(r) for r in conn.execute(select(t).order_by(t.c.id))] for t in db.ALL_TABLES}
+        return {
+            t.name: [tuple(r) for r in conn.execute(select(t).order_by(t.c.id))]
+            for t in db.ALL_TABLES
+        }
 
 
 def test_failed_contact_delete_changes_nothing(api, failing):

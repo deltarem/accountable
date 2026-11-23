@@ -16,7 +16,12 @@ import { OrganizationForm } from './OrganizationForm';
 
 type FormRequest =
   | { kind: 'organization'; record?: Organization; onSaved?: (id: number) => void }
-  | { kind: 'contact'; record?: Contact; defaults?: { organization_id?: number | null }; onSaved?: (id: number) => void }
+  | {
+      kind: 'contact';
+      record?: Contact;
+      defaults?: { organization_id?: number | null };
+      onSaved?: (id: number) => void;
+    }
   | {
       kind: 'deal';
       record?: Deal;
@@ -69,7 +74,11 @@ export function FormsProvider({ children }: { children: ReactNode }) {
     async (request: DeleteRequest) => {
       setDeleteKind(request.kind);
       if (request.kind === 'activities') {
-        setPending({ request, title: activityDeleteTitle(request.activity.type ?? 'note'), body: ACTIVITY_DELETE_BODY });
+        setPending({
+          request,
+          title: activityDeleteTitle(request.activity.type ?? 'note'),
+          body: ACTIVITY_DELETE_BODY,
+        });
         setDeleteOpen(true);
         return;
       }
@@ -114,9 +123,18 @@ export function FormsProvider({ children }: { children: ReactNode }) {
     if (form.kind === 'organization') {
       body = <OrganizationForm organization={form.record} onDone={(saved) => done(saved.id)} onCancel={close} />;
     } else if (form.kind === 'contact') {
-      body = <ContactForm contact={form.record} defaults={form.defaults} onDone={(saved) => done(saved.id)} onCancel={close} />;
+      body = (
+        <ContactForm
+          contact={form.record}
+          defaults={form.defaults}
+          onDone={(saved) => done(saved.id)}
+          onCancel={close}
+        />
+      );
     } else if (form.kind === 'deal') {
-      body = <DealForm deal={form.record} defaults={form.defaults} onDone={(saved) => done(saved.id)} onCancel={close} />;
+      body = (
+        <DealForm deal={form.record} defaults={form.defaults} onDone={(saved) => done(saved.id)} onCancel={close} />
+      );
     } else {
       body = <ActivityForm activity={form.record} onDone={() => done(form.record.id)} onCancel={close} />;
     }

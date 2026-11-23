@@ -12,8 +12,34 @@ dependencies = [
 dev = [
     "httpx>=0.28.1",
     "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.6",
+    "ty>=0.0.109",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# Ruff's default rules plus C901: at most 15 branches per function.
+extend-select = ["C901"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.coverage.run]
+source = ["backend"]
+omit = ["backend/tests/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+[tool.ty.src]
+include = ["backend"]

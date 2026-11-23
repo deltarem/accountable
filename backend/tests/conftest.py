@@ -46,7 +46,9 @@ class Api:
         body = {"name": name, "organization_id": organization_id, **kw}
         return self.ok(self.c.post("/api/deals", json=body), 201)
 
-    def activity(self, description="Called them", type="call", occurred_at="2026-11-20T10:00:00", **kw):
+    def activity(
+        self, description="Called them", type="call", occurred_at="2026-11-20T10:00:00", **kw
+    ):
         body = {"type": type, "description": description, "occurred_at": occurred_at, **kw}
         return self.ok(self.c.post("/api/activities", json=body), 201)
 
@@ -54,13 +56,23 @@ class Api:
         return self.ok(self.c.get(path))
 
     def put_deal(self, deal, **changes):
-        keys = ["name", "organization_id", "contact_id", "stage", "value_cents", "probability", "close_date"]
+        keys = [
+            "name",
+            "organization_id",
+            "contact_id",
+            "stage",
+            "value_cents",
+            "probability",
+            "close_date",
+        ]
         body = {k: deal[k] for k in keys}
         body.update(changes)
         return self.ok(self.c.put(f"/api/deals/{deal['id']}", json=body))
 
     def move(self, deal_id, stage, index=0):
-        return self.ok(self.c.post(f"/api/deals/{deal_id}/move", json={"stage": stage, "index": index}))
+        return self.ok(
+            self.c.post(f"/api/deals/{deal_id}/move", json={"stage": stage, "index": index})
+        )
 
 
 @pytest.fixture

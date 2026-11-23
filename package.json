@@ -14,9 +14,19 @@
     "test": "node scripts/test-all.mjs",
     "test:trace": "node scripts/check-trace.mjs",
     "test:scripts": "node --test \"scripts/*.test.mjs\"",
-    "test:backend": "uv run pytest -q",
+    "test:backend": "uv run pytest -q --cov --cov-report=term",
     "test:frontend": "npm run test --workspace frontend",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check": "node scripts/check.mjs",
+    "check:quick": "node scripts/check.mjs --quick",
+    "format": "npm run format --workspace frontend && uv run ruff format backend",
+    "check:format:frontend": "npm run format:check --workspace frontend",
+    "check:lint:frontend": "npm run lint --workspace frontend",
+    "check:types:frontend": "npm run typecheck --workspace frontend",
+    "check:format:backend": "uv run ruff format --check backend",
+    "check:lint:backend": "uv run ruff check backend",
+    "check:types:backend": "uv run ty check backend",
+    "check:secrets": "gitleaks git . --config .gitleaks.toml --redact --no-banner && gitleaks dir . --config .gitleaks.toml --redact --no-banner"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1"

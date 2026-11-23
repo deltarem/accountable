@@ -5,7 +5,17 @@ import { Link, useMatch } from 'react-router';
 import styles from './RailLink.module.css';
 
 /** An icon button with an accessible name and a tooltip on hover and focus. */
-export function RailLink({ to, label, icon: Icon, end }: { to: string; label: string; icon: LucideIcon; end: boolean }) {
+export function RailLink({
+  to,
+  label,
+  icon: Icon,
+  end,
+}: {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  end: boolean;
+}) {
   // Radix's Slot can't merge NavLink's className function, so work out "current" here.
   const active = useMatch({ path: to, end }) !== null;
   return (

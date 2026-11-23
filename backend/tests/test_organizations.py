@@ -31,7 +31,9 @@ def test_list_includes_counts_and_open_value(api):
 
 def test_edit(api, client):
     org = api.org()
-    r = client.put(f"/api/organizations/{org['id']}", json={"name": "Acme Group", "industry": "Software"})
+    r = client.put(
+        f"/api/organizations/{org['id']}", json={"name": "Acme Group", "industry": "Software"}
+    )
     assert r.status_code == 200
     assert api.get(f"/api/organizations/{org['id']}")["name"] == "Acme Group"
     assert api.get(f"/api/organizations/{org['id']}")["industry"] == "Software"

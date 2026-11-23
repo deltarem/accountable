@@ -12,7 +12,12 @@ def test_description_is_required(api, client):
     c = api.contact()
     r = client.post(
         "/api/activities",
-        json={"type": "note", "description": "  ", "occurred_at": "2026-11-20T10:00:00", "contact_id": c["id"]},
+        json={
+            "type": "note",
+            "description": "  ",
+            "occurred_at": "2026-11-20T10:00:00",
+            "contact_id": c["id"],
+        },
     )
     assert r.status_code == 422
     assert r.json()["errors"] == {"description": "Describe what happened"}
@@ -20,9 +25,14 @@ def test_description_is_required(api, client):
 
 def test_bad_type_and_missing_time(api, client):
     c = api.contact()
-    r = client.post("/api/activities", json={"type": "fax", "description": "x", "contact_id": c["id"]})
+    r = client.post(
+        "/api/activities", json={"type": "fax", "description": "x", "contact_id": c["id"]}
+    )
     assert r.status_code == 422
-    assert r.json()["errors"] == {"type": "Choose note, call or email", "occurred_at": "Enter when it happened"}
+    assert r.json()["errors"] == {
+        "type": "Choose note, call or email",
+        "occurred_at": "Enter when it happened",
+    }
 
 
 def test_edit_delete_and_mark_done(api, client):
@@ -53,6 +63,11 @@ def test_edit_delete_and_mark_done(api, client):
 def test_activity_on_missing_record_gives_422(client):
     r = client.post(
         "/api/activities",
-        json={"type": "call", "description": "x", "occurred_at": "2026-11-20T10:00:00", "deal_id": 77},
+        json={
+            "type": "call",
+            "description": "x",
+            "occurred_at": "2026-11-20T10:00:00",
+            "deal_id": 77,
+        },
     )
     assert r.status_code == 422 and "record" in r.json()["errors"]

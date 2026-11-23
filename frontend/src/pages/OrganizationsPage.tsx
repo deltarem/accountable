@@ -34,7 +34,12 @@ const columns: ColumnDef<Organization, unknown>[] = [
       ) : null,
   },
   { id: 'contacts', header: 'Contacts', accessorFn: (o) => o.contact_count, meta: { align: 'right', mono: true } },
-  { id: 'open_deals', header: 'Open deals', accessorFn: (o) => o.open_deal_count, meta: { align: 'right', mono: true } },
+  {
+    id: 'open_deals',
+    header: 'Open deals',
+    accessorFn: (o) => o.open_deal_count,
+    meta: { align: 'right', mono: true },
+  },
   {
     id: 'open_value',
     header: 'Open value',

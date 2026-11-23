@@ -6,7 +6,7 @@ checked against shared/validation-cases.json.
 
 import re
 from datetime import date, datetime
-from typing import Any
+from typing import Any, LiteralString
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
@@ -18,7 +18,7 @@ ACTIVITY_TYPES = ("note", "call", "email")
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://")
 
-MSG = {
+MSG: dict[str, LiteralString] = {
     "name": "Enter a name",
     "name_long": "Use 200 characters or fewer",
     "text_long": "Use 5.000 characters or fewer",
@@ -220,7 +220,8 @@ class DealIn(_In):
 
 
 class DealMove(_In):
-    stage: str | None = Field(default=None, validate_default=True)
+    # Required: a missing or empty stage fails in _stage with its own message.
+    stage: str = Field(default="", validate_default=True)
     index: int = 0
 
     @field_validator("stage", mode="before")

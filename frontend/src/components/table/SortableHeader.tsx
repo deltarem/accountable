@@ -5,7 +5,15 @@ import type { ReactNode } from 'react';
 import styles from './SortableHeader.module.css';
 
 /** UI-TBL-02: click to sort ascending, then descending. An arrow shows the current sort. */
-export function SortableHeader<T>({ column, children, align }: { column: Column<T, unknown>; children: ReactNode; align?: 'right' }) {
+export function SortableHeader<T>({
+  column,
+  children,
+  align,
+}: {
+  column: Column<T, unknown>;
+  children: ReactNode;
+  align?: 'right';
+}) {
   const sorted = column.getIsSorted();
   const Icon = sorted === 'asc' ? ArrowUp : sorted === 'desc' ? ArrowDown : ArrowUpDown;
   return (

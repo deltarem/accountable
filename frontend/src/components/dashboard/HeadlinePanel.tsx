@@ -37,8 +37,18 @@ function previousMonthName(months: Dashboard['months']) {
 }
 
 const MONTH_LONG: Record<string, string> = {
-  Jan: 'January', Feb: 'February', Mar: 'March', Apr: 'April', May: 'May', Jun: 'June',
-  Jul: 'July', Aug: 'August', Sep: 'September', Oct: 'October', Nov: 'November', Dec: 'December',
+  Jan: 'January',
+  Feb: 'February',
+  Mar: 'March',
+  Apr: 'April',
+  May: 'May',
+  Jun: 'June',
+  Jul: 'July',
+  Aug: 'August',
+  Sep: 'September',
+  Oct: 'October',
+  Nov: 'November',
+  Dec: 'December',
 };
 
 /** UI-DASH-01, UI-DASH-02: the Midnight panel with four figures and the revenue line. */

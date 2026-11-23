@@ -71,7 +71,11 @@ def column_ids(conn, stage: str, exclude: int | None = None) -> list[int]:
 
 def write_positions(conn, ids: list[int]) -> None:
     """Renumber a column 0 to n-1 in the given order (ARC-08)."""
-    current = dict(conn.execute(select(deals.c.id, deals.c.position).where(deals.c.id.in_(ids))).all()) if ids else {}
+    current = (
+        dict(conn.execute(select(deals.c.id, deals.c.position).where(deals.c.id.in_(ids))).all())
+        if ids
+        else {}
+    )
     for position, deal_id in enumerate(ids):
         if current.get(deal_id) != position:
             conn.execute(update(deals).where(deals.c.id == deal_id).values(position=position))
@@ -120,7 +124,9 @@ def update_deal(deal_id: int, data: DealIn) -> dict:
             plain["close_date"] = close_date
             conn.execute(update(deals).where(deals.c.id == deal_id).values(**plain))
         else:
-            chosen_probability = None if probability in (None, current["probability"]) else probability
+            chosen_probability = (
+                None if probability in (None, current["probability"]) else probability
+            )
             if STAGES[new_stage].open:
                 # Reopening keeps whatever date the form sends (DEC-07).
                 plain["close_date"] = close_date

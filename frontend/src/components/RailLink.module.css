@@ -19,7 +19,9 @@
 }
 
 .link:focus-visible {
-  box-shadow: 0 0 0 2px var(--midnight), 0 0 0 4px var(--sea);
+  box-shadow:
+    0 0 0 2px var(--midnight),
+    0 0 0 4px var(--sea);
 }
 
 .tip {

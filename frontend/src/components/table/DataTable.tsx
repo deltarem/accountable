@@ -134,7 +134,10 @@ export function DataTable<T>({
         {row.getVisibleCells().map((cell) => {
           const meta = cell.column.columnDef.meta as ColumnMeta | undefined;
           return (
-            <td key={cell.id} className={[meta?.align === 'right' ? styles.right : '', meta?.mono ? 'mono' : ''].join(' ')}>
+            <td
+              key={cell.id}
+              className={[meta?.align === 'right' ? styles.right : '', meta?.mono ? 'mono' : ''].join(' ')}
+            >
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
             </td>
           );

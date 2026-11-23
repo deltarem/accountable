@@ -124,7 +124,16 @@ FOLLOW_UPS = [
     ("contact", "Sam Whitfield", "call", "Check in after go-live", 30, "11:30", -21, True),
     ("deal", "Store analytics", "call", "Confirm the purchase order", 12, "15:00", -6, True),
     ("contact", "Grace Liu", "email", "Send the onboarding guide", 40, "10:25", -33, True),
-    ("deal", "Clinic scheduling", "note", "Prepare the discovery questions", 18, "13:15", -10, True),
+    (
+        "deal",
+        "Clinic scheduling",
+        "note",
+        "Prepare the discovery questions",
+        18,
+        "13:15",
+        -10,
+        True,
+    ),
 ]
 
 # Activities without follow-ups: record kind, record name, type, description, days ago, time.
@@ -182,193 +191,206 @@ class _Clock:
         return self.at(self.today - timedelta(days=days), hhmm)
 
 
-def seed(conn, today: date, now: datetime) -> None:
-    rng = random.Random(2026)
-    when = _Clock(today, now)
-    start = when.ago(365, "09:00")
-
-    org_ids = {}
-    for i, (name, industry, notes) in enumerate(ORGANIZATIONS):
-        slug = name.split()[0].lower()
-        created = when.ago(400 - i * 7, "09:00")
-        org_ids[name] = conn.execute(
-            insert(organizations).values(
-                name=name,
-                website=f"https://{slug}.example",
-                industry=industry,
-                notes=notes,
-                created_at=created,
-                updated_at=created,
+def _add_stage_events(conn, deal_id: int, path: list[str], first: datetime, last: datetime) -> None:
+    steps = len(path) - 1
+    for n in range(steps):
+        if n == steps - 1:
+            at = last
+        else:
+            # Spread the earlier moves out, in working hours.
+            day = (first + (last - first) * (n + 1) / (steps + 1)).date()
+            at = min(
+                datetime.combine(day, time(9 + (deal_id + n) % 8, (deal_id * 7 + n * 13) % 60)),
+                last,
             )
-        ).inserted_primary_key[0]
-
-    contact_ids = {}
-    contact_status = {}
-    for i, (name, org, title, status) in enumerate(CONTACTS):
-        first, last = name.lower().split()
-        domain = f"{org.split()[0].lower()}.example" if org else "mail.example"
-        created = when.ago(380 - i * 9, "10:00")
-        contact_ids[name] = conn.execute(
-            insert(contacts).values(
-                name=name,
-                email=f"{first}.{last}@{domain}",
-                phone=f"+1 555 01{i:02d}",
-                job_title=title,
-                organization_id=org_ids.get(org) if org else None,
-                status=status,
-                created_at=created,
-                updated_at=created,
+        at = at.replace(second=0, microsecond=0)
+        conn.execute(
+            insert(events).values(
+                kind="stage_change",
+                deal_id=deal_id,
+                from_value=path[n],
+                to_value=path[n + 1],
+                occurred_at=at,
+                created_at=at,
+                updated_at=at,
             )
-        ).inserted_primary_key[0]
-        contact_status[name] = status
+        )
 
-    deal_ids = {}
-    positions = {k: 0 for k in STAGES}
 
-    def add_events(deal_id: int, path: list[str], first: datetime, last: datetime) -> None:
-        steps = len(path) - 1
-        for n in range(steps):
-            if n == steps - 1:
-                at = last
-            else:
-                # Spread the earlier moves out, in working hours.
-                day = (first + (last - first) * (n + 1) / (steps + 1)).date()
-                at = min(datetime.combine(day, time(9 + (deal_id + n) % 8, (deal_id * 7 + n * 13) % 60)), last)
-            at = at.replace(second=0, microsecond=0)
-            conn.execute(
-                insert(events).values(
-                    kind="stage_change",
-                    deal_id=deal_id,
-                    from_value=path[n],
-                    to_value=path[n + 1],
-                    occurred_at=at,
-                    created_at=at,
-                    updated_at=at,
+class _Seeder:
+    """Fills the tables in a fixed order, so the sample data is the same every time."""
+
+    def __init__(self, conn, today: date, now: datetime):
+        self.conn = conn
+        self.today = today
+        self.when = _Clock(today, now)
+        self.rng = random.Random(2026)
+        self.org_ids: dict[str, int] = {}
+        self.contact_ids: dict[str, int] = {}
+        self.deal_ids: dict[str, int] = {}
+        self.positions = {k: 0 for k in STAGES}
+        self.wins_by_contact: dict[str, datetime] = {}
+
+    def organizations(self) -> None:
+        for i, (name, industry, notes) in enumerate(ORGANIZATIONS):
+            slug = name.split()[0].lower()
+            created = self.when.ago(400 - i * 7, "09:00")
+            self.org_ids[name] = self.conn.execute(
+                insert(organizations).values(
+                    name=name,
+                    website=f"https://{slug}.example",
+                    industry=industry,
+                    notes=notes,
+                    created_at=created,
+                    updated_at=created,
                 )
-            )
+            ).inserted_primary_key[0]
 
-    for i, (name, org, contact, stage, dollars, close_in, manual) in enumerate(OPEN_DEALS):
-        created = when.ago(40 + i * 6, "09:30")
-        probability = manual if manual is not None else STAGES[stage].probability
-        deal_ids[name] = conn.execute(
+    def contacts(self) -> None:
+        for i, (name, org, title, status) in enumerate(CONTACTS):
+            first, last = name.lower().split()
+            domain = f"{org.split()[0].lower()}.example" if org else "mail.example"
+            created = self.when.ago(380 - i * 9, "10:00")
+            self.contact_ids[name] = self.conn.execute(
+                insert(contacts).values(
+                    name=name,
+                    email=f"{first}.{last}@{domain}",
+                    phone=f"+1 555 01{i:02d}",
+                    job_title=title,
+                    organization_id=self.org_ids.get(org) if org else None,
+                    status=status,
+                    created_at=created,
+                    updated_at=created,
+                )
+            ).inserted_primary_key[0]
+
+    def _insert_deal(
+        self, name, org, contact, stage, dollars, probability, close_date, created, updated
+    ) -> int:
+        self.deal_ids[name] = self.conn.execute(
             insert(deals).values(
                 name=name,
-                organization_id=org_ids[org],
-                contact_id=contact_ids.get(contact) if contact else None,
+                organization_id=self.org_ids[org],
+                contact_id=self.contact_ids.get(contact) if contact else None,
                 stage=stage,
                 value_cents=dollars * 100,
                 probability=probability,
-                close_date=today + timedelta(days=close_in),
-                position=positions[stage],
+                close_date=close_date,
+                position=self.positions[stage],
                 created_at=created,
-                updated_at=created,
+                updated_at=updated,
             )
         ).inserted_primary_key[0]
-        positions[stage] += 1
-        path = OPEN_STAGES[: OPEN_STAGES.index(stage) + 1]
-        if len(path) > 1:
-            last_move = when.ago(0, "10:12") if name == "Telehealth add-on" else when.ago(2 + i, "11:00")
-            add_events(deal_ids[name], path, created, last_move)
+        self.positions[stage] += 1
+        return self.deal_ids[name]
 
-    wins_by_contact: dict[str, datetime] = {}
-    for name, org, contact, stage, dollars, months, day, lost_from in CLOSED_DEALS:
-        closed_on = _month_date(today, months, day)
-        closed_at = when.at(closed_on, "11:05")
-        created = max(start, closed_at - timedelta(days=60))
-        deal_ids[name] = conn.execute(
-            insert(deals).values(
-                name=name,
-                organization_id=org_ids[org],
-                contact_id=contact_ids.get(contact) if contact else None,
-                stage=stage,
-                value_cents=dollars * 100,
-                probability=STAGES[stage].probability,
-                close_date=closed_on,
-                position=positions[stage],
-                created_at=created,
-                updated_at=closed_at,
+    def open_deals(self) -> None:
+        for i, (name, org, contact, stage, dollars, close_in, manual) in enumerate(OPEN_DEALS):
+            created = self.when.ago(40 + i * 6, "09:30")
+            probability = manual if manual is not None else STAGES[stage].probability
+            close_date = self.today + timedelta(days=close_in)
+            deal_id = self._insert_deal(
+                name, org, contact, stage, dollars, probability, close_date, created, created
             )
-        ).inserted_primary_key[0]
-        positions[stage] += 1
-        if stage == "won":
-            path = [*OPEN_STAGES, "won"]
-            if contact and (contact not in wins_by_contact or closed_at < wins_by_contact[contact]):
-                wins_by_contact[contact] = closed_at
-        else:
-            path = [*OPEN_STAGES[: OPEN_STAGES.index(lost_from) + 1], "lost"]
-        add_events(deal_ids[name], path, created, closed_at)
+            path = OPEN_STAGES[: OPEN_STAGES.index(stage) + 1]
+            if len(path) > 1:
+                if name == "Telehealth add-on":
+                    last_move = self.when.ago(0, "10:12")
+                else:
+                    last_move = self.when.ago(2 + i, "11:00")
+                _add_stage_events(self.conn, deal_id, path, created, last_move)
+
+    def closed_deals(self) -> None:
+        start = self.when.ago(365, "09:00")
+        for name, org, contact, stage, dollars, months, day, lost_from in CLOSED_DEALS:
+            closed_on = _month_date(self.today, months, day)
+            closed_at = self.when.at(closed_on, "11:05")
+            created = max(start, closed_at - timedelta(days=60))
+            probability = STAGES[stage].probability
+            deal_id = self._insert_deal(
+                name, org, contact, stage, dollars, probability, closed_on, created, closed_at
+            )
+            if lost_from is None:
+                path = [*OPEN_STAGES, "won"]
+            else:
+                path = [*OPEN_STAGES[: OPEN_STAGES.index(lost_from) + 1], "lost"]
+            if stage == "won" and contact:
+                first_win = self.wins_by_contact.get(contact)
+                if first_win is None or closed_at < first_win:
+                    self.wins_by_contact[contact] = closed_at
+            _add_stage_events(self.conn, deal_id, path, created, closed_at)
+            self._closed_deal_activities(deal_id, closed_at)
+
+    def _closed_deal_activities(self, deal_id: int, closed_at: datetime) -> None:
         for k, (kind, text) in enumerate(CLOSED_ACTIVITY_TEXT):
             day = (closed_at - timedelta(days=20 - k * 13)).date()
-            at = min(datetime.combine(day, time(rng.randint(9, 16), rng.randint(0, 59))), closed_at)
-            conn.execute(
-                insert(activities).values(
-                    type=kind,
-                    deal_id=deal_ids[name],
-                    description=text,
+            hour_minute = time(self.rng.randint(9, 16), self.rng.randint(0, 59))
+            at = min(datetime.combine(day, hour_minute), closed_at)
+            self._insert_activity(kind, text, at, None, False, deal_id=deal_id, contact_id=None)
+
+    def status_changes(self) -> None:
+        # Every customer became one with their first win; every qualified
+        # contact was a lead before.
+        for name, _org, _title, status in CONTACTS:
+            if status == "customer":
+                at = self.wins_by_contact[name]
+                from_value = "qualified"
+            elif status == "qualified":
+                at = self.when.ago(30 + len(name) * 3, "15:00")
+                from_value = "lead"
+            else:
+                continue
+            self.conn.execute(
+                insert(events).values(
+                    kind="status_change",
+                    contact_id=self.contact_ids[name],
+                    from_value=from_value,
+                    to_value=status,
                     occurred_at=at,
-                    follow_up_date=None,
-                    follow_up_done=False,
                     created_at=at,
                     updated_at=at,
                 )
             )
 
-    # Status changes: every customer became one with their first win; every
-    # qualified contact was a lead before.
-    for name, _org, _title, status in CONTACTS:
-        if status == "customer":
-            at = wins_by_contact[name]
-            from_value = "qualified"
-        elif status == "qualified":
-            at = when.ago(30 + len(name) * 3, "15:00")
-            from_value = "lead"
-        else:
-            continue
-        conn.execute(
-            insert(events).values(
-                kind="status_change",
-                contact_id=contact_ids[name],
-                from_value=from_value,
-                to_value=status,
-                occurred_at=at,
-                created_at=at,
-                updated_at=at,
-            )
-        )
-
-    def record(kind: str, name: str) -> dict:
+    def _record(self, kind: str, name: str) -> dict:
         if kind == "deal":
-            return {"deal_id": deal_ids[name], "contact_id": None}
-        return {"deal_id": None, "contact_id": contact_ids[name]}
+            return {"deal_id": self.deal_ids[name], "contact_id": None}
+        return {"deal_id": None, "contact_id": self.contact_ids[name]}
 
-    for kind, name, act_type, text, days, hhmm, follow_in, done in FOLLOW_UPS:
-        at = when.ago(days, hhmm)
-        conn.execute(
+    def _insert_activity(self, act_type, text, at, follow_up_date, done, **record) -> None:
+        self.conn.execute(
             insert(activities).values(
                 type=act_type,
                 description=text,
                 occurred_at=at,
-                follow_up_date=today + timedelta(days=follow_in),
+                follow_up_date=follow_up_date,
                 follow_up_done=done,
                 created_at=at,
                 updated_at=at,
-                **record(kind, name),
+                **record,
             )
         )
-    for kind, name, act_type, text, days, hhmm in NOTES:
-        at = when.ago(days, hhmm)
-        conn.execute(
-            insert(activities).values(
-                type=act_type,
-                description=text,
-                occurred_at=at,
-                follow_up_date=None,
-                follow_up_done=False,
-                created_at=at,
-                updated_at=at,
-                **record(kind, name),
+
+    def follow_ups_and_notes(self) -> None:
+        for kind, name, act_type, text, days, hhmm, follow_in, done in FOLLOW_UPS:
+            follow_up_date = self.today + timedelta(days=follow_in)
+            at = self.when.ago(days, hhmm)
+            self._insert_activity(
+                act_type, text, at, follow_up_date, done, **self._record(kind, name)
             )
-        )
+        for kind, name, act_type, text, days, hhmm in NOTES:
+            at = self.when.ago(days, hhmm)
+            self._insert_activity(act_type, text, at, None, False, **self._record(kind, name))
+
+
+def seed(conn, today: date, now: datetime) -> None:
+    seeder = _Seeder(conn, today, now)
+    seeder.organizations()
+    seeder.contacts()
+    seeder.open_deals()
+    seeder.closed_deals()
+    seeder.status_changes()
+    seeder.follow_ups_and_notes()
 
 
 def clear(conn) -> None:
@@ -386,7 +408,9 @@ def seed_database(empty: bool = False) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Reset the Accountable database to the sample data.")
+    parser = argparse.ArgumentParser(
+        description="Reset the Accountable database to the sample data."
+    )
     parser.add_argument("--empty", action="store_true", help="leave every table empty instead")
     args = parser.parse_args()
     seed_database(empty=args.empty)

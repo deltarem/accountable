@@ -75,7 +75,11 @@ export function Field({
 }
 
 function controlProps(ids: { id: string; errorId: string; invalid: boolean }) {
-  return { id: ids.id, 'aria-invalid': ids.invalid || undefined, 'aria-describedby': ids.invalid ? ids.errorId : undefined };
+  return {
+    id: ids.id,
+    'aria-invalid': ids.invalid || undefined,
+    'aria-describedby': ids.invalid ? ids.errorId : undefined,
+  };
 }
 
 export const TextInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function TextInput(
@@ -91,7 +95,14 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
   ref,
 ) {
   const ids = useFieldIds();
-  return <textarea ref={ref} className={`${styles.input} ${styles.textarea} ${className ?? ''}`} {...controlProps(ids)} {...rest} />;
+  return (
+    <textarea
+      ref={ref}
+      className={`${styles.input} ${styles.textarea} ${className ?? ''}`}
+      {...controlProps(ids)}
+      {...rest}
+    />
+  );
 });
 
 export const SelectInput = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function SelectInput(
@@ -100,63 +111,65 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HT
 ) {
   const ids = useFieldIds();
   return (
-    <select ref={ref} className={`${styles.input} ${styles.select} ${className ?? ''}`} {...controlProps(ids)} {...rest}>
+    <select
+      ref={ref}
+      className={`${styles.input} ${styles.select} ${className ?? ''}`}
+      {...controlProps(ids)}
+      {...rest}
+    >
       {children}
     </select>
   );
 });
 
 /** Money as typed: $ in front, 12.500,00 inside (DEC-04). */
-export const MoneyInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function MoneyInput(
-  props,
-  ref,
-) {
-  const ids = useFieldIds();
-  return (
-    <div className={styles.affix}>
-      <span className={styles.prefix} aria-hidden>
-        $
-      </span>
-      <input
-        ref={ref}
-        inputMode="decimal"
-        autoComplete="off"
-        className={`${styles.input} ${styles.withPrefix} mono`}
-        {...controlProps(ids)}
-        {...props}
-      />
-    </div>
-  );
-});
+export const MoneyInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+  function MoneyInput(props, ref) {
+    const ids = useFieldIds();
+    return (
+      <div className={styles.affix}>
+        <span className={styles.prefix} aria-hidden>
+          $
+        </span>
+        <input
+          ref={ref}
+          inputMode="decimal"
+          autoComplete="off"
+          className={`${styles.input} ${styles.withPrefix} mono`}
+          {...controlProps(ids)}
+          {...props}
+        />
+      </div>
+    );
+  },
+);
 
-export const PercentInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function PercentInput(
-  props,
-  ref,
-) {
-  const ids = useFieldIds();
-  return (
-    <div className={styles.affix}>
-      <input
-        ref={ref}
-        inputMode="numeric"
-        autoComplete="off"
-        className={`${styles.input} ${styles.withSuffix} mono`}
-        {...controlProps(ids)}
-        {...props}
-      />
-      <span className={styles.suffix} aria-hidden>
-        %
-      </span>
-    </div>
-  );
-});
+export const PercentInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+  function PercentInput(props, ref) {
+    const ids = useFieldIds();
+    return (
+      <div className={styles.affix}>
+        <input
+          ref={ref}
+          inputMode="numeric"
+          autoComplete="off"
+          className={`${styles.input} ${styles.withSuffix} mono`}
+          {...controlProps(ids)}
+          {...props}
+        />
+        <span className={styles.suffix} aria-hidden>
+          %
+        </span>
+      </div>
+    );
+  },
+);
 
-export const DateInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function DateInput(
-  props,
-  ref,
-) {
-  return <TextInput ref={ref} type="date" {...props} />;
-});
+export const DateInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+  function DateInput(props, ref) {
+    return <TextInput ref={ref} type="date" {...props} />;
+  },
+);
 
 export const DateTimeInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function DateTimeInput(props, ref) {
@@ -164,20 +177,19 @@ export const DateTimeInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HT
   },
 );
 
-export const StageSelect = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function StageSelect(
-  props,
-  ref,
-) {
-  return (
-    <SelectInput ref={ref} {...props}>
-      {STAGES.map((s) => (
-        <option key={s.key} value={s.key}>
-          {s.name} ({s.probability}%)
-        </option>
-      ))}
-    </SelectInput>
-  );
-});
+export const StageSelect = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
+  function StageSelect(props, ref) {
+    return (
+      <SelectInput ref={ref} {...props}>
+        {STAGES.map((s) => (
+          <option key={s.key} value={s.key}>
+            {s.name} ({s.probability}%)
+          </option>
+        ))}
+      </SelectInput>
+    );
+  },
+);
 
 export function FormGrid({ children }: { children: ReactNode }) {
   return <div className={styles.grid}>{children}</div>;

@@ -47,7 +47,10 @@ describe('form resolvers', () => {
 
   test('the deal form turns money text into cents and reports unclear amounts', async () => {
     const base = { name: 'X', organization_id: 1, contact_id: null, stage: 'new', probability: '10', close_date: '' };
-    const ok = await dealResolver({ ...base, value_cents: '12.500,50' }, undefined, { fields: {}, shouldUseNativeValidation: false });
+    const ok = await dealResolver({ ...base, value_cents: '12.500,50' }, undefined, {
+      fields: {},
+      shouldUseNativeValidation: false,
+    });
     expect(ok.values).toMatchObject({ value_cents: 1_250_050, probability: 10, close_date: null });
     const bad = await dealResolver({ ...base, value_cents: '12.5', probability: '120' }, undefined, {
       fields: {},

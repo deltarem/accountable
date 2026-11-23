@@ -2,7 +2,15 @@ import { Search, X } from 'lucide-react';
 
 import styles from './SearchBox.module.css';
 
-export function SearchBox({ value, onChange, label }: { value: string; onChange: (value: string) => void; label: string }) {
+export function SearchBox({
+  value,
+  onChange,
+  label,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+}) {
   return (
     <div className={styles.box}>
       <Search size={16} className={styles.icon} aria-hidden />

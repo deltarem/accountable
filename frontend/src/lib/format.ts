@@ -115,5 +115,5 @@ export function initials(name: string): string {
 
 /** acme.example, from https://acme.example/ */
 export function displayWebsite(url: string): string {
-  return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 }

@@ -15,7 +15,11 @@ export function ColumnHeader({
   expectedCents: number | null;
 }) {
   return (
-    <header className={styles.header} style={{ background: stage.fill, color: stage.ink }} data-testid={`header-${stage.key}`}>
+    <header
+      className={styles.header}
+      style={{ background: stage.fill, color: stage.ink }}
+      data-testid={`header-${stage.key}`}
+    >
       <h2 className={styles.name}>
         {stage.name} <span className={styles.prob}>{stage.probability}%</span>
       </h2>
@@ -26,7 +30,11 @@ export function ColumnHeader({
         {formatMoney(valueCents)}
       </div>
       <div className={styles.expected} data-testid={`expected-${stage.key}`}>
-        {expectedCents === null ? (stage.key === 'won' ? 'Closed, won' : 'Closed, lost') : `exp ${formatMoney(expectedCents)}`}
+        {expectedCents === null
+          ? stage.key === 'won'
+            ? 'Closed, won'
+            : 'Closed, lost'
+          : `exp ${formatMoney(expectedCents)}`}
       </div>
     </header>
   );

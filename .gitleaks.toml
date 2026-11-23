@@ -1,0 +1,18 @@
+# gitleaks for `npm run check`: the default rules, scanning the working tree.
+# The git-ignored .env holds real local secrets on purpose, so it is allowed.
+# Installed and generated folders are not part of the repo, so they are skipped.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Local secrets file and generated folders"
+paths = [
+  '''(^|[\\/])\.env$''',
+  '''(^|[\\/])node_modules[\\/]''',
+  '''(^|[\\/])\.venv[\\/]''',
+  '''(^|[\\/])\.git[\\/]''',
+  '''(^|[\\/])(dist|coverage|htmlcov|test-results|playwright-report)[\\/]''',
+  '''(^|[\\/])\.(ruff_cache|pytest_cache|claude[\\/]worktrees)[\\/]''',
+  '''(^|[\\/])data[\\/]''',
+]
