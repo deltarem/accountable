@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { useSetDone } from '../../api/hooks';
 import { useToast } from '../Toaster';
@@ -20,7 +21,11 @@ export function FollowUpCheckbox({
 }) {
   const setDone = useSetDone();
   const toast = useToast();
-  const checked = setDone.isPending ? !!setDone.variables?.done : done;
+  // The box flips at once, in local state. Waiting for the mutation to report
+  // "pending" left it unticked for a moment, because TanStack Query notifies
+  // on a later tick. It follows the server's value again whenever that changes.
+  const [checked, setChecked] = useState(done);
+  useEffect(() => setChecked(done), [done]);
   return (
     <label className={styles.label}>
       <input
@@ -28,12 +33,19 @@ export function FollowUpCheckbox({
         className={styles.input}
         checked={checked}
         aria-label={hideLabel ? `Mark done: ${description}` : undefined}
-        onChange={(event) =>
+        onChange={(event) => {
+          const next = event.target.checked;
+          setChecked(next);
           setDone.mutate(
-            { id: activityId, done: event.target.checked },
-            { onError: () => toast("Couldn't update the follow-up. Try again.", 'error') },
-          )
-        }
+            { id: activityId, done: next },
+            {
+              onError: () => {
+                setChecked(!next);
+                toast("Couldn't update the follow-up. Try again.", 'error');
+              },
+            },
+          );
+        }}
       />
       <span className={styles.box} aria-hidden>
         {checked ? <Check size={13} strokeWidth={3} /> : null}

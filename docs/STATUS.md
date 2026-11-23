@@ -6,7 +6,7 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 
 - `npm run dev` installs what's missing on the first run, starts both servers and prints the address (http://127.0.0.1:5173). Ctrl+C stops both.
 - `npm run seed` resets the database (`data/accountable.db`) to the sample data. Add `-- --empty` for no data at all.
-- `npm test` runs the traceability check, the `dev.mjs` tests, pytest, Vitest and Playwright. The end-to-end tests start their own servers on ports 8100 and 5273 with their own database, so your data is never touched. Screenshots for review land in `test-results/screens/`.
+- `npm test` runs the traceability check, the script tests, pytest, Vitest and Playwright. It runs every suite even after one fails, prints a PASS/FAIL summary, and exits with 1 if any failed. `node scripts/test-all.mjs test:backend` runs only the named suites. The end-to-end tests start their own servers on ports 8100 and 5273 with their own database, so your data is never touched. Screenshots for review land in `test-results/screens/`.
 
 ## Log
 
@@ -27,12 +27,15 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - 2026-11-23: Phase 6, the pipeline board with dnd-kit: mouse and keyboard moves, drops onto empty columns, optimistic totals, rollback with a message on failure.
 - 2026-11-23: Phase 7, the dashboard: Midnight headline panel with the revenue line, funnel, pipeline by stage, won and lost bars, follow-ups and recent activity, each with a loading placeholder and an empty state.
 - 2026-11-23: Phase 8, finishing: empty, speed and screenshot tests at 1280px and 1024px; layout tightened so all six pipeline columns fit at 1280px; static inline styles moved into CSS Modules. `npm test` passes: the traceability check (137 spec IDs), 8 script tests, 153 pytest, 117 Vitest and 66 Playwright tests, in about 8 minutes.
+- 2026-11-23: `npm test` now runs through `scripts/test-all.mjs`, which runs all five suites even when one fails and exits with 1 if any failed (checked with a deliberately failing pytest test and Vitest test). `AGENTS.md` says to run it before calling work done.
 
 ## Notes from the build
 
 - **Library versions (risk 13).** npm's latest majors moved past the APIs the spec was written against, so these majors are pinned: React Router 7, TanStack Table 8, Vite 7, Vitest 3, TypeScript 5. The rest are current (React 19, TanStack Query 5, dnd-kit, Recharts 3, Radix, cmdk, React Hook Form 7, zod 4). `@hookform/resolvers` was left out: the forms use a small zod resolver of their own (`lib/schemas.ts`), which turns typed money into cents before validating.
 - **TanStack Table needs a stable `data` array.** A new array on every render set off its auto-reset and froze the page whenever a dialog opened. The rows are memoized and auto-reset is off.
 - **Keyboard moves on the board.** dnd-kit's default keyboard getter compares rectangles, and the 2-degree tilt of the dragged card made cards in the same column look "to the right". `components/board/keyboard.ts` moves left and right between columns and up and down within one.
+- **Follow-up checkbox.** It was a controlled checkbox that only flipped once TanStack Query reported the save as pending, which happens on a later tick. So it flickered back unticked for a moment, and a Playwright test failed now and then. It now flips at once in local state and flips back if the save fails.
+- **Open: one missing "Activity saved" message.** In one full run, an activity saved but its confirmation message never appeared in the page snapshots. It didn't happen again in 10 repeats of that test or in 20 saves in a row. The follow-ups test now waits for the saved entry instead of the message; the cause is not known yet.
 - **Speed test.** Screens are timed by clicking in the app. A full page reload on the development server also fetches every source module one by one, which measures Vite rather than the app.
 - **Brand colours in charts (risk 12).** The palette check fails for the stage colours, as the plan expected (light Marigold, near-grey Midnight, Marigold and Coral close together). Every coloured mark has its stage name beside it, and segments have 2px gaps.
 

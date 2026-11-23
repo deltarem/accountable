@@ -1,5 +1,4 @@
 import { expect, test } from './fixtures';
-import { expectToast } from './tables';
 
 // SC-05, SC-06, DEC-11, UI-DASH-06, UI-DASH-08.
 
@@ -10,7 +9,8 @@ test('a new follow-up due tomorrow appears on the dashboard; ticking it done rem
   await log.getByLabel('What happened').fill('Send the fleet brochure');
   await log.getByLabel('Follow-up date').fill('2026-11-24');
   await log.getByRole('button', { name: 'Log it' }).click();
-  await expectToast(page, 'Activity saved');
+  // Wait for the saved entry itself; this test is about follow-ups, not the confirmation message.
+  await expect(page.getByTestId('timeline-entry').filter({ hasText: 'Send the fleet brochure' })).toBeVisible();
 
   await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: 'Dashboard', exact: true }).click();
   const week = page.getByRole('region', { name: 'Next 7 days' });
