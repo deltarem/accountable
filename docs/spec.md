@@ -1,13 +1,117 @@
-# Spec: the Accountable MVP
+# Spec: Accountable
 
-This spec turns `docs/intent.md` into requirements and a design that can be built and tested. The intent says what we're building and why. This file says how it behaves and how it looks. The look follows the brand skill (`.claude/skills/brand/SKILL.md`), and the stack follows `docs/TECH_STACK.md`.
+This spec describes Accountable as it stands today: the problem it solves, how it behaves, how it looks and how it's built. Read it first. It is the reference for every change.
+
+A change starts in its own folder, `docs/changes/<branch name>/`:
+- `intent.md` says what the change should achieve.
+- `plan.md` says how it will be built and tested.
+
+When the change is finished, this spec is updated so it describes the product with the change in it. Older change folders are history.
+
+The look follows the brand skill (`.claude/skills/brand/SKILL.md`), and the stack follows `docs/TECH_STACK.md`. How the code is organised is in `docs/frontend-architecture.md` and `docs/backend-architecture.md`.
+
+## The problem
+
+A small business keeps track of its customers and sales in spreadsheets, inboxes and people's heads. Nobody can see at a glance:
+- which companies we deal with
+- who our contacts are
+- what's in the sales pipeline
+- what happened last with a customer
+- what needs doing next.
+
+## What Accountable is
+
+Accountable is a business management system: a sales CRM that will grow into a full Business OS, including ERP. Today it is a complete sales CRM for one person, running on their own computer. It does the everyday CRM essentials well, and it is meant to feel sharp, modern and professional.
+
+It has five sections:
+- **Dashboard**, the landing page: how sales are going at a glance.
+- **Pipeline**: the deals as cards on a board, one column per stage.
+- **Deals**, **Contacts** and **Organizations**: a searchable, sortable table of each, with a page for every record.
+
+It has four kinds of record:
+- **Organization**: a company we do business with.
+- **Contact**: a person we deal with. A lead is simply a contact with the lead status.
+- **Deal**: a potential sale, with a stage, a value in US dollars, a probability of close and a close date.
+- **Activity**: a note, call or email logged on a contact or a deal, optionally with a follow-up date.
+
+It comes with realistic sample data, so every screen looks alive the first time it starts.
+
+### How it answers the problem
+
+- **Which companies we deal with:** the Organizations table, and each organization's page with its contacts, deals and timeline.
+- **Who our contacts are:** the Contacts table, filtered by lead, qualified or customer.
+- **What's in the sales pipeline:** the Pipeline board with its totals and expected revenue, and the dashboard's headline figures, funnel and pipeline by stage.
+- **What happened last with a customer:** each contact's and organization's timeline, newest first, with deal activity rolled up, and the dashboard's recent activity.
+- **What needs doing next:** follow-ups on the dashboard, overdue first, and late deals marked in the table and on the board.
+
+## Who uses it
+
+- One salesperson, using Accountable on their own computer every day. For now that's the person building it: a course project, built to show a polished, complete product rather than to run a live business yet. The rest of the sales team joins later.
+- No other systems are involved.
+
+## Constraints
+
+- The technology in `docs/TECH_STACK.md`.
+- It runs locally with one documented command that works on Mac, Linux and Windows, and needs no internet connection to use.
+- Every change is kept: it's still there after a browser refresh, and every time the app starts it shows every change made before.
+- One documented command resets the data to the sample data.
+- It handles a few hundred of each kind of record comfortably. Paging or virtual scrolling for thousands of records isn't needed.
+
+### Not in the product
+
+- sign-in, user accounts, or several users
+- dark mode, or a layout for phones
+- AI features
+- email, calendar or phone integrations
+- currencies other than US dollars
+- reports beyond the dashboard
+- tags or custom fields
+- changing the pipeline stages or their usual probabilities
+- importing or exporting data.
+
+Two things are designed to make later work easier, though nothing is built for them yet:
+- The colours are kept as named tokens, so a dark mode can be added.
+- The API is the only way into the data, so a hosted database can replace SQLite.
+
+### Later
+
+- **Sign-in, several people sharing the same data, and a record of who did what.** No table has an owner or author column yet. Adding users means adding a `user_id` to records and to `events`. The `events` table is already the place where a history of changes would grow.
+- **Use beyond one computer.** The browser only talks to the JSON API, and the tables avoid anything SQLite-only. Moving to Supabase's Postgres and hosting on Render changes the backend's connection and deployment, not the screens.
+
+## Success criteria
+
+The product meets these today. A change must keep them true, or say in its intent which one it changes.
+
+1. `SC-01` Someone non-technical can start Accountable with the one documented command, open it in a browser and land on the dashboard, with sample data on every screen.
+2. `SC-02` Organizations, contacts (leads, qualified contacts and customers) and deals can each be added, found by searching, sorted, edited and deleted from their tables.
+   - Every change is still there after a refresh and after a restart.
+   - Deleting asks first, says what will happen to linked records, and does exactly that.
+   - The reset command brings back the sample data.
+3. `SC-03` Contacts can be filtered by status, and each record's page shows the records it's linked to.
+4. `SC-04` The pipeline board:
+   - Dragging a deal to another column changes its stage and its probability of close, and the deals list shows both.
+   - A card dropped anywhere in a column, including higher or lower in its own column, stays there after a refresh.
+   - The board's and the columns' totals and expected revenue change as soon as the card moves.
+   - A deal added in a column starts at that stage, and late deals stand out.
+5. `SC-05` Timelines and follow-ups:
+   - An activity or follow-up logged on a contact or deal appears in its timeline, newest first, and so does an entry for each change of stage.
+   - Activity on a deal also shows on its main contact's and its organization's timelines.
+   - Follow-ups show on the dashboard as upcoming or overdue until they're marked done.
+6. `SC-06` The dashboard's figures match the data, and they reflect a deal marked won or a new follow-up. Winning a deal makes its main contact a customer.
+7. `SC-07` Forms show clear errors for a missing required field, a badly formed email, a negative value or a probability outside 0 to 100%, and nothing is saved until they're fixed.
+8. `SC-08` Forms and tables can be used with the keyboard: Tab moves between fields, Enter submits, Escape closes a dialog.
+9. `SC-09` With the sample data, every screen loads and every action responds in under a second.
+10. `SC-10` Every table, timeline and chart still looks right with no data in it, for example after deleting everything.
+11. `SC-11` Every screen is sharp, modern and professional, and follows the brand. The dashboard is visually stunning, with a line chart, a bar chart and a visual of the pipeline.
+12. `SC-12` Before a change is called done, someone has used it end to end in a real browser, the way a salesperson would: every section and action it touches, each screen checked by eye, with no errors in the browser's console. Passing tests is necessary, but it isn't enough.
 
 ## Requirement IDs
 
-Each requirement in this spec carries an ID in code style, such as `DEC-07`. `docs/plan.md` uses these IDs in its Traceability section, which names the phase that builds each requirement and the test or check that proves it. A requirement without a row there isn't planned.
+Each requirement in this spec carries an ID in code style, such as `DEC-07`.
 
 | Prefix | Section of this spec |
 |---|---|
+| `SC` | Success criteria |
 | `DEC` | Decisions |
 | `RUN` | How it runs |
 | `ARC` | Architecture, Decisions |
@@ -16,22 +120,41 @@ Each requirement in this spec carries an ID in code style, such as `DEC-07`. `do
 | `UI-LAY`, `UI-DASH`, `UI-TBL`, `UI-REC`, `UI-PIPE`, `UI-FORM`, `UI-DEL`, `UI-EMPTY`, `UI-ERR` | Screens: layout, dashboard, tables, record pages, pipeline, forms, deleting, empty and loading states, errors |
 | `DES` | Design |
 | `SEED` | Sample data |
-| `SC` | the success criteria in `docs/intent.md`; `SC-01` is criterion 1 |
 
-When a requirement is added or changed, it gets a new ID or keeps its old one, and the Traceability table in `docs/plan.md` is updated in the same change.
+The rules for IDs:
+- An ID never changes meaning. A requirement that changes keeps its ID; a new requirement gets a new ID.
+- A change's `plan.md` has a Traceability table: each ID the change adds or touches, the phase that builds it, and the test or check that proves it.
+- `scripts/check-trace.mjs` runs first in `npm test`. It fails if an ID here has no row in the plan, or a row names an ID this spec doesn't have.
 
 ## Decisions
 
-These began as concerns: gaps and conflicts found in the intent while writing this spec. Each one was reviewed and accepted as written below on 23 Nov 2026, and the rest of the spec follows them.
+These settle questions where a simpler reading of the product would be wrong or unclear. The rest of the spec follows them.
 
-1. `DEC-01` **Deals that lose their organization.** A deal needs an organization, but deleting an organization keeps its deals with no organization. Both rules stand: the database allows a deal with no organization, the table and the deal's page show "No organization", and the deal form won't save until one is chosen. So a deal can sit without an organization until it's next edited.
-2. `DEC-02` **Fonts with no internet.** The brand's fonts come from Google Fonts, but the app has to work offline. The same fonts are bundled with the app through the `@fontsource` npm packages, so nothing is fetched from Google at runtime.
-3. `DEC-03` **"One command" and installing.** `npm run dev` normally needs `npm install` first. Here `npm run dev` runs a small Node script with no dependencies of its own. On the first run it installs what's missing (`npm install`; uv sets up Python and the backend packages by itself), then starts both servers. The only things to install beforehand are Node 24 or later and uv. The first run needs an internet connection to download packages; after that, none.
-4. `DEC-04` **The money format.** `$12.500,00` puts a US dollar sign on European separators, which is unusual for US dollars. It's used everywhere anyway, including in forms, because that's the format asked for. Forms accept `12500`, `12.500` and `12.500,50`, and turn down `12.5` with "Use a comma for cents, like 12.500,50". Headline figures on the dashboard drop the cents (`$412.500`), and chart axes shorten amounts (`$400k`) while their tooltips show the full figure.
-5. `DEC-05` **Six stages, five brand colours.** The brand gives five colours for things side by side, in a fixed order. The stages get colours by meaning instead: New Cerulean, Qualified Marigold, Proposal Coral, Negotiation Midnight, Won Sea Green and Lost a grey taken from Sea Mist. Raspberry is kept for things that need attention, such as late deals and overdue follow-ups.
-6. `DEC-06` **Contrast.** White text on Cerulean (3.96:1) and on Raspberry (3.62:1) falls below the 4.5:1 that small text needs. Sea Green, Marigold and Coral text on white is far too faint (1.6 to 2.4:1), as the brand itself warns. Badges and small labels therefore use a pale tint of the colour with darker text in the same hue (all 4.8:1 or better, listed under Design). Solid fills carry Midnight text, or white text only at 16px semibold or larger.
+1. `DEC-01` **Deals that lose their organization.** A deal needs an organization, but deleting an organization keeps its deals with no organization. Both rules stand:
+   - The database allows a deal with no organization.
+   - The table and the deal's page show "No organization".
+   - The deal form won't save until one is chosen.
 
-   Mockup B's solid stage blocks also hold small text, so they use these pairs, all checked:
+   So a deal can sit without an organization until it's next edited.
+2. `DEC-02` **Fonts with no internet.** The brand's fonts are bundled with the app through the `@fontsource` npm packages, so nothing is fetched from Google at runtime.
+3. `DEC-03` **"One command" and installing.** `npm run dev` runs a small Node script with no dependencies of its own. On the first run it installs what's missing (`npm install`; uv sets up Python and the backend packages by itself), then starts both servers.
+   - The only things to install beforehand are Node 24 or later and uv.
+   - The first run needs an internet connection to download packages; after that, none.
+4. `DEC-04` **The money format.** Money shows as `$12.500,00`: a US dollar sign on European separators. That's unusual for US dollars, but it's used everywhere, forms included.
+   - Forms accept `12500`, `12.500`, `12.500,50` and `$12.500,00`, and turn down `12.5` with "Use a comma for cents, like 12.500,50".
+   - Headline figures on the dashboard drop the cents (`$412.500`).
+   - Chart axes shorten amounts (`$400k`), and their tooltips show the full figure.
+5. `DEC-05` **Six stages, five brand colours.** The brand gives five colours for things side by side, in a fixed order. The stages get colours by meaning instead:
+   - New Cerulean, Qualified Marigold, Proposal Coral, Negotiation Midnight, Won Sea Green, and Lost a grey taken from Sea Mist.
+   - Raspberry is kept for things that need attention, such as late deals and overdue follow-ups.
+   - Because Marigold and Coral sit close together, and Midnight is nearly grey, every coloured mark in a chart has its stage name beside it, and segments have 2px gaps.
+6. `DEC-06` **Contrast.** The brand's bright colours fail contrast at small sizes:
+   - White text on Cerulean (3.96:1) and on Raspberry (3.62:1) falls below the 4.5:1 that small text needs.
+   - Sea Green, Marigold and Coral text on white is far too faint (1.6 to 2.4:1), as the brand itself warns.
+
+   So badges and small labels use a pale tint of the colour with darker text in the same hue (all 4.8:1 or better, listed under Design). Solid fills carry Midnight text, or white text only at 16px semibold or larger.
+
+   The solid stage blocks also hold small text, so they use these pairs, all checked:
    - white on the darker Cerulean `#0D6E8F` (5.8:1)
    - Midnight on Marigold (7.5:1), Coral (5.1:1), Sea Green (6.4:1) and the Lost grey (4.6:1)
    - white on Midnight.
@@ -44,45 +167,48 @@ These began as concerns: gaps and conflicts found in the intent while writing th
    - The close date is optional while a deal is open, and a deal with no close date is never late.
    - Moving a deal to Won or Lost, by dragging or in the form, sets its close date to today. The form shows that date and it can be changed before saving, so a deal won last week can be recorded properly.
    - Moving a deal back out of Won or Lost keeps the date. If that date has passed, the deal is late at once, which prompts a new expected date.
-8. `DEC-08` **Undoing a win.** If a won deal is moved back to an open stage, its main contact stays a customer. Winning a deal with no main contact changes no contact, and winning one whose contact is already a customer adds no entry to their timeline.
-9. `DEC-09` **Status changes in the timeline.** The intent asks for the automatic "became a customer" entry. For consistency, every change of a contact's status makes an entry, whether it was made by hand or by a win, for example "Status changed from Lead to Qualified".
+8. `DEC-08` **Undoing a win.**
+   - If a won deal is moved back to an open stage, its main contact stays a customer.
+   - Winning a deal with no main contact changes no contact.
+   - Winning one whose contact is already a customer adds no entry to their timeline.
+9. `DEC-09` **Status changes in the timeline.** Every change of a contact's status makes an entry, whether it was made by hand or by a win, for example "Status changed from Lead to Qualified".
 10. `DEC-10` **What the funnel counts.** "How much value reaches each stage" is worked out from stage history. It covers open deals and deals closed in the last 12 months:
     - A deal counts towards its current stage and every open stage before it.
     - A won deal counts towards every stage.
-    - A lost deal counts towards every stage up to the last one it was in before it was lost.
-
-    The sample data includes stage-change entries for every deal past New, so the funnel looks right from the start.
-11. `DEC-11` **Which follow-ups the dashboard shows.** "Coming up" means due in the next 7 days. The dashboard lists every overdue follow-up, then those due today, then those due in the next 7 days. Later ones show on their contact or deal page only.
-12. `DEC-12` **"Today".** The app runs on one computer, so "today" is that computer's local date. The backend works it out; the frontend never sends it.
-13. `DEC-13` **Sample data dates.** Sample dates are relative to the day the data is created, so the dashboard's last 12 months are always filled on a fresh start or after `npm run seed`. Data seeded months ago will look older, which is expected; reseeding fixes it.
-14. `DEC-14` **Keyboard use on the pipeline.** The intent asks for keyboard use in forms and tables. The drag-and-drop library also supports moving cards with the keyboard (space to pick up, arrows to move, space to drop), so the pipeline gets it too, at little cost.
-
-## Scope
-
-In scope is everything in `docs/intent.md`:
-- five sections and four kinds of record
-- activities with follow-ups
-- automatic entries for stage and status changes
-- sample data, a reset command, and data that's still there after a refresh or a restart.
-
-The intent's "Not in the MVP" list stands as written. Two things are designed now to make later work easier, but nothing is built for them yet:
-- The colours are kept as named tokens, so a dark mode can be added later.
-- The API is the only way into the data, so a hosted database can replace SQLite later.
+    - A lost deal counts towards every stage up to the last one it was in before it was lost. A lost deal with no stage history counts towards New only.
+11. `DEC-11` **Which follow-ups the dashboard shows.** "Coming up" means due in the next 7 days.
+    - The dashboard lists every overdue follow-up, then those due today, then those due in the next 7 days.
+    - Later ones show on their contact or deal page only.
+12. `DEC-12` **"Today".** The app runs on one computer, so "today" is that computer's local date. The backend works it out; the browser never uses its own clock.
+13. `DEC-13` **Sample data dates.** Sample dates are relative to the day the data is created, so the dashboard's last 12 months are always filled on a fresh start or after `npm run seed`. Data seeded months ago looks older, which is expected; reseeding fixes it.
+14. `DEC-14` **Keyboard use on the pipeline.** Cards can be moved with the keyboard as well as the mouse:
+    - Space picks a card up and drops it.
+    - Left and right move it to the neighbouring column; up and down move it within its column.
+    - Escape cancels the move.
+    - Enter opens the deal.
 
 ## How it runs
 
 - `RUN-01` **Prerequisites:** Node 24 or later and uv. Google Chrome is needed only for the end-to-end tests.
 - `RUN-02` **`npm run dev`** runs `scripts/dev.mjs`:
   1. It installs Node packages if `node_modules` is missing or older than `package-lock.json`.
-  2. It starts the backend with `uv run uvicorn` on `127.0.0.1:8000` and the frontend with Vite on `127.0.0.1:5173`.
-  3. It prints the address to open.
-  4. Ctrl+C stops both.
-  5. Vite forwards `/api` to the backend, so the browser only talks to one address.
-- `RUN-03` **`npm run seed`** deletes all data and loads the sample data again. It works whether or not the app is running; a running app shows the new data on its next refresh.
-- `RUN-04` **`npm test`** runs the backend tests (pytest), the frontend tests (Vitest) and the end-to-end tests (Playwright with the installed Chrome), and fails if any of them fails. The end-to-end tests start their own backend and frontend on other ports, using their own database file.
-- `RUN-05` **The database** is `data/accountable.db`, which is not committed to git. The environment variable `ACCOUNTABLE_DB` points to another file; the tests use it. When the backend starts and the file doesn't exist, it creates the tables and loads the sample data.
+  2. It starts the backend with `uv run uvicorn` on `127.0.0.1:8000` and the frontend with Vite on `127.0.0.1:5173`. `BACKEND_PORT` and `FRONTEND_PORT` choose other ports.
+  3. If a port can't be used, it says why before starting anything: already in use, or blocked by the system (Windows can reserve whole port ranges). It also says how to pick another port.
+  4. It prints the address to open.
+  5. Ctrl+C stops both servers and everything they started.
+  6. Vite forwards `/api` to the backend, so the browser only talks to one address.
+- `RUN-03` **`npm run seed`** deletes all data and loads the sample data again, in one transaction. It works whether or not the app is running; a running app shows the new data on its next refresh. `npm run seed -- --empty` leaves every table empty.
+- `RUN-04` **`npm test`** runs every suite in order:
+  1. the traceability check
+  2. the script tests (`node --test`)
+  3. the backend tests (pytest)
+  4. the frontend tests (Vitest)
+  5. the end-to-end tests (Playwright with the installed Chrome).
 
-`RUN-06` `docs/STATUS.md` explains how to run the app, in a few lines.
+  It keeps going after a suite fails, prints a pass or fail summary, and exits with 1 if any suite failed. The end-to-end tests start their own backend and frontend on ports 8100 and 5273, with their own database file and the date fixed to 23 Nov 2026.
+- `RUN-05` **The database** is `data/accountable.db`, which is not committed to git. The environment variable `ACCOUNTABLE_DB` points to another file; the tests use it. When the backend starts and the file doesn't exist, it creates the tables and loads the sample data. An existing file is never reseeded.
+
+`RUN-06` `docs/STATUS.md` explains how to run, seed and test the app, in a few lines.
 
 ## Architecture
 
@@ -104,43 +230,47 @@ SQLite file (data/accountable.db, or ACCOUNTABLE_DB)
 ### Code layout
 
 ```
-package.json            root scripts: dev, test, seed; frontend/ as a workspace
-scripts/dev.mjs         installs what's missing, starts both servers
+package.json            root scripts: dev, seed, test; frontend/ as a workspace
+scripts/                dev.mjs (one-command start), test-all.mjs (npm test),
+                        check-trace.mjs (traceability), and their tests
 pyproject.toml, uv.lock backend dependencies
+shared/                 validation-cases.json, read by both test suites
 backend/
-  main.py               FastAPI app, routers, startup (create tables, seed if new)
-  db.py                 engine, table definitions, connection per request
+  main.py               FastAPI app, routers, JSON errors, startup (create tables, seed if new)
+  db.py                 engine, table definitions, transaction helper
   clock.py              today() and now(), the only source of the current date
-  schemas.py            Pydantic request and response models
-  routes/               organizations, contacts, deals, activities, dashboard
+  money.py              cents and half-up rounding
+  schemas.py            Pydantic request models with the field rules
+  routes/               organizations, contacts, deals, activities, dashboard, meta
   services/             the rules: stages, deletes, timelines, dashboard figures
   seed.py               sample data, also run by npm run seed
   tests/                pytest
 frontend/
   src/
-    api/                one typed function per endpoint, TanStack Query hooks
+    api/                fetch wrapper, typed TanStack Query hooks
     pages/              Dashboard, Pipeline, the three tables, the three record pages
-    components/         Table, Dialog, forms, Timeline, badges, charts, empty states
-    lib/                formatting, money parsing, zod schemas, stage rules
+    components/         table, board, dashboard, record, forms, dialogs, fields, shell
+    lib/                formatting, money parsing, zod schemas, stage rules, board state
     styles/             tokens.css (colours, type, spacing), global styles
-e2e/                    Playwright tests and config
-data/                   the database file, ignored by git
+e2e/                    Playwright tests, fixtures and helpers
+playwright.config.ts    the end-to-end servers, ports and database
+data/                   the database files, ignored by git
 ```
 
-### Decisions
+### Architecture decisions
 
 Each one says what was decided, why, and what was turned down.
 
 1. `ARC-01` **A React app talking to a JSON API.**
-   - **Decided:** the browser only ever calls `/api`. In development Vite forwards those calls to FastAPI, so there's one address and no CORS setup. The MVP runs on the development servers only; serving a production build comes with the move to Render.
+   - **Decided:** the browser only ever calls `/api`. In development Vite forwards those calls to FastAPI, so there's one address and no CORS setup. The app runs on the development servers only; serving a production build comes with the move to Render.
    - **Why:** it matches the tech stack, keeps every rule on the server, and lets the database change later without touching the screens.
 2. `ARC-02` **Three layers in the backend.**
    - **Decided:** routes handle HTTP only, services hold every business rule, and the tables module holds the schema.
    - **Why:** a stage change can come from a drag on the board or from the deal form. Both call the same service function, so the probability, the close date, the event and the customer change can't drift apart.
    - **Turned down:** rules inside the route handlers, which would duplicate them between `move` and `PUT`.
 3. `ARC-03` **SQLAlchemy Core with no migrations tool yet.**
-   - **Decided:** tables are created with `metadata.create_all` when the database is new. If the schema changes during the MVP, `npm run seed` rebuilds the database.
-   - **Why:** the MVP only holds sample data, so there's nothing to migrate. Alembic comes in with Supabase, when real data has to survive changes.
+   - **Decided:** tables are created with `metadata.create_all` when the database is new. If the schema changes, `npm run seed` rebuilds the database.
+   - **Why:** the database only holds sample data so far, so there's nothing to migrate. Alembic comes in with Supabase, when real data has to survive changes.
 4. `ARC-04` **The services do the unlinking and cascading.**
    - **Decided:** foreign keys are declared on the tables, but the delete rules (unlink contacts and deals, delete activities and events) are written out in the service, in the same transaction as the delete.
    - **Why:** SQLite only enforces foreign keys after a raw `PRAGMA`, which the stack rules out. Doing it in the service is explicit, easy to test, and works the same on Postgres.
@@ -161,56 +291,62 @@ Each one says what was decided, why, and what was turned down.
    - **Turned down:** fractional or text ranks, which only pay off with thousands of cards.
 9. `ARC-09` **Lists come whole; search, sort and filter run in the browser.**
    - **Decided:** TanStack Table works on the full list.
-   - **Why:** a few hundred rows filter instantly, and the intent says paging isn't needed.
+   - **Why:** a few hundred rows filter instantly, and paging isn't needed.
    - **Turned down:** server-side paging and search.
 10. `ARC-10` **Server data through TanStack Query.**
     - **Decided:** every read is a query, and every save invalidates what it affects. For example, saving a deal refreshes the deals list, the board, the dashboard and the timelines involved. Pipeline moves update the board first and roll back if the server refuses.
     - **Why:** the screens stay in step with the database without a hand-written store.
     - **Turned down:** Redux or a global store.
-11. `ARC-11` **Validation in both places, the server has the last word.**
-    - **Decided:** Pydantic checks every request. Zod schemas in the browser give errors as you type. Both apply the same rules, and tests feed both the same good and bad examples.
+11. `ARC-11` **Validation in both places; the server has the last word.**
+    - **Decided:** Pydantic checks every request, with the same messages the forms show. Zod schemas in the browser give errors as you type. Both apply the same rules, and both test suites run the same good and bad examples from `shared/validation-cases.json`.
     - **Why:** instant feedback in forms, and no bad data even if the browser is skipped.
 12. `ARC-12` **One clock.**
-    - **Decided:** `backend/clock.py` is the only place that reads the current date and time. Tests can fix it, and the environment variable `ACCOUNTABLE_TODAY` fixes it for the end-to-end tests.
+    - **Decided:** `backend/clock.py` is the only place that reads the current date and time. `ACCOUNTABLE_TODAY` fixes the date (`2026-11-23`), or the date and time (`2026-11-23T14:00:00`), for tests.
     - **Why:** late deals, overdue follow-ups, "this month" and the 12-month charts all depend on today. Tests need them to give the same result every day.
 13. `ARC-13` **One seed function.**
     - **Decided:** `backend/seed.py` fills an empty database. Startup uses it when the database is new, and `npm run seed` uses it after clearing every table. It uses a fixed random seed and dates relative to today.
     - **Why:** first start and reset give exactly the same data.
 14. `ARC-14` **Tests never touch your data.**
-    - **Decided:** each backend test gets a fresh temporary database. The end-to-end run starts its own servers on other ports with `ACCOUNTABLE_DB` pointing to its own file, which is reseeded before the run.
+    - **Decided:** each backend test gets a fresh temporary database. The end-to-end run starts its own servers on other ports with `ACCOUNTABLE_DB` pointing to its own file, which is reseeded before each test.
     - **Why:** the tech stack requires it, and it keeps tests independent of each other.
 15. `ARC-15` **Styling with CSS Modules and CSS variables.**
-    - **Decided:** `tokens.css` defines the brand colours, fonts and spacing as variables, and each component has its own CSS Module.
+    - **Decided:** `tokens.css` defines the brand colours, fonts and spacing as variables, and each component has its own CSS Module. Inline styles are used only for values that come from data, such as a stage's colour or a chart column's height.
     - **Why:** the brand's tokens live in one file, and a dark mode later only means redefining the variables.
     - **Turned down:** a CSS framework, which adds a second vocabulary for the same tokens.
 16. `ARC-16` **Mature libraries for the hard parts.**
 
     | Need | Library |
     |---|---|
-    | Routing | React Router |
-    | Server data | TanStack Query |
-    | Tables | TanStack Table |
-    | Drag and drop | dnd-kit (sortable preset, keyboard sensor) |
-    | Charts | Recharts |
-    | Dialogs, menus, selects, messages | Radix UI |
-    | Forms and validation | React Hook Form with zod |
+    | Routing | React Router 7 |
+    | Server data | TanStack Query 5 |
+    | Tables | TanStack Table 8 |
+    | Drag and drop | dnd-kit (sortable preset, pointer and keyboard sensors) |
+    | Charts | Recharts 3 |
+    | Dialogs, menus, popovers, tooltips, messages | Radix UI |
+    | Searchable select | cmdk |
+    | Forms and validation | React Hook Form 7 with zod 4 |
     | Icons | Lucide |
     | Fonts | `@fontsource` (Instrument Sans, Instrument Serif, JetBrains Mono) |
     | Backend | FastAPI, Pydantic, SQLAlchemy Core, uvicorn |
     | Tests | pytest with FastAPI's TestClient, Vitest with Testing Library, Playwright Test |
 
     - **Why:** the tech stack asks for popular, well-supported libraries over custom code.
+    - **Versions:** the majors above are pinned in the lockfiles. Newer majors of React Router, TanStack Table, Vite, Vitest and TypeScript exist; moving to them is a change of its own.
 
 ## Data model
 
-`DM-06` SQLAlchemy Core tables in `backend/`, with no raw SQL. Each user action writes in a single transaction. Columns use SQLAlchemy's generic types, such as `Date` and `DateTime`, which SQLite stores as ISO 8601 text, in local time. Nothing SQLite-only is used, so the same tables can move to Postgres later. Money is stored as whole cents in an integer, so sums are exact. Every table has `id` (integer primary key), `created_at` and `updated_at`, set by the server.
+`DM-06` SQLAlchemy Core tables in `backend/`, with no raw SQL. Each user action writes in a single transaction.
+- Columns use SQLAlchemy's generic types, such as `Date` and `DateTime`, which SQLite stores as ISO 8601 text, in local time.
+- Nothing SQLite-only is used, so the same tables can move to Postgres later.
+- Money is stored as whole cents in an integer, so sums are exact.
+- Every table has `id` (integer primary key), `created_at` and `updated_at`, set by the server.
 
 ### organizations `DM-01`
 
 | Column | Type | Rules |
 |---|---|---|
 | name | text | required, 1 to 200 characters after trimming |
-| website | text | optional; the form adds `https://` if no scheme is given |
+| website | text | optional; `https://` is added if no scheme is given |
 | industry | text | optional, free text; the form suggests industries already in use |
 | notes | text | optional, up to 5.000 characters |
 
@@ -230,12 +366,12 @@ Each one says what was decided, why, and what was turned down.
 | Column | Type | Rules |
 |---|---|---|
 | name | text | required, 1 to 200 characters |
-| organization_id | integer | required by the form and the API on create and edit; set to empty when the organization is deleted (decision 1) |
+| organization_id | integer | required by the form and the API on create and edit; set to empty when the organization is deleted (`DEC-01`) |
 | contact_id | integer | the main contact, optional; set to empty when the contact is deleted |
 | stage | text | `new`, `qualified`, `proposal`, `negotiation`, `won` or `lost` |
 | value_cents | integer | 0 or more; defaults to 0 |
 | probability | integer | 0 to 100 |
-| close_date | date | optional while open; set to today when the deal is won or lost (decision 7) |
+| close_date | date | optional while open; set to today when the deal is won or lost (`DEC-07`) |
 | position | integer | the card's place in its pipeline column, 0 at the top |
 
 ### activities `DM-04`
@@ -277,16 +413,18 @@ Deleting the deal or contact deletes its events.
 | Won | 100% | closed |
 | Lost | 0% | closed |
 
-- `RULE-01` A new deal takes its stage's usual probability, unless the form sets another.
-- `RULE-02` `RULE-03` When the stage changes, the probability becomes the new stage's usual figure. In the form, picking a new stage fills in that figure, and the user can change it before saving. A probability set by hand is kept until the stage changes again.
+- `RULE-01` A new deal takes its stage's usual probability, unless the form sets another. It goes to the top of its column.
+- `RULE-02` `RULE-03` When the stage changes, the probability becomes the new stage's usual figure.
+  - In the form, picking a new stage fills in that figure, and the user can change it before saving.
+  - A probability set by hand is kept until the stage changes again.
 - `RULE-04` Every change of stage writes a `stage_change` event, whether it comes from the board or the form.
-- `RULE-05` Moving to Won makes the main contact a customer (decision 8) and writes a `status_change` event for them.
+- `RULE-05` Moving to Won makes the main contact a customer (`DEC-08`) and writes a `status_change` event for them. A deal created at Won does the same.
 - `RULE-06` A deal is **late** when it's open and its close date is before today.
 - `RULE-07` **Expected revenue** for a deal is value times probability. The open pipeline's figures add up open deals only.
 
 ### What each timeline shows
 
-`TL-04` Timelines are newest first, by `occurred_at`. Each entry shows its type, its text, its date and, for entries rolled up from another record, which record it came from ("on deal Acme renewal").
+`TL-04` Timelines are newest first, by `occurred_at`. Each entry shows its type, its text and its date. An entry rolled up from another record also says which record it came from: "on deal Acme renewal", or "with Maria Lopez" for a contact's own entry on an organization's timeline.
 
 - `TL-01` **Deal:** its activities and its stage changes.
 - `TL-02` **Contact:**
@@ -298,7 +436,11 @@ Deleting the deal or contact deletes its events.
 
 ## API
 
-`API-17` JSON under `/api`, served by FastAPI with Pydantic models. Request bodies are validated on the server with the same rules as the forms. A request that breaks a rule gets a 422 with an error for each field, which the form shows next to the field. A request for a missing record gets a 404.
+`API-17` JSON under `/api`, served by FastAPI with Pydantic models.
+- Request bodies are validated on the server with the same rules and messages as the forms.
+- A request that breaks a rule gets a 422 with one message per field, `{"detail": ..., "errors": {"field": "message"}}`, which the form shows next to the field.
+- A request for a missing record gets a 404.
+- Any other error comes back as JSON with a `detail`.
 
 | ID | Method and path | Purpose |
 |---|---|---|
@@ -307,55 +449,48 @@ Deleting the deal or contact deletes its events.
 | `API-03` | `GET /api/organizations/{id}` | one organization with its contacts, its deals and its timeline |
 | `API-02` | `PUT /api/organizations/{id}` | edit |
 | `API-02` | `DELETE /api/organizations/{id}` | delete; contacts and deals are kept, with no organization |
-| `API-04` | `GET /api/organizations/{id}/delete-impact` | how many contacts and deals would lose their organization |
+| `API-04` | `GET /api/organizations/{id}/delete-impact` | its name, and how many contacts and deals would lose their organization |
 | `API-05` | `GET /api/contacts` | all contacts with their organization's name |
 | `API-06` | `POST`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}` | as above; a contact's `GET` includes their organization, their deals and their timeline |
-| `API-07` | `GET /api/contacts/{id}/delete-impact` | how many activities would be deleted and how many deals would lose their main contact |
-| `API-08` | `GET /api/deals` | all deals with organization and contact names, and a `late` flag |
+| `API-07` | `GET /api/contacts/{id}/delete-impact` | their name, how many activities would be deleted, and how many deals would lose their main contact |
+| `API-08` | `GET /api/deals` | all deals with organization and contact names, a `late` flag and expected revenue |
 | `API-09` | `POST`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}` | as above; a deal's `GET` includes its timeline |
-| `API-10` | `GET /api/deals/{id}/delete-impact` | how many activities would be deleted |
-| `API-11` | `POST /api/deals/{id}/move` | body `{stage, index}`: moves the card to that stage and place, renumbers the column, and applies the stage rules |
+| `API-10` | `GET /api/deals/{id}/delete-impact` | its name, and how many activities and stage-history entries would be deleted |
+| `API-11` | `POST /api/deals/{id}/move` | body `{stage, index}`: moves the card to that stage and place, renumbers both columns, and applies the stage rules. An index past the end puts the card last. |
 | `API-12` | `POST /api/activities` | log an activity on a contact or a deal |
 | `API-13` | `PUT /api/activities/{id}`, `DELETE /api/activities/{id}` | edit or delete |
 | `API-14` | `POST /api/activities/{id}/done` | body `{done}`: marks a follow-up done or not done |
 | `API-15` | `GET /api/dashboard` | every figure the dashboard shows, worked out on the server |
-| `API-16` | `GET /api/industries` | industries in use, for the form's suggestions |
-| `API-18` | `GET /api/today` | today's date and the current time from `backend/clock.py`, so the browser never uses its own clock (decision 12) |
+| `API-16` | `GET /api/industries` | industries in use, each once, sorted, with no blanks |
+| `API-18` | `GET /api/today` | today's date and the current time from `backend/clock.py`, so the browser never uses its own clock (`DEC-12`) |
 
 Lists return every record; a few hundred of each kind is fine without paging. Search and sorting run in the browser.
 
 ## Screens
 
-### Chosen look: mockup B, Command deck
+### The look: Command deck
 
-Three mockups were made on 23 Nov 2026 and are kept in `docs/mockups/`:
-- A, Ledger
-- B, Command deck
-- C, Open plan
+The look is the one called "Command deck", and `docs/mockups/b-dashboard.html` and `b-pipeline.html` are its visual reference. Where they and this spec differ, this spec wins. Two other mockups, A and C, are kept in the same folder for reference only.
 
-Mockup B was chosen (`b-dashboard.png` and `b-pipeline.png`). Its HTML files are the visual reference for the build, and where this spec and the mockup differ, this spec wins.
-
-What B means for every screen:
+What it means for every screen:
 - **Navigation:** a slim icon rail instead of a wide sidebar, which leaves more width for the board and the tables.
 - **Page title:** a small "Accountable" line above the page title.
 - **Dark panels:** one Midnight panel per screen carries the headline figures (the dashboard's top panel, the pipeline's totals strip).
 - **Stage colour:** used boldly, as solid blocks for stage headers and stage rows rather than small dots.
 - **Shapes:** panels have 20px corners; cards and rows have 14px.
 
-Why B was chosen: it looks the most professional of the three.
-
 ### Layout
 
 - `UI-LAY-01` **Icon rail:** a fixed rail on the left, 72px wide, in Midnight.
-  - At the top is the Accountable mark: a Sea Green rounded square with a Midnight "A".
-  - Below it are five 44px icon buttons from Lucide, for Dashboard, Pipeline, Deals, Contacts and Organizations, with Sea Mist icons. The current page's button is filled Sea Green with a Midnight icon.
+  - At the top is the Accountable mark: a Sea Green rounded square with a Midnight "A". It links to the dashboard.
+  - Below it are five 44px icon buttons from Lucide, for Dashboard, Pipeline, Deals, Contacts and Organizations, with Sea Mist icons. The current page's button is filled Sea Green with a Midnight icon, and marked as the current page for screen readers.
   - Each button has an accessible name, and a tooltip with the section's name shows on hover and on keyboard focus.
 - `UI-LAY-02` **Main area:** the page background is `#F0F4F5`. Each page has a title row:
   - on the left, a small uppercase "Accountable" line in Muted ink above the page title
   - on the right, the page's main action ("New deal") as a Midnight button with white text, or on the dashboard, today's date in Instrument Serif.
 
   White rounded panels sit below.
-- `UI-LAY-03` **Screen size:** the layout is built for screens 1280px wide and up, and still works at 1024px.
+- `UI-LAY-03` **Screen size:** the layout is built for screens 1280px wide and up, and still works at 1024px. The page never scrolls sideways; only the board may, inside itself.
 - `UI-LAY-04` **Addresses:**
   - `/` for the dashboard
   - `/pipeline`
@@ -363,7 +498,7 @@ Why B was chosen: it looks the most professional of the three.
   - `/contacts` and `/contacts/:id`
   - `/organizations` and `/organizations/:id`.
 
-  The browser's back button works throughout.
+  The browser's back button works throughout. Any other address shows a "Page not found" page with a way back to the dashboard.
 
 ### Dashboard
 
@@ -373,25 +508,34 @@ From top to bottom:
    - **Left, about 360px:** four figures in a 2 x 2 grid. Each has a label in light Sea Mist (`#9FB4BA`), a large figure in white JetBrains Mono, and a short line of context.
      - **Open pipeline:** the value of all open deals, and how many there are.
      - **Expected revenue:** the open deals' value times their probability.
-     - **Won this month:** the value of deals won this month, with the figure in Sea Green. Below it, the change from last month in a pill with an up or down arrow: Sea Green on a translucent Sea Green fill for a rise, and Raspberry for a fall.
+     - **Won this month:** the value of deals won this month, with the figure in Sea Green. Below it, the change from last month in a pill with an up or down arrow: Sea Green on a translucent Sea Green fill for a rise, and Raspberry for a fall. With nothing won last month, it says so instead.
      - **Follow-ups due:** how many are overdue, in Raspberry when more than zero, and how many are due today.
    - `UI-DASH-02` **Right, the rest:** **Revenue won** (line chart), the value of won deals for each of the last 12 months by close date.
-     - The line is Sea Green, with a dot for each month, on grid lines in a lighter Midnight (`#1C5568`).
+     - The line is Sea Green, with a dot for each month, on grid lines in a lighter Midnight (`#1C5568`), with four round axis steps from $0.
      - The current month's dot is larger and filled, and labelled with its short amount (`$86k`).
      - Hovering a month shows a white tooltip with its full total and how many deals were won.
 2. **Three panels in a row:**
-   - `UI-DASH-03` **Sales funnel:** one column per stage from New to Won, in stage colours, side by side and getting shorter. Above each column is the share of New's value it keeps (`94%`), and below it the stage name and the value that reached it (decision 10).
+   - `UI-DASH-03` **Sales funnel:** one column per stage from New to Won, in stage colours, side by side and getting shorter. Above each column is the share of New's value it keeps (`94%`), and below it the stage name and the value that reached it (`DEC-10`).
    - `UI-DASH-04` **Pipeline by stage:** one solid row per open stage, in the stage's colour (New uses the darker Cerulean, `#0D6E8F`, so its white text passes contrast). Each row shows the stage name and probability, its value, its deal count and its expected revenue. Clicking a row opens the pipeline.
-   - `UI-DASH-05` **Won and lost** (bar chart): one bar per month above a centre line for deals won (Sea Green), and one below it for deals lost (Lost grey), with "13 won" and "3 lost" labels and a legend.
+   - `UI-DASH-05` **Won and lost** (bar chart): one bar per month above a centre line for deals won (Sea Green), and one below it for deals lost (Lost grey), with "13 won" and "3 lost" labels, a legend, and a tooltip per month.
 3. **Two panels in a row:**
-   - `UI-DASH-06` **Follow-ups** (wider), grouped under "Overdue", "Today" and "Next 7 days" (decision 11).
-     - Each follow-up is a rounded row with a checkbox to mark it done, the activity's description, the record it belongs to (as a link) and its due date.
+   - `UI-DASH-06` **Follow-ups** (wider), grouped under "Overdue", "Today" and "Next 7 days" (`DEC-11`).
+     - Each follow-up is a rounded row with:
+       - a checkbox to mark it done
+       - the activity's description
+       - the record it belongs to, as a link ("Pinecrest Hotels · Booking engine", or a contact's name)
+       - its due date, relative ("3 days overdue", "Today", "In 3 days"), with the full date in a tooltip.
      - Overdue rows sit on a pale Raspberry tint with the date in dark Raspberry. The other rows sit on a pale grey (`#F3F7F8`).
      - Ticking the box removes the row and updates the figure in the headline panel.
    - `UI-DASH-07` **Recent activity:** the 10 newest entries across all timelines with `occurred_at` up to now: activities, stage changes and status changes.
      - Each has a rounded-square icon in its type's colour, a line of text, and the record (as a link) with its date and time.
 
-`UI-DASH-08` Charts use Recharts. Axes and grid lines are quiet: Sea Mist grid lines and muted labels on white, and lighter Midnight grid lines and pale labels on the headline panel. Every chart has a tooltip with full figures in the money format. All figures come from `GET /api/dashboard`, which is fetched again whenever the dashboard is opened.
+`UI-DASH-08` Charts use Recharts.
+- Axes and grid lines are quiet: Sea Mist grid lines and muted labels on white, and lighter Midnight grid lines and pale labels on the headline panel.
+- Every chart has a tooltip with full figures in the money format.
+- All figures come from `GET /api/dashboard`, which is fetched again whenever the dashboard is opened.
+
+Below 1280px wide, the headline panel stacks its figures above the chart, and the three-panel and two-panel rows become two columns, then one.
 
 ### Tables (Organizations, Contacts, Deals)
 
@@ -399,48 +543,57 @@ All three use TanStack Table in a white panel, with the same behaviour:
 
 - `UI-TBL-01` **Search:** a search box above the table. It matches any text column, ignores case, and filters as you type.
 - `UI-TBL-02` **Sorting:** clicking a heading sorts by that column, ascending then descending. An arrow shows the current sort. Names sort A to Z by default.
-- `UI-TBL-03` **Opening a record:** clicking a row, or pressing Enter on it, opens the record's page.
-- `UI-TBL-04` **Row actions:** each row ends with Edit and Delete icon buttons, which have text labels for screen readers.
+- `UI-TBL-03` **Opening a record:** clicking a row, or pressing Enter on it, opens the record's page. Links inside a row (a website, an email address) do their own thing instead.
+- `UI-TBL-04` **Row actions:** each row ends with Edit and Delete icon buttons, which have text labels for screen readers ("Edit Acme Ltd").
 - `UI-TBL-03` **Keyboard:** Tab reaches the search box, the headings, each row and the row buttons.
 - `UI-TBL-05` **Records:** the panel's footer shows how many records are showing out of the total, for example "12 of 25 contacts".
 
 `UI-TBL-06` Columns:
 
 - **Organizations:** Name, Industry, Website (a link that opens in a new tab), Contacts, Open deals, Open value.
-- `UI-TBL-07` **Contacts:** Name, Organization, Job title, Email, Phone, Status (badge). Above the table are filter buttons for All, Lead, Qualified and Customer, each with its count. The filter combines with the search.
+- `UI-TBL-07` **Contacts:** Name, Organization, Job title, Email (a `mailto:` link), Phone, Status (badge). Above the table are filter buttons for All, Lead, Qualified and Customer, each with its count. The filter combines with the search.
 - `UI-TBL-08` **Deals:** Name, Organization, Main contact, Stage (badge), Value, Probability, Close date. A late deal shows its close date in Raspberry with a small "Late" badge. A deal with no organization shows "No organization" in muted text.
 
 ### Record pages
 
-`UI-REC-01` Each page has a header panel with the record's name, its key facts, and Edit and Delete buttons. Below it are two columns: linked records on the left (about 40%) and the timeline on the right (about 60%).
+`UI-REC-01` Each page starts with a "< Deals" (or Contacts, Organizations) link back to its list, then a header panel with the record's name, its key facts, and Edit and Delete buttons. Below it are two columns: linked records on the left (about 40%) and the timeline on the right (about 60%). Below 1100px wide the two columns stack.
 
 - `UI-REC-02` **Organization:**
-  - Facts: industry, website and notes.
+  - Facts: industry, website, open value and notes.
   - Left: its contacts (name, job title, status) and its deals (name, stage, value), each as a link, each with a "New" button that starts the form with this organization filled in.
   - Right: the organization's timeline.
 - `UI-REC-03` **Contact:**
-  - Facts: organization (as a link), status badge, email (as a `mailto:` link), phone and job title.
-  - Left: the deals where they're the main contact.
+  - Facts: status badge, organization (as a link), job title, email (as a `mailto:` link) and phone.
+  - Left: the deals where they're the main contact, with a "New" button that starts a deal with them and their organization filled in.
   - Right: the timeline, with "Log activity" at the top.
 - `UI-REC-04` **Deal:**
-  - Facts: stage badge, value, probability, expected revenue, close date (with "Late" if it applies), organization and main contact (as links).
-  - Left: details.
+  - Facts: stage badge, value, probability, expected revenue, close date (with "Late" if it applies).
+  - Left: details, including organization and main contact (as links) and when it was created.
   - Right: the timeline, with "Log activity" at the top.
 
-`UI-REC-05` **Log activity:** a form inside the timeline panel. It has type (Note, Call or Email, as three buttons), description, when it happened (defaults to now) and an optional follow-up date. Saving adds the entry at the top of the timeline without reloading the page.
+`UI-REC-05` **Log activity:** a form inside the timeline panel.
+- Its fields:
+  - type: Note, Call or Email, as three buttons
+  - description
+  - when it happened, which defaults to now on the server's clock
+  - an optional follow-up date.
+- "Log it" adds the entry at the top of the timeline without reloading the page, and clears the form for the next one.
 
 `UI-REC-06` **Timeline entries:**
 - Each entry has a round icon in its type's colour: note Midnight, call Cerulean, email Coral, stage change in the new stage's colour, status change Sea Green.
-- Activities have Edit and Delete in a small menu. An activity with a follow-up shows its due date and a "Done" checkbox.
+- Activities read "Call: agreed a two-year term", and have Edit and Delete in a small menu.
+- An activity with a follow-up shows its due date, "3 days overdue" if it has passed, and a "Done" checkbox.
 - `UI-EMPTY-04` An empty timeline reads "Nothing here yet. Log a call, email or note to start the history."
+
+A record that doesn't exist, for example after it was deleted elsewhere, shows "That deal doesn't exist. It may have been deleted." with a way back to the list.
 
 ### Pipeline
 
-- `UI-PIPE-01` **Totals strip:** a Midnight panel across the top. It shows the total open value, the expected revenue (in Sea Green) and the number of open deals. Beside them is a stacked bar of open value by stage, in stage colours with 2px gaps; Negotiation uses Sea Mist there so it shows on Midnight.
-- `UI-PIPE-02` **The board:** six columns side by side, New to Lost, sharing the width equally, each at least 180px. Each column is its own white panel with 20px corners. The board scrolls sideways if the window is narrower than six columns at their minimum, and each column scrolls on its own if it's taller than the window.
+- `UI-PIPE-01` **Totals strip:** a Midnight panel across the top. It shows the total open value, the expected revenue (in Sea Green) and the number of open deals. Beside them is a stacked bar of open value by stage, in stage colours with 2px gaps and a legend; Negotiation uses Sea Mist there so it shows on Midnight. With no open deals, the bar reads "No open deals".
+- `UI-PIPE-02` **The board:** six columns side by side, New to Lost, sharing the width equally, each at least 180px. Each column is its own white panel with 20px corners. All six fit at 1280px; the board scrolls sideways if the window is narrower, and each column scrolls on its own if it's taller than the window.
 - `UI-PIPE-03` **Column header:** a solid block in the stage colour at the top of the column, with 14px corners. It shows:
   - the stage name and its usual probability
-  - the number of cards, in a pill
+  - the number of cards, in a pill (beside the name, or beside the expected revenue in narrower columns)
   - the column's value
   - its expected revenue, or "Closed, won" or "Closed, lost" for the last two columns.
 
@@ -448,30 +601,43 @@ All three use TanStack Table in a white panel, with the same behaviour:
 - `UI-PIPE-04` **Card:** a pale grey card (`#F3F7F8`) with 14px corners, inside the white column. It shows:
   - the value first, in JetBrains Mono 16px
   - the deal name, in semibold
-  - the organization
-  - at the bottom, the main contact's initials in a Midnight circle (an empty ringed circle when there's no main contact), and the close date in a white pill.
+  - the organization, or "No organization"
+  - at the bottom, the main contact's initials in a Midnight circle (an empty ringed circle when there's no main contact), and the close date in a white pill ("No date" when there's none).
 
-  A late card's pill reads "Late · 20 Nov 2026" in dark Raspberry on a pale Raspberry tint. Clicking a card opens the deal. The initials circle has the contact's full name as its tooltip and accessible name.
-- `UI-PIPE-05` **Adding a deal:** "Add deal" sits under the header of each open column, as a pale grey button. It opens the deal form with that stage already chosen.
+  A late card's pill reads "Late · 20 Nov 2026" in dark Raspberry on a pale Raspberry tint. Clicking a card, or pressing Enter on it, opens the deal. The initials circle has the contact's full name as its tooltip and accessible name.
+- `UI-PIPE-05` **Adding a deal:** "Add deal" sits under the header of each open column, as a pale grey button. It opens the deal form with that stage and its probability already chosen.
 - `UI-PIPE-06` **Dragging:** cards are dragged with dnd-kit, using its sortable preset.
   - A card can be dropped anywhere in any column, including higher or lower in its own column.
-  - The board updates at once: the card's place, its probability and every total. Then it calls `POST /api/deals/{id}/move`.
-  - `UI-PIPE-07` If the call fails, the card goes back to where it was and an error message explains why.
-  - The keyboard works too (decision 14).
+  - The board updates at once: the card's place, its stage, its probability and every total. Then it calls `POST /api/deals/{id}/move`.
+  - `UI-PIPE-07` If the call fails, the card goes back to where it was and a message explains why ("Couldn't move Data audit. ...").
+  - The keyboard works too (`DEC-14`).
 
 ### Forms
 
-- `UI-FORM-01` **Where:** forms open in a dialog (Radix Dialog), titled "New deal" or "Edit deal". The first field has focus when it opens, Tab moves between fields, Enter saves (except in multi-line text, where it starts a new line) and Escape closes.
+- `UI-FORM-01` **Where:** forms open in a dialog (Radix Dialog), titled "New deal" or "Edit deal".
+  - The first field has focus when it opens.
+  - Tab moves between fields.
+  - Enter saves, except in multi-line text, where it starts a new line, and in a select or suggestion list, where it picks the option.
+  - Escape closes an open list first, then the dialog.
 - **Building them:** forms use React Hook Form with zod schemas that mirror the server's rules.
 - `UI-FORM-02` **Errors:**
   - Errors show under each field when it's left or when the form is saved, in Raspberry text with an icon.
   - Saving is blocked until they're fixed, and focus moves to the first field with an error.
-  - Messages are short, for example "Enter a name", "Enter an email like name@company.com", "Value can't be negative", "Probability must be between 0 and 100".
-- `UI-FORM-03` **Choosing records:** organization and main contact are chosen with a searchable select. The deal form's contact list shows the chosen organization's contacts first.
+  - Messages are short:
+    - "Enter a name"
+    - "Choose an organization"
+    - "Enter an email like name@company.com"
+    - "Value can't be negative"
+    - "Use a comma for cents, like 12.500,50"
+    - "Probability must be between 0 and 100"
+    - "Describe what happened"
+  - Errors the server finds show on their fields the same way.
+- `UI-FORM-03` **Choosing records:** organization and main contact are chosen with a searchable select. The deal form's contact list shows the chosen organization's contacts first, under "At Acme Ltd", then the others.
 - `UI-FORM-04` **Deal form:**
   - Changing the stage fills in its usual probability.
   - Choosing Won or Lost fills in today as the close date.
   - Both can be changed before saving.
+  - The value is typed in the money format and tidied to `12.500,00` when the field is left.
 - `UI-FORM-05` **After saving:** the dialog closes, a short message confirms it ("Deal saved") at the bottom right, and the list or page shows the change.
 - `UI-FORM-06` `UI-FORM-07` **Organization form:** the industry field suggests industries already in use as you type (from `GET /api/industries`), and the form adds `https://` to a website with no scheme before saving.
 
@@ -479,28 +645,30 @@ All three use TanStack Table in a white panel, with the same behaviour:
 
 `UI-DEL-01` Delete opens a confirmation dialog. Before it appears, the dialog asks the `delete-impact` endpoint what will happen, and then says it in plain words:
 
-- **Organization:** "Delete Northwind Traders? Its 3 contacts and 2 deals will be kept, with no organization. This can't be undone."
-- **Contact:** "Delete Maria Lopez? 4 activities logged with this contact will be deleted. 2 deals will be kept, with no main contact. This can't be undone." (The text never uses a pronoun for the contact.)
+- **Organization:** "Delete Northwind Traders? Its 3 contacts and 2 deals will be kept, with no organization. This can't be undone." With neither, "It has no contacts or deals."
+- **Contact:** "Delete Maria Lopez? 4 activities logged with this contact will be deleted. 2 deals will be kept, with no main contact. This can't be undone." Parts with a count of zero are left out. The text never uses a pronoun for the contact.
 - **Deal:** "Delete Acme renewal? Its 5 activities and its stage history will be deleted. This can't be undone."
 - `UI-DEL-04` **Activity:** "Delete this call? This can't be undone."
 
-`UI-DEL-02` `UI-DEL-03` The buttons are Cancel, which has focus, and Delete, in Raspberry. Deleting from a record's page goes back to its list.
+`UI-DEL-02` `UI-DEL-03` The buttons are Cancel, which has focus, and Delete, in dark Raspberry. After deleting, a message confirms it ("Deal deleted"). Deleting from a record's page goes back to its list.
 
 ### Empty and loading states
 
 - `UI-EMPTY-01` An empty table shows a short line and the add button, such as "No contacts yet" with "New contact". A search with no results says "No contacts match "smith"" and offers to clear the search.
 - `UI-EMPTY-02` An empty chart keeps its axes and shows "No deals won in the last 12 months" in the middle. An empty funnel or pipeline bar shows the same kind of line.
 - `UI-EMPTY-03` `UI-PIPE-08` An empty pipeline column shows a dashed drop area reading "No deals". It is still a place to drop cards.
-- `UI-EMPTY-04` An empty follow-up list reads "No follow-ups due. You're up to date." The recent activity list reads "No activity yet".
-- `UI-EMPTY-05` While data loads, panels show grey placeholder shapes in the same layout, so nothing jumps around. With the sample data that lasts well under a second.
+- `UI-EMPTY-04` An empty follow-up list reads "No follow-ups due. You're up to date." The recent activity list reads "No activity yet". Linked lists on record pages read "No contacts yet", "No deals yet".
+- `UI-EMPTY-05` While data loads, panels and tables show grey placeholder shapes in the same layout, so nothing jumps around. With the sample data that lasts well under a second.
 
 ### Errors
 
-`UI-ERR-01` `UI-ERR-02` If the backend can't be reached or returns an error, a message at the bottom right says what failed ("Couldn't save the deal. Try again."). Nothing the user typed is lost, so an open form stays open. The browser's console stays free of errors and warnings during normal use.
+`UI-ERR-01` If the backend can't be reached or returns an error, a message at the bottom right says what failed ("Couldn't save the deal. Try again."). Nothing the user typed is lost, so an open form stays open. A screen whose data can't be loaded shows a short message with "Try again" instead of a blank page.
+
+`UI-ERR-02` The browser's console stays free of errors and warnings during normal use.
 
 ## Screen structures
 
-These wireframes show where everything sits on each screen. They show structure only: colours, type and spacing come from Design below, and behaviour from Screens above. Each one ends with the components it's built from, named as they'll be in `frontend/src/components/` and `frontend/src/pages/`. Figures are examples.
+These wireframes show where everything sits on each screen. They show structure only: colours, type and spacing come from Design below, and behaviour from Screens above. Each one ends with the components it's built from, as named in `frontend/src/components/` and `frontend/src/pages/`. Figures are examples.
 
 ### App shell
 
@@ -522,12 +690,12 @@ Every page sits inside this shell.
 |      |                                            +-----------------+  |
 |      |                                            | Message (toast) |  |
 +------+--------------------------------------------+-----------------+--+
- Rail,    Main area: page background, 32px padding
+ Rail,    Main area: page background, 32px padding (24px below 1320px)
  72px,
  Midnight
 ```
 
-- **Built from:** `AppShell`, `IconRail`, `RailLink` (icon button with tooltip), `PageHeader` (eyebrow, title, action slot), `Panel`, `Toaster`.
+- **Built from:** `AppShell`, `IconRail`, `RailLink` (icon button with tooltip), `PageHeader` (eyebrow, title, action slot), `Panel`, `Toaster`, and `FormsProvider`, which hosts the form and delete dialogs for every page.
 - **Notes:**
   - The rail stays fixed and the main area scrolls.
   - `[A]` is the brand mark, `#` is a Lucide icon, and `[#]` is the current page's button, filled Sea Green.
@@ -547,7 +715,7 @@ Dashboard                                         Monday, 23 Nov 2026 (serif)
 |                                     $80k  |Apr 2026   |   \   o--- (o)  |
 | Won this month    Follow-ups due          |$71.000,00 |    \ /           |
 | $86.000 (green)   4 overdue (rasp.)  $40k +---o-------+     o            |
-| (^ 37%) on Oct    2 due today           o--o   \  o                      |
+| (^ 37%) on October 2 due today          o--o   \  o                      |
 |                                     $0                                   |
 |                                       Dec Jan ...              Oct Nov   |
 +--------------------------------------------------------------------------+
@@ -566,7 +734,7 @@ Dashboard                                         Monday, 23 Nov 2026 (serif)
 +-------------------------+ +-----------------------+ +--------------------+
 
 +--------------------------------------+ +---------------------------------+
-| Follow-ups                  7 to do  | | Recent activity                 |
+| Follow-ups                 10 to do  | | Recent activity                 |
 |                                      | |                                 |
 | OVERDUE                              | | [>] Moved from Proposal to      |
 | +----------------------------------+ | |     Negotiation                 |
@@ -581,10 +749,9 @@ Dashboard                                         Monday, 23 Nov 2026 (serif)
 +--------------------------------------+ +---------------------------------+
 ```
 
-- **Built from:** `DashboardPage`, `HeadlinePanel`, `HeadlineFigure` x4, `RevenueChart`, `FunnelChart`, `PipelineByStage`, `WonLostChart`, `FollowUpList`, `FollowUpGroup`, `ActivityFeed`, `EmptyState`.
+- **Built from:** `DashboardPage`, `HeadlinePanel`, `HeadlineFigure` x4, `RevenueChart`, `FunnelChart`, `PipelineByStage`, `WonLostChart`, `FollowUpList` (with its groups), `ActivityFeed`, `EmptyState`, `Skeleton`.
 - **Notes:**
   - Overdue follow-up rows sit on a pale Raspberry tint, and the other rows on pale grey.
-  - Below 1280px wide, the headline panel stacks its figures above the chart, and the three-panel and two-panel rows become two columns, then one.
   - Each panel shows its own loading placeholder and its own empty state.
 
 ### Pipeline (`/pipeline`)
@@ -619,7 +786,7 @@ Pipeline                                                     [ + New deal ]
   each column is a white panel; its header is a solid block of stage colour
 ```
 
-- **Built from:** `PipelinePage`, `BoardTotals` (the Midnight strip with its stacked bar), `Board` (dnd-kit context), `StageColumn` x6, `ColumnHeader`, `DealCard`, `ContactInitials`, `DatePill`, `DealCardOverlay` (the card while dragging), `EmptyColumn`.
+- **Built from:** `PipelinePage`, `BoardTotals` (the Midnight strip with its stacked bar), `Board` (dnd-kit context, with its keyboard handling), `StageColumn` x6, `ColumnHeader`, `DealCard` with `ContactInitials` and `DatePill`, `DealCardOverlay` (the card while dragging).
 - **Notes:**
   - The columns share the width equally, at least 180px each, and the board scrolls sideways only when they don't fit.
   - The board takes the full height of the window under the totals strip, and each column scrolls on its own.
@@ -640,7 +807,7 @@ Contacts                                                    [ New contact ]
 | ------------------------------------------------------------------------ |
 | Maria Lopez   Acme Ltd        Head of Ops     maria@acm...  (Customer) e x|
 | Tom Becker    Globex Corp     CFO             tom@globe...  (Lead)     e x|
-| Aisha Khan    -               Consultant      aisha@...     (Qualified)e x|
+| Aisha Khan    No organization Consultant      aisha@...     (Qualified)e x|
 | ...                                                                      |
 |                                                                          |
 | 25 of 25 contacts                                                        |
@@ -648,7 +815,7 @@ Contacts                                                    [ New contact ]
    ^ = sorted column    e = Edit    x = Delete    ( ) = button or badge
 ```
 
-- **Built from:** `ContactsPage` (and `DealsPage`, `OrganizationsPage`), `DataTable` (TanStack Table), `SearchBox`, `StatusFilter` (Contacts only), `SortableHeader`, `RowActions`, `StageBadge` or `StatusBadge`, `LateBadge` (Deals only), `TableFooter`, `EmptyState`.
+- **Built from:** `ContactsPage` (and `DealsPage`, `OrganizationsPage`), `DataTable` (TanStack Table), `SearchBox`, `StatusFilter` (Contacts only), `SortableHeader`, `RowActions`, `StageBadge` or `StatusBadge`, `LateBadge` (Deals only), `EmptyState`, `LoadError`.
 - **Notes:**
   - The rows are divided by light lines, with no outline around the panel.
   - Money and dates sit right-aligned in JetBrains Mono.
@@ -702,7 +869,7 @@ Contact page                            Organization page
 
 Left column                             Left column
 +-------------------------------+       +-------------------------------+
-| Deals as main contact         |       | Contacts               [ New ]|
+| Deals as main contact  [ New ]|       | Contacts               [ New ]|
 | Acme renewal  (Neg) $24.000,00|       | Maria Lopez  Head of Ops  (Cu)|
 | Acme support  (Won)  $8.000,00|       | Tom Becker   CFO          (Le)|
 +-------------------------------+       +-------------------------------+
@@ -715,7 +882,7 @@ the Log activity form                   | Acme renewal  (Neg) $24.000,00|
                                         Right column: timeline only
 ```
 
-- **Built from:** `DealPage`, `ContactPage`, `OrganizationPage`, `RecordHeader`, `FactList`, `LinkedList`, `Timeline`, `TimelineEntry`, `LogActivityForm`, `ActivityMenu` (`...` = Edit, Delete), `FollowUpCheckbox`, `EmptyState`.
+- **Built from:** `DealPage`, `ContactPage`, `OrganizationPage`, `RecordHeader`, `HeaderFact`, `FactList`, `LinkedList`, `RecordColumns`, `Timeline` with its entries and their Edit and Delete menu, `LogActivityForm`, `FollowUpCheckbox`, `EmptyState`.
 - **Notes:**
   - `< Deals` goes back to the list.
   - `UI-REC-07` An organization's timeline has no "Log activity" form, because activities belong to a contact or a deal. Its entries say which contact or deal they came from.
@@ -723,7 +890,7 @@ the Log activity form                   | Acme renewal  (Neg) $24.000,00|
 
 ### Form dialog
 
-The deal form is shown here. The organization and contact forms use the same frame with their own fields.
+The deal form is shown here. The organization, contact and activity forms use the same frame with their own fields.
 
 ```
 +--------------------------------------------------+
@@ -736,7 +903,7 @@ The deal form is shown here. The organization and contact forms use the same fra
 | [ Acme Ltd                v ] [ Maria Lopez  v ] |
 |                                                  |
 | Stage                         Probability        |
-| [ Negotiation             v ] [ 75          ] %  |
+| [ Negotiation (75%)       v ] [ 75          ] %  |
 |                                                  |
 | Value (USD)                   Close date         |
 | [ $ 24.000,00               ] [ 12 Dec 2026    ] |
@@ -747,11 +914,12 @@ The deal form is shown here. The organization and contact forms use the same fra
      about 560px wide, centred, page dimmed behind
 ```
 
-- **Built from:** `FormDialog` (Radix Dialog), `DealForm` / `ContactForm` / `OrganizationForm` / `ActivityForm`, `TextField`, `MoneyField`, `PercentField`, `DateField`, `RecordSelect` (searchable), `StageSelect`, `FieldError`.
+- **Built from:** `FormDialog` (Radix Dialog), `DealForm` / `ContactForm` / `OrganizationForm` / `ActivityForm`, the fields in `fields.tsx` (`TextInput`, `TextArea`, `MoneyInput`, `PercentInput`, `DateInput`, `DateTimeInput`, `SelectInput`, `StageSelect`, `FieldError`), `RecordSelect` (searchable), `SuggestField` (industry).
 - **Notes:**
   - `*` marks a required field.
   - Errors sit under their field, in Raspberry with an icon.
   - Fields are in two columns where they pair naturally. The name and notes fields take the full width.
+  - Save is a Sea Green button with Midnight text.
 
 ### Delete dialog
 
@@ -764,10 +932,10 @@ The deal form is shown here. The organization and contact forms use the same fra
 |                                                  |
 |                        [ Cancel ]  [ Delete ]    |
 +--------------------------------------------------+
-     about 440px wide; Cancel has focus; Delete in Raspberry
+     about 440px wide; Cancel has focus; Delete in dark Raspberry
 ```
 
-- **Built from:** `ConfirmDeleteDialog` (Radix AlertDialog), which loads `delete-impact` before showing the text.
+- **Built from:** `ConfirmDeleteDialog` (Radix AlertDialog). `FormsProvider` loads `delete-impact` before showing the text.
 
 ## Design
 
@@ -784,7 +952,7 @@ Colours are CSS variables on `:root`, named by their role, so a dark mode can re
 | Rail and headline panels | `#073B4C` Midnight, with Sea Mist `#CDD8DB` icons, white figures and `#9FB4BA` labels | the icon rail, the dashboard headline panel, the pipeline totals strip |
 | Card | `#F3F7F8` | pipeline cards, follow-up rows, "Add deal" buttons |
 | Line | `#E8EEF0` | table row dividers and input fills (never an outline around a panel) |
-| Primary | Sea Green `#06D6A0`, Midnight text | main buttons ("New deal", "Save"), focus rings |
+| Primary | Sea Green `#06D6A0`, Midnight text | "Save" and "Log it" buttons, focus rings |
 | Secondary | Marigold `#FFC145`, Midnight text | Qualified, highlights |
 | Tertiary | Coral `#F78C6B`, Midnight text | Proposal, email activity |
 | Information | Cerulean `#118AB2` | New, call activity, links |
@@ -801,7 +969,7 @@ Colours are CSS variables on `:root`, named by their role, so a dark mode can re
 | Raspberry | `#C2264F` (5.7:1) | `#C2264F` on `#FDECF0` (5.0:1) |
 | Midnight | `#073B4C` | `#073B4C` on `#E8EEF0` (10.3:1) |
 
-**Stage colours** (decision 5): New Cerulean, Qualified Marigold, Proposal Coral, Negotiation Midnight, Won Sea Green and Lost grey `#8FA3AA`. Stage badges use the tinted versions above; Lost uses `#4D6973` on `#E8EEF0`.
+**Stage colours** (`DEC-05`): New Cerulean, Qualified Marigold, Proposal Coral, Negotiation Midnight, Won Sea Green and Lost grey `#8FA3AA`. Stage badges use the tinted versions above; Lost uses `#4D6973` on `#E8EEF0`.
 
 **Contact status colours:** Lead Cerulean, Qualified Marigold, Customer Sea Green.
 
@@ -809,14 +977,14 @@ Colours are CSS variables on `:root`, named by their role, so a dark mode can re
 
 ### Type `DES-03`
 
-Fonts are bundled with `@fontsource` (decision 2).
+Fonts are bundled with `@fontsource` (`DEC-02`).
 
 - **Instrument Sans** for all interface text:
   - page titles 28px semibold
   - panel titles 16px semibold
   - body and table text 14px regular
   - labels 12px medium, in Muted ink.
-- **JetBrains Mono** for figures: money, percentages, counts in tiles and tables, and dates in tables. It uses tabular numbers, so columns line up. Tile figures are 32px medium.
+- **JetBrains Mono** for figures: money, percentages, counts in tiles and tables, and dates in tables. It uses tabular numbers, so columns line up. Tile figures are 28px medium.
 - **Instrument Serif** sparingly, as an accent: today's date on the right of the dashboard's title row ("Monday, 23 Nov 2026"), and the empty-state lines.
 
 ### Shape and spacing `DES-04`
@@ -830,78 +998,73 @@ Fonts are bundled with `@fontsource` (decision 2).
 
 ### Formats `DES-05`
 
-All formatting lives in one frontend module, which has its own unit tests.
+All formatting lives in one frontend module, `frontend/src/lib/format.ts`, which has its own unit tests.
 
 - **Dates:** `23 Nov 2026`. Times show as `23 Nov 2026, 14:05`, on a 24-hour clock.
 - **Money:**
   - in tables, forms and cards, `$12.500,00`, always with the dollar sign
   - in headline tiles, `$412.500`
-  - on chart axes, `$400k` and `$1,2M`.
+  - on chart axes and labels, `$400k` and `$1,2M`.
 - **Probability:** `75%`.
-- **Relative dates on follow-ups:** "Today", "Tomorrow", "In 3 days", and "3 days overdue", with the full date in a tooltip.
+- **Relative dates on follow-ups:** "Today", "Tomorrow", "In 3 days", "1 day overdue" and "3 days overdue", with the full date in a tooltip.
 
 ### Tone `DES-06`
 
-Plain business English, as the brand asks. Labels are short ("New deal", "Log activity", "Mark done"), with no jargon and no exclamation marks.
+Plain business English, as the brand asks. Labels are short ("New deal", "Log activity", "Mark done"), with no jargon and no exclamation marks. Money is always shown with its currency.
 
 ## Sample data
 
-Created by `backend/seed.py`. It uses a fixed random seed, so every reset gives the same data relative to today:
+Created by `backend/seed.py`. It uses a fixed random seed, so every reset gives the same data relative to today. On 23 Nov 2026 it gives these figures:
+- $1.130.000 open in 14 deals, with $529.500 expected
+- $668.000 won over 12 months
+- a funnel of 100, 94, 76, 56 and 34%
+- 4 overdue follow-ups.
 
-- `SEED-01` **10 organizations** across at least six industries: software, manufacturing, retail, healthcare, logistics, finance and hospitality. Each has a made-up name, a website on `.example` and a line of notes.
+- `SEED-01` **10 organizations** across seven industries: software, manufacturing, retail, healthcare, logistics, finance and hospitality. Each has a made-up name, a website on `.example` and a line of notes.
 - `SEED-01` **25 contacts:**
-  - about 9 leads, 7 qualified and 9 customers
+  - 9 leads, 7 qualified and 9 customers
   - all but 3 at an organization
-  - `SEED-03` every customer is the main contact of at least one won deal.
+  - `SEED-03` every customer is the main contact of at least one won deal, and every main contact of a won deal is a customer.
 - `SEED-01` **30 deals:**
   - 4 at New, 4 at Qualified, 3 at Proposal and 3 at Negotiation
-  - `SEED-02` 13 won and 3 lost, with close dates spread so that each of the last 12 months has at least one won deal (12 months need at least 12 wins)
+  - `SEED-02` 13 won and 3 lost, with close dates spread so that each of the last 12 months has at least one won deal
   - `SEED-02` 3 of the open deals are late, and the rest have close dates over the next 4 months
   - values range from $2.500,00 to $180.000,00
   - `SEED-06` two open deals have a probability set by hand
   - `SEED-04` every deal past New has the stage-change events of the path it took
   - `SEED-04` pipeline order is set within each column.
-- `SEED-05` **About 60 activities** on contacts and deals, spread over the last 12 months. 4 have overdue follow-ups, 2 are due today, 4 are due in the next week, 3 are due later, and several are done.
+- `SEED-05` **About 65 activities** on contacts and deals, spread over the last 12 months, in working hours and never later than now.
+  - 4 have overdue follow-ups, 2 are due today, 4 are due in the next week and 3 are due later.
+  - Several follow-ups are done.
 
 ## Testing
 
-`npm test` must pass before the MVP is called done. `docs/plan.md` will list the tests in full. At least:
+`npm test` must pass before any change is called done (`RUN-04`). Each change's `plan.md` lists the tests it adds. Between them, the suites cover:
 
 - **Backend (pytest):**
   - every endpoint, against a temporary database
-  - the stage rules (probability, close date, events, the customer change)
-  - each delete rule
+  - the stage rules (probability, close date, events, the customer change), through both the form and the board
+  - each delete rule, and that a failed delete or move changes nothing
   - the move endpoint's renumbering
   - each dashboard figure, worked out from a small known set of data
-  - each timeline's roll-up.
+  - each timeline's roll-up
+  - the sample data, startup seeding, the shared validation cases, and speed.
 - **Frontend (Vitest):**
   - money and date formatting
-  - money input parsing (decision 4)
-  - the zod schemas
-  - the late-deal and expected-revenue helpers.
-- **End to end (Playwright with Chrome), one test per success criterion that can be automated:**
-  - starting and landing on the dashboard
-  - adding, searching, sorting, editing and deleting each kind of record, and checking it all after a reload
-  - dragging a card within its column and to another column, then reloading
+  - money input parsing (`DEC-04`)
+  - the zod schemas, against the shared validation cases
+  - the late-deal and expected-revenue helpers
+  - the table, the deal form, the delete dialog, the board's totals and the dashboard's placeholders.
+- **End to end (Playwright with Chrome), for each success criterion that can be automated:**
+  - starting and landing on the dashboard, and nothing fetched from the internet
+  - adding, searching, sorting, editing and deleting each kind of record, and checking it all after a reload and a restart
+  - dragging a card within its column and to another column, with the mouse and the keyboard, then reloading
   - logging an activity and following it into the contact's and organization's timelines
-  - winning a deal and seeing the contact become a customer
-  - form errors
+  - follow-ups on the dashboard, and winning a deal and seeing the contact become a customer
+  - form errors and failed saves
   - keyboard-only creation of a contact
-  - the empty states after deleting everything.
+  - speed, the empty states, and screenshots of every screen at 1280px and 1024px.
 
-  Each test also fails if the browser's console logs an error.
+  Each test also fails if the browser's console logs an error or a warning.
 
-Success criterion 12, a person using the whole app by eye, stays a manual step after the tests pass.
-
-## Checked against the intent
-
-**The problem.** The intent says nobody can see at a glance:
-- **Which companies we deal with:** the Organizations table, and each organization's page with its contacts, deals and timeline.
-- **Who our contacts are:** the Contacts table, filtered by lead, qualified or customer.
-- **What's in the sales pipeline:** the Pipeline board, with its totals and expected revenue, and the dashboard's pipeline tiles, funnel and pipeline by stage.
-- **What happened last with a customer:** each contact's and organization's timeline, newest first, with deal activity rolled up, and the dashboard's recent activity.
-- **What needs doing next:** follow-ups on the dashboard, overdue first, and late deals marked in the table and on the board.
-
-**The open questions.** Neither is answered here, and nothing in this spec gets in their way:
-- **Sign-in, several people and a record of who did what.** No table has an owner or author column yet. Adding users later means adding a `user_id` to records and to `events`. The `events` table is already the place where a history of changes would grow.
-- **Use beyond one computer.** The browser only talks to the JSON API, and the tables avoid anything SQLite-only. So moving to Supabase's Postgres and hosting on Render changes the backend's connection and deployment, not the screens.
+`SC-12`, a person using the change end to end by eye, stays a manual step after the tests pass.

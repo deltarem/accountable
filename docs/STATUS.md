@@ -1,4 +1,4 @@
-The MVP is built (phases 1 to 8 of `docs/plan.md`) and `npm test` passes. Two checks by hand are still open; see the end.
+The MVP is built (phases 1 to 8 of `docs/changes/mvp/plan.md`). Two checks by hand are still open; see the end. `npm test` fails at its first step until `scripts/check-trace.mjs` reads the current change's plan; see the last log entry.
 
 ## How to run
 
@@ -30,6 +30,7 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - 2026-11-23: `npm test` now runs through `scripts/test-all.mjs`, which runs all five suites even when one fails and exits with 1 if any failed (checked with a deliberately failing pytest test and Vitest test). `AGENTS.md` says to run it before calling work done.
 - 2026-11-23: `docs/frontend-architecture.md` written: layers, folder layout, providers and routes, the data layer (query keys, invalidation, errors, the server's clock), forms and validation, the pipeline board's drag flow, the dashboard, tables, styling, formatting, accessibility, testing, and how to add to it.
 - 2026-11-23: `docs/backend-architecture.md` written: layers, folder layout, the data model and delete rules, a request end to end, the stage rules, timelines, dashboard figures, validation and errors, the clock, startup and sample data, configuration, the API, testing, and how to add to it.
+- 2026-11-23: Docs reorganized for future changes. `docs/spec.md` now describes the whole product as it stands: it brings in the problem, users, constraints, scope and success criteria (`SC-01` to `SC-12`) from the MVP's intent, keeps every requirement ID, and is the reference for every change. The MVP's `intent.md` and `plan.md` moved to `docs/changes/mvp/`; each change gets its own `docs/changes/<branch name>/`. `AGENTS.md` says to read the spec first and only the current change's folder. `docs/REVIEW.md` flags code the spec doesn't describe. No code changed, so `scripts/check-trace.mjs` still reads `docs/plan.md`, which no longer exists: `npm test` fails at the traceability check until it reads `docs/changes/<current branch>/plan.md`.
 
 ## Notes from the build
 
