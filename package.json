@@ -9,6 +9,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "prepare": "lefthook install",
     "dev": "node scripts/dev.mjs",
     "seed": "uv run python -m backend.seed",
     "test": "node scripts/test-all.mjs",
@@ -29,6 +30,7 @@
     "check:secrets": "gitleaks git . --config .gitleaks.toml --redact --no-banner && gitleaks dir . --config .gitleaks.toml --redact --no-banner"
   },
   "devDependencies": {
-    "@playwright/test": "^1.65.1"
+    "@playwright/test": "^1.65.1",
+    "lefthook": "^2.2.2"
   }
 }

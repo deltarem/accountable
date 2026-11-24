@@ -7,6 +7,7 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - `npm run dev` installs what's missing on the first run, starts both servers and prints the address (http://127.0.0.1:5173). Ctrl+C stops both.
 - `npm run seed` resets the database (`data/accountable.db`) to the sample data. Add `-- --empty` for no data at all.
 - `npm test` runs the traceability check, the script tests, pytest, Vitest and Playwright. It runs every suite even after one fails, prints a PASS/FAIL summary, and exits with 1 if any failed. `node scripts/test-all.mjs test:backend` runs only the named suites. The end-to-end tests start their own servers on ports 8100 and 5273 with their own database, so your data is never touched. Screenshots for review land in `test-results/screens/`.
+- `npm install` also installs the git pre-commit hook (`lefthook.yml`). `git commit --no-verify` skips it once.
 
 ## Log
 
@@ -32,6 +33,7 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - 2026-11-23: `docs/backend-architecture.md` written: layers, folder layout, the data model and delete rules, a request end to end, the stage rules, timelines, dashboard figures, validation and errors, the clock, startup and sample data, configuration, the API, testing, and how to add to it.
 - 2026-11-23: Docs reorganized for future changes. `docs/spec.md` now describes the whole product as it stands: it brings in the problem, users, constraints, scope and success criteria (`SC-01` to `SC-12`) from the MVP's intent, keeps every requirement ID, and is the reference for every change. The MVP's `intent.md` and `plan.md` moved to `docs/changes/mvp/`; each change gets its own `docs/changes/<branch name>/`. `AGENTS.md` says to read the spec first and only the current change's folder. `docs/REVIEW.md` flags code the spec doesn't describe. No code changed, so `scripts/check-trace.mjs` still reads `docs/plan.md`, which no longer exists: `npm test` fails at the traceability check until it reads `docs/changes/<current branch>/plan.md`.
 - 2026-11-23: `npm run check` passes again. `scripts/check-trace.mjs` reads the Traceability rows of every `docs/changes/*/plan.md`. The linked lists on contact and organization pages show placeholder rows while loading instead of "No contacts yet" (UI-EMPTY-05). The pipeline board keeps its dropped order until the deals list changes again, without an effect. The TanStack Table lint warning is disabled on that one line, with the reason. The persistence end-to-end test is marked slow, because two cold backend starts went past 45 seconds under load.
+- 2026-11-24: Hooks (`docs/changes/harness/`). A lefthook pre-commit hook formats the staged files and re-stages the fixes, then runs ESLint, ruff check, tsc, ty and gitleaks on what is staged, with no tests (about 10 to 35 seconds). Two Claude Code hooks in `.claude/settings.json`: on stop, `npm run check:quick` runs and a failure is sent back to the agent once; edits to `.env` and `.env.*` (not `.env.example`) are blocked, including shell commands that name them. New spec IDs `RUN-07` to `RUN-09`.
 
 ## Notes from the build
 

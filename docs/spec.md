@@ -207,6 +207,13 @@ These settle questions where a simpler reading of the product would be wrong or 
 
   It keeps going after a suite fails, prints a pass or fail summary, and exits with 1 if any suite failed. The end-to-end tests start their own backend and frontend on ports 8100 and 5273, with their own database file and the date fixed to 23 Nov 2026.
 - `RUN-05` **The database** is `data/accountable.db`, which is not committed to git. The environment variable `ACCOUNTABLE_DB` points to another file; the tests use it. When the backend starts and the file doesn't exist, it creates the tables and loads the sample data. An existing file is never reseeded.
+- `RUN-07` **The git pre-commit hook** (lefthook, `lefthook.yml`), installed by `npm install`, runs in two steps and stops the commit if either fails:
+  1. It formats the staged files (Prettier in `frontend/`, ruff format in `backend/`) and adds the fixes to the commit. Changes that aren't staged stay out of it.
+  2. It lints the staged files (ESLint, ruff check), checks the types of the frontend or backend when files of that kind are staged (tsc, ty) and scans what is staged for secrets (gitleaks).
+
+  It runs no tests, so a commit stays quick. `git commit --no-verify` skips it.
+- `RUN-08` **When the coding agent finishes a turn**, a Claude Code Stop hook (`.claude/hooks/check-on-stop.mjs`) runs `npm run check:quick`. If it fails, the agent is sent the output of the failed steps and keeps working. It is blocked only once: the next time it stops, it may.
+- `RUN-09` **The coding agent can't change `.env`**: a Claude Code PreToolUse hook (`.claude/hooks/protect-env.mjs`) blocks the file-editing tools on `.env` and `.env.*` in any folder, except `.env.example`, and any shell command that names one of those files.
 
 `RUN-06` `docs/STATUS.md` explains how to run, seed and test the app, in a few lines.
 
@@ -233,6 +240,8 @@ SQLite file (data/accountable.db, or ACCOUNTABLE_DB)
 package.json            root scripts: dev, seed, test; frontend/ as a workspace
 scripts/                dev.mjs (one-command start), test-all.mjs (npm test),
                         check-trace.mjs (traceability), and their tests
+lefthook.yml            the git pre-commit hook
+.claude/                the coding agent's settings and hooks (check on stop, .env guard)
 pyproject.toml, uv.lock backend dependencies
 shared/                 validation-cases.json, read by both test suites
 backend/

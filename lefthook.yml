@@ -1,0 +1,50 @@
+# Git hooks, installed by `npm install` (the `prepare` script runs `lefthook install`).
+#
+# pre-commit formats the staged files and adds the fixes to the commit, then
+# runs lint, type checks and a secrets scan on what is staged. It skips the
+# tests so a commit stays quick; `npm run check` runs everything.
+# Skip it once with `git commit --no-verify` or `LEFTHOOK=0 git commit`.
+
+# `**/` also matches no folder at all, so backend/**/*.py covers backend/x.py.
+glob_matcher: doublestar
+
+pre-commit:
+  # Format first, so lint and types see the formatted files.
+  piped: true
+  jobs:
+    - name: format
+      group:
+        parallel: true
+        jobs:
+          - name: prettier
+            root: frontend/
+            run: npx prettier --write --ignore-unknown {staged_files}
+            stage_fixed: true
+          - name: ruff format
+            root: backend/
+            glob: "**/*.py"
+            run: uv run ruff format {staged_files}
+            stage_fixed: true
+
+    - name: checks
+      group:
+        parallel: true
+        jobs:
+          - name: eslint
+            root: frontend/
+            glob: "**/*.{js,jsx,ts,tsx}"
+            run: npx eslint --max-warnings 0 --no-warn-ignored {staged_files}
+          - name: ruff check
+            root: backend/
+            glob: "**/*.py"
+            run: uv run ruff check {staged_files}
+          # Type checks look at the whole project, since a change in one file
+          # can break another, but only run when files of that kind are staged.
+          - name: tsc
+            glob: "frontend/**/*.{ts,tsx}"
+            run: npm run check:types:frontend
+          - name: ty
+            glob: "backend/**/*.py"
+            run: npm run check:types:backend
+          - name: gitleaks
+            run: gitleaks git --pre-commit --staged --config .gitleaks.toml --redact --no-banner

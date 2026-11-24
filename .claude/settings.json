@@ -8,6 +8,32 @@
       "Read(./.env)"
     ]
   },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-env.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-on-stop.mjs\"",
+            "timeout": 600,
+            "statusMessage": "Running npm run check:quick"
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "frontend-design@anthropic-plugin-directory": true
   }
