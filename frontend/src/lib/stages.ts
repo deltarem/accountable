@@ -1,5 +1,8 @@
 // Stage names, colours and usual probabilities (DEC-05), and the two deal
 // helpers the screens need (RULE-06, RULE-07). The backend has the same table.
+//
+// Colours are references to tokens.css (ARC-15), so they follow light and dark
+// mode with no code here knowing which one is on.
 
 export type StageKey = 'new' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
 export type StatusKey = 'lead' | 'qualified' | 'customer';
@@ -26,66 +29,66 @@ export const STAGES: StageInfo[] = [
     name: 'New',
     probability: 10,
     open: true,
-    fill: '#0D6E8F',
-    ink: '#FFFFFF',
-    badgeText: '#0D6E8F',
-    badgeTint: '#E7F3F7',
-    onDark: '#118AB2',
+    fill: 'var(--stage-new)',
+    ink: 'var(--stage-new-ink)',
+    badgeText: 'var(--cerulean-text)',
+    badgeTint: 'var(--cerulean-tint)',
+    onDark: 'var(--cerulean)',
   },
   {
     key: 'qualified',
     name: 'Qualified',
     probability: 25,
     open: true,
-    fill: '#FFC145',
-    ink: '#073B4C',
-    badgeText: '#8A5A00',
-    badgeTint: '#FFF6E3',
-    onDark: '#FFC145',
+    fill: 'var(--stage-qualified)',
+    ink: 'var(--stage-qualified-ink)',
+    badgeText: 'var(--marigold-text)',
+    badgeTint: 'var(--marigold-tint)',
+    onDark: 'var(--marigold)',
   },
   {
     key: 'proposal',
     name: 'Proposal',
     probability: 50,
     open: true,
-    fill: '#F78C6B',
-    ink: '#073B4C',
-    badgeText: '#B4472A',
-    badgeTint: '#FEEEE9',
-    onDark: '#F78C6B',
+    fill: 'var(--stage-proposal)',
+    ink: 'var(--stage-proposal-ink)',
+    badgeText: 'var(--coral-text)',
+    badgeTint: 'var(--coral-tint)',
+    onDark: 'var(--coral)',
   },
   {
     key: 'negotiation',
     name: 'Negotiation',
     probability: 75,
     open: true,
-    fill: '#073B4C',
-    ink: '#FFFFFF',
-    badgeText: '#073B4C',
-    badgeTint: '#E8EEF0',
-    onDark: '#CDD8DB',
+    fill: 'var(--stage-negotiation)',
+    ink: 'var(--stage-negotiation-ink)',
+    badgeText: 'var(--ink)',
+    badgeTint: 'var(--midnight-tint)',
+    onDark: 'var(--mist)',
   },
   {
     key: 'won',
     name: 'Won',
     probability: 100,
     open: false,
-    fill: '#06D6A0',
-    ink: '#073B4C',
-    badgeText: '#067A5C',
-    badgeTint: '#E6FBF5',
-    onDark: '#06D6A0',
+    fill: 'var(--stage-won)',
+    ink: 'var(--stage-won-ink)',
+    badgeText: 'var(--sea-text)',
+    badgeTint: 'var(--sea-tint)',
+    onDark: 'var(--sea)',
   },
   {
     key: 'lost',
     name: 'Lost',
     probability: 0,
     open: false,
-    fill: '#8FA3AA',
-    ink: '#073B4C',
-    badgeText: '#4D6973',
-    badgeTint: '#E8EEF0',
-    onDark: '#8FA3AA',
+    fill: 'var(--stage-lost)',
+    ink: 'var(--stage-lost-ink)',
+    badgeText: 'var(--muted)',
+    badgeTint: 'var(--midnight-tint)',
+    onDark: 'var(--lost)',
   },
 ];
 
@@ -103,9 +106,9 @@ export function isOpen(key: StageKey | string): boolean {
 }
 
 export const STATUSES: { key: StatusKey; name: string; text: string; tint: string }[] = [
-  { key: 'lead', name: 'Lead', text: '#0D6E8F', tint: '#E7F3F7' },
-  { key: 'qualified', name: 'Qualified', text: '#8A5A00', tint: '#FFF6E3' },
-  { key: 'customer', name: 'Customer', text: '#067A5C', tint: '#E6FBF5' },
+  { key: 'lead', name: 'Lead', text: 'var(--cerulean-text)', tint: 'var(--cerulean-tint)' },
+  { key: 'qualified', name: 'Qualified', text: 'var(--marigold-text)', tint: 'var(--marigold-tint)' },
+  { key: 'customer', name: 'Customer', text: 'var(--sea-text)', tint: 'var(--sea-tint)' },
 ];
 
 export function status(key: StatusKey | string) {

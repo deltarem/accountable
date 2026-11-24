@@ -4,10 +4,12 @@ import type { MonthFigures } from '../../api/types';
 import { formatMoney, formatMoneyShort, formatMonth, formatMonthShort, plural } from '../../lib/format';
 import styles from './charts.module.css';
 
-const SEA = '#06D6A0';
-const MIDNIGHT = '#073B4C';
-const GRID = '#1C5568';
-const PALE = '#9FB4BA';
+// This chart sits on the headline panel, which is Midnight in both modes.
+const SEA = 'var(--sea)';
+const PANEL = 'var(--dark-panel)';
+const GRID = 'var(--dark-grid)';
+const PALE = 'var(--on-dark-muted)';
+const FIGURE = 'var(--on-dark-strong)';
 
 /** Four round ticks from zero, like $0, $40k, $80k, $120k. */
 export function niceTicks(maxCents: number): number[] {
@@ -74,13 +76,13 @@ export function RevenueChart({ months }: { months: MonthFigures[] }) {
                   cx={props.cx}
                   cy={props.cy}
                   r={current ? 6 : 4}
-                  fill={current ? SEA : MIDNIGHT}
+                  fill={current ? SEA : PANEL}
                   stroke={SEA}
                   strokeWidth={2}
                 />
               );
             }}
-            activeDot={{ r: 6, fill: SEA, stroke: MIDNIGHT, strokeWidth: 2 }}
+            activeDot={{ r: 6, fill: SEA, stroke: PANEL, strokeWidth: 2 }}
             label={(props: { x?: number | string; y?: number | string; index?: number; value?: unknown }) =>
               props.index === last && !empty ? (
                 <text
@@ -88,7 +90,7 @@ export function RevenueChart({ months }: { months: MonthFigures[] }) {
                   x={props.x}
                   y={Number(props.y ?? 0) - 14}
                   textAnchor="middle"
-                  fill="#fff"
+                  fill={FIGURE}
                   fontSize={12}
                   fontWeight={600}
                 >

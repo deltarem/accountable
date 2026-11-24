@@ -16,7 +16,10 @@ The work goes in a fixed order: lock light mode down first, then move every colo
 
 | File | Change |
 |---|---|
-| `index.html` | A few lines of plain script in `<head>` that read `accountable-theme` from localStorage and set `data-theme="dark"` on `<html>` before the app loads. |
+| `index.html` | A few lines of plain script in `<head>` that read `accountable-theme` from localStorage and set `data-theme="dark"` on `<html>` before the app loads. It also loads `tokens.css` and `global.css`, so the colours apply while the app's code is still loading. |
+| `src/main.tsx` | No longer imports `tokens.css` and `global.css` (added during the build: imported from here, they only arrived with the app's code, so a held-back app showed an unstyled white page). |
+| `src/test/setup.ts` | Points `localStorage` at jsdom's (added during the build: Node 26's own `localStorage` global is undefined in tests and hid jsdom's). |
+| `src/components/Badges.test.tsx` | Checks token names instead of colour values (added during the build). |
 | `src/styles/tokens.css` | Every colour the app uses, split by role (see Phase 2), and a `:root[data-theme='dark']` block that redefines them, with `color-scheme: dark`. |
 | `src/styles/tokens.test.ts` (new) | The contrast of every listed text pair in both modes, and a scan that fails on any colour value outside `tokens.css`. |
 | `src/lib/theme.ts` (new) | `readTheme`, `setTheme` (sets the attribute and saves the choice) and the storage key, shared with `index.html`. |
@@ -28,6 +31,7 @@ The work goes in a fixed order: lock light mode down first, then move every colo
 | `src/components/record/Timeline.tsx`, `Timeline.test.tsx` | Icon colours from tokens. The test checks token names instead of hex values. |
 | `src/components/dashboard/RevenueChart.tsx`, `WonLostChart.tsx` | Chart colours passed to Recharts as `var(--token)`. |
 | CSS Modules with colour values in them | Their hard-coded values become tokens: `Button`, `ConfirmDeleteDialog`, `FormDialog`, `Panel`, `RailLink`, `Skeleton`, `Toaster`, `fields`, `RecordSelect`, `board/BoardTotals`, `board/ColumnHeader`, `board/DealCard`, `dashboard/charts`, `dashboard/FollowUpList`, `dashboard/HeadlinePanel`, `forms/ActivityForm`, `record/FollowUpCheckbox`, `table/DataTable`, `table/SearchBox`, `table/StatusFilter`. |
+| `Timeline`, `RecordSelect`, `SuggestField`, `FormDialog`, `ConfirmDeleteDialog` CSS Modules | Dialogs, menus and pop-up lists use `--raised`, and their chosen item `--highlight` (added in Phase 4: black dialogs on black panels had no visible edge). |
 | CSS Modules that use `--midnight` or `--ink` for a role that splits | Switched to the right role token (see Phase 2). The ones known today: `Button`, `IconRail`, `RailLink`, `Panel`, `Toaster`, `board/BoardTotals`, `board/DealCard`, `dashboard/FollowUpList`, `dashboard/HeadlinePanel`, `forms/ActivityForm`, `table/StatusFilter`. |
 
 ### End-to-end (`e2e/`)
@@ -140,7 +144,7 @@ Before any styling changes, so the reference shows light mode as it is today.
   - the toast and tooltip text on their backgrounds (4.5:1)
   - the headline panel labels on Midnight (4.5:1).
 - Light mode's values equal today's, listed in the test. This catches an accidental change before the screenshots run.
-- Every token the dark block sets is also set in light mode, and the dark block sets every colour token.
+- Every token the dark block sets is also set in light mode, and the colours meant to stay the same (brand fills, the text on them, the delete button, the rail and headline panels) aren't redefined.
 - No file under `src/` other than `tokens.css` holds a colour value (hex, `rgb(` or `rgba(`), test files excluded.
 
 **`src/lib/theme.test.ts`**
@@ -173,7 +177,7 @@ Before any styling changes, so the reference shows light mode as it is today.
 - Clicking the toggle turns the page background `#04232E` and the panels black, and renames the toggle "Switch to light mode".
 - After a reload it's still dark. With the app's script held back by a delayed route, the page is already dark before the app loads, which proves there's no light flash.
 - In dark mode, every section has the toggle at the foot of the rail and stays dark: dashboard, pipeline, deals, contacts, organizations and a record page.
-- Dialogs, tooltips and messages are dark too: the deal form and the delete dialog are black panels, a rail tooltip is Sea Mist, and a "Deal saved" message is Sea Mist.
+- Dialogs, tooltips and messages are dark too: the deal form and the delete dialog use the Raised colour, a rail tooltip is Sea Mist, and a "Deal saved" message is Sea Mist.
 - Text typed in the Log activity form is still there after switching modes.
 - Switching back to light also lasts through a reload.
 - A second browser context starts in light mode while the first is dark.

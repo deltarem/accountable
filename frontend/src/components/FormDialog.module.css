@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(7, 59, 76, 0.45);
+  background: var(--overlay);
   z-index: 40;
 }
 
@@ -13,15 +13,15 @@
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 48px);
   overflow: auto;
-  background: var(--panel);
+  background: var(--raised);
   border-radius: var(--radius-panel);
   padding: var(--space-3);
-  box-shadow: 0 24px 60px rgba(7, 59, 76, 0.3);
+  box-shadow: var(--shadow-dialog);
   z-index: 41;
 }
 
 .content:focus-visible {
-  box-shadow: 0 24px 60px rgba(7, 59, 76, 0.3);
+  box-shadow: var(--shadow-dialog);
 }
 
 .head {

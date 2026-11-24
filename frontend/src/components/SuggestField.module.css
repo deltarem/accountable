@@ -10,7 +10,7 @@
   margin: 0;
   padding: 6px;
   list-style: none;
-  background: var(--panel);
+  background: var(--raised);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-pop);
   z-index: 5;
@@ -26,5 +26,5 @@
 
 .option:hover,
 .active {
-  background: var(--card);
+  background: var(--highlight);
 }

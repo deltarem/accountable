@@ -44,7 +44,7 @@
   min-height: 120px;
   max-height: 200px;
   border-radius: var(--radius-card);
-  border: 2px dashed var(--mist);
+  border: 2px dashed var(--ring);
   display: grid;
   place-items: center;
   color: var(--muted);

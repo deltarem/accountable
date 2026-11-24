@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(7, 59, 76, 0.45);
+  background: var(--overlay);
   z-index: 60;
 }
 
@@ -12,10 +12,10 @@
   transform: translate(-50%, -50%);
   width: 440px;
   max-width: calc(100vw - 32px);
-  background: var(--panel);
+  background: var(--raised);
   border-radius: var(--radius-panel);
   padding: var(--space-3);
-  box-shadow: 0 24px 60px rgba(7, 59, 76, 0.3);
+  box-shadow: var(--shadow-dialog);
   z-index: 61;
 }
 

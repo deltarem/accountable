@@ -1,21 +1,74 @@
-/* Brand tokens (DES-01 to DES-04). Named by role, so a dark mode only has to
-   redefine them. Contrast figures are in docs/spec.md, Design. */
+/* Brand tokens (DES-01 to DES-04), named by role. Every colour in the app is
+   here and nowhere else (ARC-15). Light mode is on :root. Dark mode redefines
+   the same names under :root[data-theme='dark'] at the end of this file; the
+   attribute is set by index.html and lib/theme.ts. Contrast figures are in
+   docs/spec.md, Design. */
 :root {
   /* Surfaces */
   --page: #f0f4f5;
   --panel: #ffffff;
   --card: #f3f7f8;
+  --card-hover: #edf3f4;
+  /* A card while it's dragged */
+  --card-lift: #ffffff;
+  --row-hover: #f7fafa;
+  /* Dialogs, menus and pop-up lists, which sit above the panels */
+  --raised: #ffffff;
+  /* The chosen item in a menu or pop-up list */
+  --highlight: var(--card);
   --line: #e8eef0;
+  /* Empty initials, the dashed drop area, an unticked checkbox */
+  --ring: #cdd8db;
 
   /* Ink */
   --ink: #073b4c;
   --muted: #4d6973;
+  --placeholder: #6b858e;
+  /* Text on the bright brand fills (Sea Green, Marigold, Coral, the Lost grey):
+     Midnight in both modes */
+  --on-bright: #073b4c;
+  /* Text on the solid dark fills (darker Cerulean, dark Raspberry): white in
+     both modes */
+  --on-solid: #ffffff;
+
+  /* Midnight fills on the page and panels: main action buttons, the initials
+     circle, the chosen filter or activity type, card tooltips, messages. They
+     turn Sea Mist in dark mode, where Midnight would vanish on black. */
+  --strong: #073b4c;
+  --strong-hover: #0b4a5e;
+  --on-strong: #ffffff;
+
+  /* The rail, the dashboard headline panel and the pipeline totals strip:
+     Midnight in both modes */
+  --dark-panel: #073b4c;
   --on-dark: #cdd8db;
+  --on-dark-strong: #ffffff;
   --on-dark-muted: #9fb4ba;
   --dark-grid: #1c5568;
+  --dark-hover: rgba(205, 216, 219, 0.12);
+  --dark-skeleton: rgba(205, 216, 219, 0.14);
+  --dark-up-tint: rgba(6, 214, 160, 0.16);
 
-  /* Brand colours */
+  /* Rail and chart tooltips, and messages */
+  --tip: #ffffff;
+  --on-tip: #073b4c;
+  --toast: var(--strong);
+  --on-toast: var(--on-strong);
+  --toast-icon: #06d6a0;
+  --toast-error: #ffffff;
+  --on-toast-error: #073b4c;
+  --toast-error-icon: #c2264f;
+
+  /* Dialogs */
+  --overlay: rgba(7, 59, 76, 0.45);
+
+  /* Charts on panels */
+  --chart-grid: #cdd8db;
+  --chart-cursor: rgba(7, 59, 76, 0.05);
+
+  /* Brand colours: the same in both modes */
   --sea: #06d6a0;
+  --sea-hover: #05c491;
   --marigold: #ffc145;
   --coral: #f78c6b;
   --cerulean: #118ab2;
@@ -23,8 +76,14 @@
   --midnight: #073b4c;
   --mist: #cdd8db;
   --lost: #8fa3aa;
+  /* Delete buttons: dark Raspberry with white text in both modes */
+  --danger: #c2264f;
+  --danger-hover: #a81f43;
+  /* The card count on a stage header */
+  --count-pill: rgba(255, 255, 255, 0.28);
 
-  /* Darker shades for small text, and pale tints for badges (DES-02) */
+  /* Shades for small text, and tints for badges (DES-02). Darker than the brand
+     colours in light mode, lighter in dark mode. */
   --sea-text: #067a5c;
   --sea-tint: #e6fbf5;
   --marigold-text: #8a5a00;
@@ -37,19 +96,22 @@
   --raspberry-tint: #fdecf0;
   --midnight-tint: #e8eef0;
 
-  /* Stages (DEC-05): solid header colour and its text */
+  /* Stages (DEC-05): solid fill and its text */
   --stage-new: #0d6e8f;
-  --stage-new-ink: #ffffff;
+  --stage-new-ink: var(--on-solid);
   --stage-qualified: var(--marigold);
-  --stage-qualified-ink: var(--ink);
+  --stage-qualified-ink: var(--on-bright);
   --stage-proposal: var(--coral);
-  --stage-proposal-ink: var(--ink);
-  --stage-negotiation: var(--midnight);
-  --stage-negotiation-ink: #ffffff;
+  --stage-proposal-ink: var(--on-bright);
+  --stage-negotiation: var(--strong);
+  --stage-negotiation-ink: var(--on-strong);
   --stage-won: var(--sea);
-  --stage-won-ink: var(--ink);
+  --stage-won-ink: var(--on-bright);
   --stage-lost: var(--lost);
-  --stage-lost-ink: var(--ink);
+  --stage-lost-ink: var(--on-bright);
+
+  /* The chevron on select fields, in Muted ink */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234D6973' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
   /* Type (DES-03) */
   --sans: 'Instrument Sans', system-ui, sans-serif;
@@ -68,6 +130,66 @@
   --shadow-panel: 0 1px 2px rgba(7, 59, 76, 0.06);
   --shadow-lift: 0 14px 30px rgba(7, 59, 76, 0.25);
   --shadow-pop: 0 8px 24px rgba(7, 59, 76, 0.18);
+  --shadow-dialog: 0 24px 60px rgba(7, 59, 76, 0.3);
+  --shadow-tip: 0 6px 16px rgba(0, 0, 0, 0.25);
   --focus-ring: 0 0 0 2px var(--panel), 0 0 0 4px var(--sea);
   --rail-width: 72px;
+}
+
+/* Dark mode (spec: Design, "Dark mode", and the decision "Dark surfaces").
+   Only colours change. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --page: #04232e;
+  --panel: #000000;
+  --card: #0f2027;
+  --card-hover: #152a33;
+  --card-lift: #1c3038;
+  --row-hover: #0c1b21;
+  /* A step lighter than the black panels, since shadows don't show on black */
+  --raised: #0f2027;
+  --highlight: #1c3038;
+  --line: #1c3038;
+  --ring: #4d6973;
+
+  --ink: #cdd8db;
+  --muted: #9fb4ba;
+  --placeholder: #7f969d;
+
+  --strong: #cdd8db;
+  --strong-hover: #b8c7cb;
+  --on-strong: #073b4c;
+
+  --tip: #cdd8db;
+  --on-tip: #073b4c;
+  --toast-icon: #067a5c;
+  --toast-error: #2b0d14;
+  --on-toast-error: #cdd8db;
+  --toast-error-icon: #ff7f9c;
+
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --chart-grid: #1c3038;
+  --chart-cursor: rgba(205, 216, 219, 0.08);
+
+  --sea-text: #3de0b4;
+  --sea-tint: #01271d;
+  --marigold-text: #ffcf6b;
+  --marigold-tint: #2e230c;
+  --coral-text: #ffa488;
+  --coral-tint: #2c1913;
+  --cerulean-text: #5cbfe0;
+  --cerulean-tint: #031920;
+  --raspberry-text: #ff7f9c;
+  --raspberry-tint: #2b0d14;
+  --midnight-tint: #1c3038;
+
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239FB4BA' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lift: 0 14px 30px rgba(0, 0, 0, 0.6);
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-dialog: 0 24px 60px rgba(0, 0, 0, 0.6);
+  --shadow-tip: 0 6px 16px rgba(0, 0, 0, 0.5);
 }

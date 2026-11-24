@@ -5,6 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Accountable</title>
+    <!--
+      The saved light or dark choice, applied before anything draws, so a page in
+      dark mode never shows light first. It has to be a plain inline script: a
+      module script runs too late. Same key and rule as src/lib/theme.ts.
+    -->
+    <script>
+      try {
+        if (localStorage.getItem('accountable-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+      } catch {
+        // The browser blocks storage: stay in light mode, the default.
+      }
+    </script>
+    <!-- Loaded here rather than from main.tsx, so the colours apply while the app's code is still loading. -->
+    <link rel="stylesheet" href="/src/styles/tokens.css" />
+    <link rel="stylesheet" href="/src/styles/global.css" />
   </head>
   <body>
     <div id="root"></div>

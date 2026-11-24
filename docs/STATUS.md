@@ -1,4 +1,4 @@
-The MVP is built (phases 1 to 8 of `docs/changes/mvp/plan.md`). Two checks by hand are still open; see the end. `npm run check` passes.
+The MVP is built (phases 1 to 8 of `docs/changes/mvp/plan.md`), and so is dark mode (`docs/changes/dark-mode/`). Checks by hand are still open; see the end. `npm run check` passes.
 
 ## How to run
 
@@ -6,7 +6,8 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 
 - `npm run dev` installs what's missing on the first run, starts both servers and prints the address (http://127.0.0.1:5173). Ctrl+C stops both.
 - `npm run seed` resets the database (`data/accountable.db`) to the sample data. Add `-- --empty` for no data at all.
-- `npm test` runs the traceability check, the script tests, pytest, Vitest and Playwright. It runs every suite even after one fails, prints a PASS/FAIL summary, and exits with 1 if any failed. `node scripts/test-all.mjs test:backend` runs only the named suites. The end-to-end tests start their own servers on ports 8100 and 5273 with their own database, so your data is never touched. Screenshots for review land in `test-results/screens/`.
+- `npm test` runs the traceability check, the script tests, pytest, Vitest and Playwright. It runs every suite even after one fails, prints a PASS/FAIL summary, and exits with 1 if any failed. `node scripts/test-all.mjs test:backend` runs only the named suites. The end-to-end tests start their own servers on ports 8100 and 5273 with their own database, so your data is never touched. Screenshots for review land in `test-results/screens/`, in light and dark mode.
+- **Light mode reference screenshots** (`e2e/light-mode.spec.ts-snapshots/`) prove light mode hasn't changed since dark mode was added. They're made per platform, and only the Windows ones exist. To make them on another computer, check out the commit that added them, before the styling changed, and run `npx playwright test e2e/light-mode.spec.ts --update-snapshots`. Never update them to make a failing comparison pass.
 - `npm install` also installs the git pre-commit hook (`lefthook.yml`). `git commit --no-verify` skips it once.
 
 ## Log
@@ -35,6 +36,8 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - 2026-11-23: `npm run check` passes again. `scripts/check-trace.mjs` reads the Traceability rows of every `docs/changes/*/plan.md`. The linked lists on contact and organization pages show placeholder rows while loading instead of "No contacts yet" (UI-EMPTY-05). The pipeline board keeps its dropped order until the deals list changes again, without an effect. The TanStack Table lint warning is disabled on that one line, with the reason. The persistence end-to-end test is marked slow, because two cold backend starts went past 45 seconds under load.
 - 2026-11-24: Hooks (`docs/changes/harness/`). A lefthook pre-commit hook formats the staged files and re-stages the fixes, then runs ESLint, ruff check, tsc, ty and gitleaks on what is staged, with no tests (about 10 to 35 seconds). Two Claude Code hooks in `.claude/settings.json`: on stop, `npm run check:quick` runs and a failure is sent back to the agent once; edits to `.env` and `.env.*` (not `.env.example`) are blocked, including shell commands that name them. New spec IDs `RUN-07` to `RUN-09`.
 
+- 2026-11-24: Dark mode (`docs/changes/dark-mode/`). A toggle at the foot of the rail switches between light and dark, remembered in localStorage and applied before the page draws. Every colour moved into `tokens.css` by role, with light values unchanged (proven by a pixel comparison of every screen at 1280px and 1024px with zero tolerance), and a dark block with contrast-checked values. Dialogs and menus got a Raised surface, since black dialogs on black panels had no visible edge. The end-to-end clock now fixes the time as well as the date.
+
 ## Notes from the build
 
 - **Library versions (risk 13).** npm's latest majors moved past the APIs the spec was written against, so these majors are pinned: React Router 7, TanStack Table 8, Vite 7, Vitest 3, TypeScript 5. The rest are current (React 19, TanStack Query 5, dnd-kit, Recharts 3, Radix, cmdk, React Hook Form 7, zod 4). `@hookform/resolvers` was left out: the forms use a small zod resolver of their own (`lib/schemas.ts`), which turns typed money into cents before validating.
@@ -45,7 +48,11 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - **Speed test.** Screens are timed by clicking in the app. A full page reload on the development server also fetches every source module one by one, which measures Vite rather than the app.
 - **Brand colours in charts (risk 12).** The palette check fails for the stage colours, as the plan expected (light Marigold, near-grey Midnight, Marigold and Coral close together). Every coloured mark has its stage name beside it, and segments have 2px gaps.
 
+- **Node 26 and localStorage in tests.** Node 25 and later define a global `localStorage` that is undefined unless Node is started with `--localstorage-file`, and it hides jsdom's. `src/test/setup.ts` points `localStorage`, `sessionStorage` and `Storage` at jsdom's.
+- **Speed test flakiness.** The speed test sits close to its one-second limit on the development server. It failed now and then (1033 ms, 1132 ms) during the dark mode work, with and without that change's clock fix, and passed 8 runs in a row when repeated.
+
 ## Still to check by hand
 
 - **Ctrl+C on Windows:** press Ctrl+C on `npm run dev`, then check that no Python or Node process is left and both ports are free. The automated test covers the same shutdown through a `stop` message, because a test can't press Ctrl+C.
+- **Dark mode by hand:** use every section in both modes in Chrome, including a drag on the board, a form with errors, a delete, a message and a follow-up ticked off, with the console open.
 - **Criterion 12, the walk-through:** run `npm run dev` from a fresh clone and use every section and action with the browser's console open. The screenshots in `test-results/screens/` have been compared with mockup B, but a person still needs to use the app end to end.

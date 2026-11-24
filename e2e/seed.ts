@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 const ENV = {
   ...process.env,
   ACCOUNTABLE_DB: 'data/e2e.db',
-  ACCOUNTABLE_TODAY: '2026-11-23',
+  ACCOUNTABLE_TODAY: '2026-11-23T14:00:00',
 };
 
 function runSeed(args: string[]) {

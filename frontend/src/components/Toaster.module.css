@@ -19,8 +19,8 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  background: var(--midnight);
-  color: #fff;
+  background: var(--toast);
+  color: var(--on-toast);
   border-radius: var(--radius-card);
   padding: 12px 14px;
   box-shadow: var(--shadow-pop);
@@ -28,16 +28,16 @@
 }
 
 .icon {
-  color: var(--sea);
+  color: var(--toast-icon);
 }
 
 .error {
-  background: var(--panel);
-  color: var(--ink);
+  background: var(--toast-error);
+  color: var(--on-toast-error);
 }
 
 .error .icon {
-  color: var(--raspberry-text);
+  color: var(--toast-error-icon);
 }
 
 .text {

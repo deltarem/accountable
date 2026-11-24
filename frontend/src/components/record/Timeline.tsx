@@ -25,16 +25,16 @@ export function entryText(entry: Entry): string {
   return `${TYPE_NAME[entry.type ?? 'note']}: ${entry.description ?? ''}`;
 }
 
-/** UI-REC-06: a round icon in the type's colour. */
+/** UI-REC-06: a round icon in the type's colour, from the tokens (ARC-15). */
 export function entryIcon(entry: Entry): { Icon: typeof Phone; bg: string; fg: string } {
   if (entry.kind === 'stage_change') {
     const s = stageInfo(entry.to_value ?? '');
     return { Icon: ArrowRight, bg: s.fill, fg: s.ink };
   }
-  if (entry.kind === 'status_change') return { Icon: UserCheck, bg: '#06D6A0', fg: '#073B4C' };
-  if (entry.type === 'call') return { Icon: Phone, bg: '#118AB2', fg: '#FFFFFF' };
-  if (entry.type === 'email') return { Icon: Mail, bg: '#F78C6B', fg: '#073B4C' };
-  return { Icon: StickyNote, bg: '#073B4C', fg: '#FFFFFF' };
+  if (entry.kind === 'status_change') return { Icon: UserCheck, bg: 'var(--sea)', fg: 'var(--on-bright)' };
+  if (entry.type === 'call') return { Icon: Phone, bg: 'var(--cerulean)', fg: 'var(--on-solid)' };
+  if (entry.type === 'email') return { Icon: Mail, bg: 'var(--coral)', fg: 'var(--on-bright)' };
+  return { Icon: StickyNote, bg: 'var(--strong)', fg: 'var(--on-strong)' };
 }
 
 export function RecordLink({ record, prefix = true }: { record: RecordRef; prefix?: boolean }) {

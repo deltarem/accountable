@@ -4,12 +4,12 @@
 }
 
 .tooltip {
-  background: #fff;
-  color: var(--ink);
+  background: var(--tip);
+  color: var(--on-tip);
   font-size: 12px;
   padding: 8px 10px;
   border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-tip);
   line-height: 1.5;
 }
 

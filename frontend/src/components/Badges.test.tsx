@@ -6,8 +6,8 @@ import { LateBadge, StageBadge, StatusBadge } from './Badges';
 test('a stage badge names the stage in its own colours (DES-02)', () => {
   render(<StageBadge stage="proposal" />);
   const badge = screen.getByText('Proposal');
-  expect(badge.style.color).toBe('rgb(180, 71, 42)');
-  expect(badge.style.background).toBe('rgb(254, 238, 233)');
+  expect(badge.style.color).toBe('var(--coral-text)');
+  expect(badge.style.background).toBe('var(--coral-tint)');
 });
 
 test('an unknown stage falls back to New', () => {
@@ -18,8 +18,8 @@ test('an unknown stage falls back to New', () => {
 test('a status badge names the status in its own colours', () => {
   render(<StatusBadge status="customer" />);
   const badge = screen.getByText('Customer');
-  expect(badge.style.color).toBe('rgb(6, 122, 92)');
-  expect(badge.style.background).toBe('rgb(230, 251, 245)');
+  expect(badge.style.color).toBe('var(--sea-text)');
+  expect(badge.style.background).toBe('var(--sea-tint)');
 });
 
 test('an unknown status falls back to Lead', () => {

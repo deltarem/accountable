@@ -4,9 +4,11 @@ import type { MonthFigures } from '../../api/types';
 import { formatMoney, formatMonth, formatMonthShort } from '../../lib/format';
 import styles from './charts.module.css';
 
-const SEA = '#06D6A0';
-const LOST = '#8FA3AA';
-const MUTED = '#4D6973';
+const SEA = 'var(--sea)';
+const LOST = 'var(--lost)';
+const MUTED = 'var(--muted)';
+const GRID = 'var(--chart-grid)';
+const CURSOR = 'var(--chart-cursor)';
 
 interface Row extends MonthFigures {
   won: number;
@@ -66,8 +68,8 @@ export function WonLostChart({
             interval={1}
           />
           <YAxis hide domain={[-bottom * 1.6, top * 1.15]} />
-          <ReferenceLine y={0} stroke="#CDD8DB" />
-          <Tooltip content={<WonLostTooltip />} cursor={{ fill: 'rgba(7, 59, 76, 0.05)' }} />
+          <ReferenceLine y={0} stroke={GRID} />
+          <Tooltip content={<WonLostTooltip />} cursor={{ fill: CURSOR }} />
           <Bar
             dataKey="won"
             name="Won"

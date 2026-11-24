@@ -52,16 +52,22 @@ describe('entryText (UI-REC-06)', () => {
 
 describe('entryIcon (UI-REC-06)', () => {
   test('each kind has its colour: note Midnight, call Cerulean, email Coral, status Sea Green', () => {
-    expect(entryIcon(note)).toMatchObject({ bg: '#073B4C', fg: '#FFFFFF' });
-    expect(entryIcon(call)).toMatchObject({ bg: '#118AB2', fg: '#FFFFFF' });
-    expect(entryIcon(email)).toMatchObject({ bg: '#F78C6B', fg: '#073B4C' });
-    expect(entryIcon(statusChange)).toMatchObject({ bg: '#06D6A0', fg: '#073B4C' });
+    expect(entryIcon(note)).toMatchObject({ bg: 'var(--strong)', fg: 'var(--on-strong)' });
+    expect(entryIcon(call)).toMatchObject({ bg: 'var(--cerulean)', fg: 'var(--on-solid)' });
+    expect(entryIcon(email)).toMatchObject({ bg: 'var(--coral)', fg: 'var(--on-bright)' });
+    expect(entryIcon(statusChange)).toMatchObject({ bg: 'var(--sea)', fg: 'var(--on-bright)' });
   });
 
   test('a stage change takes the new stage colour', () => {
-    expect(entryIcon(stageChange)).toMatchObject({ bg: '#073B4C', fg: '#FFFFFF' });
-    expect(entryIcon({ ...stageChange, to_value: 'won' })).toMatchObject({ bg: '#06D6A0', fg: '#073B4C' });
-    expect(entryIcon({ ...stageChange, to_value: null })).toMatchObject({ bg: '#0D6E8F' });
+    expect(entryIcon(stageChange)).toMatchObject({
+      bg: 'var(--stage-negotiation)',
+      fg: 'var(--stage-negotiation-ink)',
+    });
+    expect(entryIcon({ ...stageChange, to_value: 'won' })).toMatchObject({
+      bg: 'var(--stage-won)',
+      fg: 'var(--stage-won-ink)',
+    });
+    expect(entryIcon({ ...stageChange, to_value: null })).toMatchObject({ bg: 'var(--stage-new)' });
   });
 
   test('every kind gets a different icon', () => {

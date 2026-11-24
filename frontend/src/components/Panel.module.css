@@ -7,7 +7,7 @@
 }
 
 .dark {
-  background: var(--midnight);
+  background: var(--dark-panel);
   color: var(--on-dark);
 }
 
@@ -25,7 +25,7 @@
 }
 
 .dark .title {
-  color: #fff;
+  color: var(--on-dark-strong);
 }
 
 .note {

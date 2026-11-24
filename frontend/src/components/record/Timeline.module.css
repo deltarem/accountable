@@ -82,7 +82,7 @@
 }
 
 .menu {
-  background: var(--panel);
+  background: var(--raised);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-pop);
   padding: 6px;
@@ -102,7 +102,7 @@
 }
 
 .menuItem[data-highlighted] {
-  background: var(--card);
+  background: var(--highlight);
 }
 
 .danger {

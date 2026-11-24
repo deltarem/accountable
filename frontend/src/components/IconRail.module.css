@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0 auto 0 0;
   width: var(--rail-width);
-  background: var(--midnight);
+  background: var(--dark-panel);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,7 +16,7 @@
   height: 36px;
   border-radius: 10px;
   background: var(--sea);
-  color: var(--ink);
+  color: var(--on-bright);
   display: grid;
   place-items: center;
   font-weight: 700;
@@ -31,6 +31,11 @@
 
 .mark:focus-visible {
   box-shadow:
-    0 0 0 2px var(--midnight),
+    0 0 0 2px var(--dark-panel),
     0 0 0 4px var(--sea);
+}
+
+/* Pins the light and dark toggle to the bottom of the rail. */
+.foot {
+  margin-top: auto;
 }

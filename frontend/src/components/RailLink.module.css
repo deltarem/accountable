@@ -9,28 +9,39 @@
 }
 
 .link:hover {
-  background: rgba(205, 216, 219, 0.12);
+  background: var(--dark-hover);
 }
 
 .on,
 .on:hover {
   background: var(--sea);
-  color: var(--ink);
+  color: var(--on-bright);
 }
 
 .link:focus-visible {
   box-shadow:
-    0 0 0 2px var(--midnight),
+    0 0 0 2px var(--dark-panel),
     0 0 0 4px var(--sea);
 }
 
 .tip {
-  background: var(--panel);
-  color: var(--ink);
+  background: var(--tip);
+  color: var(--on-tip);
   font-size: 13px;
   font-weight: 500;
   padding: 6px 10px;
   border-radius: 8px;
   box-shadow: var(--shadow-pop);
   z-index: 50;
+}
+
+/* The same look on a <button>: the light and dark toggle. */
+.button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--dark-hover);
 }

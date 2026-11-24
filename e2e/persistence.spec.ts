@@ -10,7 +10,7 @@ const PORT = 8110;
 
 function startBackend(): ChildProcess {
   return spawn('uv', ['run', 'uvicorn', 'backend.main:app', '--host', '127.0.0.1', '--port', String(PORT)], {
-    env: { ...process.env, ACCOUNTABLE_DB: 'data/e2e.db', ACCOUNTABLE_TODAY: '2026-11-23' },
+    env: { ...process.env, ACCOUNTABLE_DB: 'data/e2e.db', ACCOUNTABLE_TODAY: '2026-11-23T14:00:00' },
     shell: process.platform === 'win32',
     stdio: 'ignore',
   });

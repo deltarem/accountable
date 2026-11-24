@@ -65,8 +65,8 @@ section:first-child > .group {
 }
 
 .tip {
-  background: var(--midnight);
-  color: #fff;
+  background: var(--strong);
+  color: var(--on-strong);
   font-size: 12px;
   padding: 5px 8px;
   border-radius: 8px;

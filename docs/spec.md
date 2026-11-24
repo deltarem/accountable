@@ -219,7 +219,7 @@ These settle questions where a simpler reading of the product would be wrong or 
   4. the frontend tests (Vitest)
   5. the end-to-end tests (Playwright with the installed Chrome).
 
-  It keeps going after a suite fails, prints a pass or fail summary, and exits with 1 if any suite failed. The end-to-end tests start their own backend and frontend on ports 8100 and 5273, with their own database file and the date fixed to 23 Nov 2026.
+  It keeps going after a suite fails, prints a pass or fail summary, and exits with 1 if any suite failed. The end-to-end tests start their own backend and frontend on ports 8100 and 5273, with their own database file and the clock fixed to 23 Nov 2026, 14:00. The time is fixed as well as the date, so every screen looks the same on each run, which the light mode screenshot comparison needs.
 - `RUN-05` **The database** is `data/accountable.db`, which is not committed to git. The environment variable `ACCOUNTABLE_DB` points to another file; the tests use it. When the backend starts and the file doesn't exist, it creates the tables and loads the sample data. An existing file is never reseeded.
 - `RUN-07` **The git pre-commit hook** (lefthook, `lefthook.yml`), installed by `npm install`, runs in two steps and stops the commit if either fails:
   1. It formats the staged files (Prettier in `frontend/`, ruff format in `backend/`) and adds the fixes to the commit. Changes that aren't staged stay out of it.
@@ -275,7 +275,7 @@ frontend/
     components/         table, board, dashboard, record, forms, dialogs, fields, shell
     lib/                formatting, money parsing, zod schemas, stage rules, board state
     styles/             tokens.css (colours for light and dark mode, type, spacing), global styles
-  index.html            sets dark mode before the app loads
+  index.html            sets dark mode and loads the global styles before the app loads
 e2e/                    Playwright tests, fixtures and helpers
 playwright.config.ts    the end-to-end servers, ports and database
 data/                   the database files, ignored by git
@@ -365,6 +365,8 @@ Each one says what was decided, why, and what was turned down.
 17. **Switching between light and dark.**
     - **Decided:**
       - A few lines of plain script in `frontend/index.html` read the saved choice from localStorage (key `accountable-theme`, value `light` or `dark`). Before the app's code loads, they set `data-theme="dark"` on `<html>` when dark mode was chosen.
+      - `index.html` also loads `tokens.css` and `global.css` itself, rather than `main.tsx` importing them, so the page has its colours while the app's code is still loading.
+      - The attribute is on `<html>` so that dialogs, menus, tooltips and messages, which Radix draws outside the app's root, pick up the same colours.
       - The toggle switches that attribute and saves the choice.
       - Nothing else reacts to the mode: every component reads the tokens, so the CSS alone changes the colours, with no re-render and no reload.
     - **Why:** the page never shows the wrong mode first, an open form keeps what was typed, and no dependency is needed.
@@ -996,7 +998,8 @@ Colours are CSS variables in `tokens.css`, named by their role. Light mode defin
 | Role | Light | Dark | Use |
 |---|---|---|---|
 | Page | `#F0F4F5` | `#04232E` | page background |
-| Panel | `#FFFFFF` | `#000000` | panels, dialogs, date pills |
+| Panel | `#FFFFFF` | `#000000` | panels, date pills |
+| Raised | `#FFFFFF` | `#0F2027` (ink 11.5:1) | dialogs, menus and pop-up lists. The chosen item in a menu uses the Card colour, or `#1C3038` in dark mode. |
 | Ink | `#073B4C` Midnight (12.1:1 on white) | Sea Mist `#CDD8DB` (14.4:1 on black, 11.2:1 on the page, 11.5:1 on cards) | headings and body text |
 | Muted ink | `#4D6973` (5.3:1 on the page, 5.9:1 on white) | `#9FB4BA` (9.7:1 on black, 7.6:1 on the page, 7.7:1 on cards) | labels, secondary text |
 | Rail and headline panels | `#073B4C` Midnight, with Sea Mist `#CDD8DB` icons, white figures and `#9FB4BA` labels | the same (see the decision "Dark surfaces") | the icon rail, the dashboard headline panel, the pipeline totals strip |
@@ -1056,7 +1059,7 @@ Dark mode keeps every layout, size, shape and font. Only colours change, taken f
 - **Solid stage blocks** (column headers, pipeline-by-stage rows, funnel columns) keep their light-mode colours and text, except Negotiation, which is Sea Mist with Midnight text.
 - **Charts:** grid lines use the Line colour and axis labels use Muted ink. The series keep their brand colours: the won line and bars in Sea Green, lost bars in the Lost grey. The headline panel's chart is unchanged, since that panel stays Midnight.
 - **Tooltips**, on charts and on the rail, are Sea Mist with Midnight text.
-- **Dialogs** are black panels, and the page behind them dims with black at 60% (light mode dims it with Midnight at 45%).
+- **Dialogs, menus and pop-up lists** use the Raised colour, `#0F2027`, a step lighter than the black panels. Shadows don't show on black, so a black dialog would have no visible edge. The page behind a dialog dims with black at 60% (light mode dims it with Midnight at 45%).
 - **Messages:** a confirmation is Sea Mist with Midnight text and a dark Sea Green `#067A5C` icon (3.7:1, above the 3:1 an icon needs). An error is `#2B0D14` with Sea Mist text (12.3:1) and a `#FF7F9C` icon, so the two still look different at a glance.
 - **Follow-ups:** overdue rows sit on `#2B0D14` with the date in `#FF7F9C` (7.5:1). Other rows use the Card colour.
 - **Timeline icons:** call Cerulean with white, email Coral and status change Sea Green with Midnight, as in light mode. A note is Sea Mist with a Midnight icon.

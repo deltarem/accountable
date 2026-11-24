@@ -19,14 +19,25 @@ test('open or closed', () => {
   expect(isOpen('lost')).toBe(false);
 });
 
+// The values behind these tokens, and their contrast in both modes, are checked
+// in styles/tokens.test.ts.
 test('each stage has its colour pair (DEC-05, DEC-06)', () => {
-  expect([stage('new').fill, stage('new').ink]).toEqual(['#0D6E8F', '#FFFFFF']);
-  expect([stage('qualified').fill, stage('qualified').ink]).toEqual(['#FFC145', '#073B4C']);
-  expect([stage('proposal').fill, stage('proposal').ink]).toEqual(['#F78C6B', '#073B4C']);
-  expect([stage('negotiation').fill, stage('negotiation').ink]).toEqual(['#073B4C', '#FFFFFF']);
-  expect([stage('won').fill, stage('won').ink]).toEqual(['#06D6A0', '#073B4C']);
-  expect([stage('lost').fill, stage('lost').ink]).toEqual(['#8FA3AA', '#073B4C']);
-  expect([stage('lost').badgeText, stage('lost').badgeTint]).toEqual(['#4D6973', '#E8EEF0']);
+  expect([stage('new').fill, stage('new').ink]).toEqual(['var(--stage-new)', 'var(--stage-new-ink)']);
+  expect([stage('qualified').fill, stage('qualified').ink]).toEqual([
+    'var(--stage-qualified)',
+    'var(--stage-qualified-ink)',
+  ]);
+  expect([stage('proposal').fill, stage('proposal').ink]).toEqual([
+    'var(--stage-proposal)',
+    'var(--stage-proposal-ink)',
+  ]);
+  expect([stage('negotiation').fill, stage('negotiation').ink]).toEqual([
+    'var(--stage-negotiation)',
+    'var(--stage-negotiation-ink)',
+  ]);
+  expect([stage('won').fill, stage('won').ink]).toEqual(['var(--stage-won)', 'var(--stage-won-ink)']);
+  expect([stage('lost').fill, stage('lost').ink]).toEqual(['var(--stage-lost)', 'var(--stage-lost-ink)']);
+  expect([stage('lost').badgeText, stage('lost').badgeTint]).toEqual(['var(--muted)', 'var(--midnight-tint)']);
 });
 
 describe('isLate', () => {
@@ -75,7 +86,12 @@ test('an unknown stage falls back to New rather than breaking the screen', () =>
 
 describe('contact statuses', () => {
   test('each status has its name and badge colours', () => {
-    expect(status('lead')).toEqual({ key: 'lead', name: 'Lead', text: '#0D6E8F', tint: '#E7F3F7' });
+    expect(status('lead')).toEqual({
+      key: 'lead',
+      name: 'Lead',
+      text: 'var(--cerulean-text)',
+      tint: 'var(--cerulean-tint)',
+    });
     expect(status('qualified').name).toBe('Qualified');
     expect(status('customer').name).toBe('Customer');
   });

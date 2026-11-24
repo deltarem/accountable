@@ -9,7 +9,7 @@
 }
 
 .card:hover {
-  background: #edf3f4;
+  background: var(--card-hover);
 }
 
 .card:focus-visible {
@@ -21,14 +21,14 @@
 }
 
 .overlay {
-  background: var(--panel);
+  background: var(--card-lift);
   transform: rotate(-2deg);
   box-shadow: var(--shadow-lift);
   cursor: grabbing;
 }
 
 .overlay:hover {
-  background: var(--panel);
+  background: var(--card-lift);
 }
 
 .value {
@@ -65,8 +65,8 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--midnight);
-  color: #fff;
+  background: var(--strong);
+  color: var(--on-strong);
   font: 600 10px var(--sans);
   display: grid;
   place-items: center;
@@ -75,7 +75,7 @@
 
 .none {
   background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--mist);
+  box-shadow: inset 0 0 0 1.5px var(--ring);
 }
 
 .pill {
@@ -96,8 +96,8 @@
 }
 
 .tip {
-  background: var(--midnight);
-  color: #fff;
+  background: var(--strong);
+  color: var(--on-strong);
   font-size: 12px;
   font-weight: 500;
   padding: 5px 8px;

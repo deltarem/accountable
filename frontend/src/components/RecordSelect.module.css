@@ -28,7 +28,7 @@
 }
 
 .placeholder {
-  color: #6b858e;
+  color: var(--placeholder);
 }
 
 .chevron {
@@ -39,7 +39,7 @@
 .content {
   width: var(--radix-popover-trigger-width);
   min-width: 240px;
-  background: var(--panel);
+  background: var(--raised);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-pop);
   padding: 8px;
@@ -85,7 +85,7 @@
 }
 
 .item[data-selected='true'] {
-  background: var(--card);
+  background: var(--highlight);
 }
 
 .hint,

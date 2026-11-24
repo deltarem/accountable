@@ -48,7 +48,7 @@
 }
 
 .row:hover td {
-  background: #f7fafa;
+  background: var(--row-hover);
 }
 
 .row:focus-visible {

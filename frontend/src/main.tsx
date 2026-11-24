@@ -5,8 +5,8 @@ import '@fontsource/instrument-sans/700.css';
 import '@fontsource/instrument-serif/400.css';
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
-import './styles/tokens.css';
-import './styles/global.css';
+// tokens.css and global.css load from index.html, so the colours of the saved
+// light or dark mode apply before this code runs.
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

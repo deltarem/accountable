@@ -39,13 +39,13 @@
 }
 
 .on {
-  background: var(--midnight);
-  color: #fff;
+  background: var(--strong);
+  color: var(--on-strong);
   box-shadow: none;
 }
 
 .on:hover {
-  color: #fff;
+  color: var(--on-strong);
 }
 
 .type:has(input:focus-visible) {

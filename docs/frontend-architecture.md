@@ -52,7 +52,7 @@ The rules for each layer:
 
 ```
 frontend/src/
-  main.tsx              fonts, global styles, mounts <App/>
+  main.tsx              fonts, mounts <App/> (index.html loads the global styles)
   App.tsx               providers: query client, tooltips, toasts, router
   routes.tsx            the seven addresses under AppShell
   api/
@@ -262,7 +262,15 @@ The rows handed to TanStack Table are memoized, and its auto-reset is turned off
 
 ## Styling
 
-- `styles/tokens.css` defines every colour, font, radius, spacing step and shadow as a CSS variable, named by role (`--page`, `--muted`, `--raspberry-text`...). A dark mode would only redefine these (`ARC-15`, `DES-01`).
+- `styles/tokens.css` defines every colour, font, radius, spacing step and shadow as a CSS variable, named by role (`--page`, `--muted`, `--raspberry-text`...) (`ARC-15`, `DES-01`). No colour lives anywhere else: `styles/tokens.test.ts` fails on a hex, `rgb()` or `rgba()` value in any other file under `src/`. Code that hands a colour to a library or an inline style passes `var(--token)`, as `lib/stages.ts`, the timeline icons and the Recharts props do.
+- **Light and dark mode.** Light values are on `:root`. Dark mode redefines the same tokens under `:root[data-theme='dark']`, with `color-scheme: dark`. Nothing in React knows the mode:
+  - `index.html` has a small inline script that sets `data-theme="dark"` on `<html>` from localStorage (`accountable-theme`) before anything draws. It also loads `tokens.css` and `global.css` itself, so the colours apply while the app's code is still loading.
+  - `lib/theme.ts` reads and sets the mode, and `components/ThemeToggle.tsx` is the button at the foot of the rail.
+  - The attribute is on `<html>`, so Radix portals (dialogs, menus, tooltips, toasts) follow the mode too.
+- **Tokens by role, not by colour.** A colour that plays two parts gets two tokens, because the parts go different ways in dark mode:
+  - `--ink` is body text, while `--on-bright` is the Midnight text on Sea Green, Marigold, Coral and grey fills.
+  - `--dark-panel` is the rail and the two headline panels, which stay Midnight. `--strong` and `--on-strong` are the other Midnight fills (main action buttons, initials, chosen filters, tooltips on cards, messages), which turn Sea Mist.
+  - `--raised` is dialogs, menus and pop-up lists, and `--highlight` is the chosen item in them.
 - Each component has its own CSS Module. `styles/global.css` holds only the reset, the focus ring and a few utility classes (`mono`, `visually-hidden`, `muted-text`, `late-text`, `pre-line`).
 - Inline styles are used only for values that come from data: a stage's colour, a funnel column's height, a skeleton's size.
 - **Breakpoints:**
@@ -296,10 +304,10 @@ All formatting lives in `lib/format.ts`, with its own unit tests (`DES-05`):
 
 | Level | Where | What |
 |---|---|---|
-| Unit (Vitest, jsdom) | next to the code, `*.test.ts(x)` | `lib/` (formats, money, stages, schemas with the shared cases), `DataTable`, `DealForm`, `ConfirmDeleteDialog`, `Board` totals, `DashboardPage` placeholders |
-| End to end (Playwright, Chrome) | `e2e/` | every screen against a real backend on ports 8100 and 5273, with the date fixed; fails on any console error or warning |
+| Unit (Vitest, jsdom) | next to the code, `*.test.ts(x)` | `lib/` (formats, money, stages, schemas with the shared cases), `DataTable`, `DealForm`, `ConfirmDeleteDialog`, `Board` totals, `DashboardPage` placeholders, the theme and its toggle, and the tokens (contrast in both modes, light values unchanged, no colour outside `tokens.css`) |
+| End to end (Playwright, Chrome) | `e2e/` | every screen against a real backend on ports 8100 and 5273, with the clock fixed to 23 Nov 2026, 14:00; light mode compared pixel for pixel against reference screenshots (`light-mode.spec.ts`); dark mode switching and remembering (`dark-mode.spec.ts`); fails on any console error or warning |
 
-`test/utils.tsx` gives component tests the real providers and a fake `fetch` keyed by `"METHOD /api/path"`. `npm test` runs both levels along with the backend tests (see `AGENTS.md`).
+`test/setup.ts` points `localStorage` at jsdom's, because Node 25 and later define their own, which is undefined in tests and hides jsdom's. `test/utils.tsx` gives component tests the real providers and a fake `fetch` keyed by `"METHOD /api/path"`. `npm test` runs both levels along with the backend tests (see `AGENTS.md`).
 
 ## Adding to it
 

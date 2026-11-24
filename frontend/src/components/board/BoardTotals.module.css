@@ -3,7 +3,7 @@
   grid-template-columns: auto auto auto minmax(200px, 1fr);
   gap: 36px;
   align-items: center;
-  background: var(--midnight);
+  background: var(--dark-panel);
   color: var(--on-dark);
   border-radius: var(--radius-panel);
   padding: 18px var(--space-3);
@@ -17,7 +17,7 @@
 
 .fig {
   font: 500 22px var(--mono);
-  color: #fff;
+  color: var(--on-dark-strong);
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

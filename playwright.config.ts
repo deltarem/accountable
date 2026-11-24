@@ -1,11 +1,12 @@
 import { defineConfig } from '@playwright/test';
 
 // The end-to-end tests start their own servers on ports 8100 and 5273, with
-// their own database and the date fixed to 23 Nov 2026, so your data is never
-// touched (ARC-14, RUN-04).
+// their own database and the clock fixed to 23 Nov 2026, 14:00, so your data is
+// never touched (ARC-14, RUN-04). The time is fixed too, so the sample data and
+// every screen look the same on each run, which the light mode comparison needs.
 export const E2E_ENV = {
   ACCOUNTABLE_DB: 'data/e2e.db',
-  ACCOUNTABLE_TODAY: '2026-11-23',
+  ACCOUNTABLE_TODAY: '2026-11-23T14:00:00',
   BACKEND_PORT: '8100',
   FRONTEND_PORT: '5273',
 };
