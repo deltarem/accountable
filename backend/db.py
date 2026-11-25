@@ -1,11 +1,11 @@
-"""Engine, table definitions and the transaction helper (DM-01 to DM-06).
+"""Engine, table definitions, migrations and the transaction helper (DM-01 to DM-08).
 
-SQLAlchemy Core with generic types only, so the same tables can move to
-Postgres later. Foreign keys are declared, but the delete rules live in the
-services (ARC-04).
+SQLAlchemy Core with generic types only, so the same tables and queries run on
+SQLite and on Postgres (DM-06). Foreign keys are declared, but the delete rules
+live in the services (ARC-04). Every change to the tables is also an Alembic
+migration in backend/migrations/ (ARC-03).
 """
 
-import os
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -23,11 +23,12 @@ from sqlalchemy import (
     Text,
     and_,
     create_engine,
+    inspect,
     or_,
 )
 from sqlalchemy.engine import Connection, Engine
 
-DEFAULT_DB = "data/accountable.db"
+from backend import settings
 
 metadata = MetaData()
 
@@ -39,15 +40,36 @@ def _stamps():
     ]
 
 
+def _authors():
+    """Who added the record and who last changed it (DM-08). Empty for sample data."""
+    return [
+        Column("created_by", String(64), ForeignKey("users.id")),
+        Column("updated_by", String(64), ForeignKey("users.id")),
+    ]
+
+
+# One row per person who has signed in, keyed by their Supabase user id (DM-07).
+users = Table(
+    "users",
+    metadata,
+    Column("id", String(64), primary_key=True),
+    Column("email", String(320), nullable=False),
+    Column("name", String(200), nullable=False),
+    *_stamps(),
+)
+
+
 organizations = Table(
     "organizations",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("name", String(200), nullable=False),
-    Column("website", String(500)),
+    # 500 characters as typed, plus the https:// the server may add (UI-FORM-07).
+    Column("website", String(508)),
     Column("industry", String(200)),
     Column("notes", Text),
     *_stamps(),
+    *_authors(),
 )
 
 contacts = Table(
@@ -56,11 +78,12 @@ contacts = Table(
     Column("id", Integer, primary_key=True),
     Column("name", String(200), nullable=False),
     Column("email", String(320)),
-    Column("phone", String(100)),
+    Column("phone", String(200)),
     Column("job_title", String(200)),
     Column("organization_id", Integer, ForeignKey("organizations.id")),
     Column("status", String(20), nullable=False, default="lead"),
     *_stamps(),
+    *_authors(),
 )
 
 deals = Table(
@@ -76,6 +99,7 @@ deals = Table(
     Column("close_date", Date),
     Column("position", Integer, nullable=False, default=0),
     *_stamps(),
+    *_authors(),
 )
 
 activities = Table(
@@ -90,6 +114,7 @@ activities = Table(
     Column("follow_up_date", Date),
     Column("follow_up_done", Boolean, nullable=False, default=False),
     *_stamps(),
+    *_authors(),
 )
 
 # An activity belongs to exactly one record: a contact or a deal.
@@ -113,30 +138,35 @@ events = Table(
     Column("from_value", String(20)),
     Column("to_value", String(20)),
     Column("occurred_at", DateTime, nullable=False),
+    Column("created_by", String(64), ForeignKey("users.id")),
     *_stamps(),
 )
 
+# The tables a reset clears, children first. `users` is never cleared (SEED-07).
 ALL_TABLES = [events, activities, deals, contacts, organizations]
 
 
 def db_path() -> Path:
-    return Path(os.environ.get("ACCOUNTABLE_DB") or DEFAULT_DB)
+    """The SQLite file, when the database is SQLite."""
+    return settings.sqlite_path()
 
 
 _engines: dict[str, Engine] = {}
 
 
 def get_engine() -> Engine:
-    """One engine per database file, with a 10-second busy timeout."""
-    path = db_path()
-    key = str(path.resolve())
-    if key not in _engines:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        _engines[key] = create_engine(
-            f"sqlite:///{path.as_posix()}",
-            connect_args={"timeout": 10, "check_same_thread": False},
-        )
-    return _engines[key]
+    """One engine per database. SQLite gets a 10-second busy timeout; Postgres, through
+    Supabase's session pooler, a small pool that checks connections before use."""
+    url = settings.load().database_url
+    if url not in _engines:
+        if url.startswith("sqlite"):
+            db_path().parent.mkdir(parents=True, exist_ok=True)
+            _engines[url] = create_engine(
+                url, connect_args={"timeout": 10, "check_same_thread": False}
+            )
+        else:
+            _engines[url] = create_engine(url, pool_pre_ping=True, pool_size=3, max_overflow=2)
+    return _engines[url]
 
 
 def dispose_engines() -> None:
@@ -145,8 +175,45 @@ def dispose_engines() -> None:
     _engines.clear()
 
 
+MIGRATIONS = Path(__file__).resolve().parent / "migrations"
+BASELINE = "0001"
+
+
+def _alembic_config(conn: Connection):
+    from alembic.config import Config
+
+    config = Config()
+    config.set_main_option("script_location", str(MIGRATIONS))
+    config.attributes["connection"] = conn
+    return config
+
+
+def run_migrations() -> bool:
+    """Bring the database up to date (ARC-03). Returns True when it had no tables yet.
+
+    A SQLite file from before migrations has the tables but no alembic_version. It is
+    stamped at the baseline first, which describes those tables, so it keeps its data.
+    """
+    from alembic import command
+
+    with get_engine().begin() as conn:
+        tables = set(inspect(conn).get_table_names())
+        config = _alembic_config(conn)
+        if "alembic_version" not in tables and "organizations" in tables:
+            command.stamp(config, BASELINE)
+        command.upgrade(config, "head")
+    return "organizations" not in tables
+
+
 def create_tables() -> None:
-    metadata.create_all(get_engine())
+    """The tables straight from the definitions above, stamped as fully migrated.
+    Quicker than running every migration, so the unit tests use it; the migrations
+    are checked against these definitions in test_migrations.py."""
+    from alembic import command
+
+    with get_engine().begin() as conn:
+        metadata.create_all(conn)
+        command.stamp(_alembic_config(conn), "head")
 
 
 @contextmanager
@@ -176,5 +243,7 @@ __all__ = [
     "metadata",
     "organizations",
     "reading",
+    "run_migrations",
     "transaction",
+    "users",
 ]

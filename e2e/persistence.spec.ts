@@ -1,5 +1,6 @@
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
 
+import { E2E_ENV } from '../playwright.config';
 import { expect, reseed, test } from './fixtures';
 import { expectToast } from './tables';
 
@@ -10,7 +11,8 @@ const PORT = 8110;
 
 function startBackend(): ChildProcess {
   return spawn('uv', ['run', 'uvicorn', 'backend.main:app', '--host', '127.0.0.1', '--port', String(PORT)], {
-    env: { ...process.env, ACCOUNTABLE_DB: 'data/e2e.db', ACCOUNTABLE_TODAY: '2026-11-23T14:00:00' },
+    // Local mode and the end-to-end database, like the test servers (DEC-19).
+    env: { ...process.env, ...E2E_ENV },
     shell: process.platform === 'win32',
     stdio: 'ignore',
   });
@@ -21,11 +23,13 @@ function stopBackend(child: ChildProcess) {
   else child.kill();
 }
 
-async function namesFrom(port: number): Promise<string[]> {
+async function namesFrom(port: number, token: string): Promise<string[]> {
   const started = Date.now();
   while (Date.now() - started < 30_000) {
     try {
-      const r = await fetch(`http://127.0.0.1:${port}/api/organizations`);
+      const r = await fetch(`http://127.0.0.1:${port}/api/organizations`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (r.ok) return (await r.json()).map((o: { name: string }) => o.name);
     } catch {
       // not up yet
@@ -35,7 +39,7 @@ async function namesFrom(port: number): Promise<string[]> {
   throw new Error('backend did not start');
 }
 
-test('changes are kept after a refresh and a restart, and seed resets them', async ({ page }) => {
+test('changes are kept after a refresh and a restart, and seed resets them', async ({ page, token }) => {
   // Two cold backend starts (about 12 seconds each on Windows) and a reseed
   // take this past the usual 45-second limit.
   test.slow();
@@ -56,7 +60,7 @@ test('changes are kept after a refresh and a restart, and seed resets them', asy
   for (let run = 0; run < 2; run++) {
     const backend = startBackend();
     try {
-      const names = await namesFrom(PORT);
+      const names = await namesFrom(PORT, token);
       expect(names).toContain('Kept After Restart');
       expect(names).not.toContain('Solano Foods');
     } finally {

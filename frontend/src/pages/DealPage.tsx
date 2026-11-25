@@ -11,6 +11,7 @@ import { FactList, HeaderFact, RecordColumns, RecordHeader } from '../components
 import { Timeline } from '../components/record/Timeline';
 import { formatDate, formatMoney, formatPercent } from '../lib/format';
 import { stage as stageInfo } from '../lib/stages';
+import { whoLine } from '../lib/who';
 import { BackLink, RecordLoadFailure } from './recordShared';
 
 function CloseDate({ deal }: { deal: DealDetail }) {
@@ -70,7 +71,6 @@ function DealDetails({ deal }: { deal: DealDetail }) {
           value: <span className="mono">{formatMoney(stageInfo(deal.stage).open ? deal.expected_cents : 0)}</span>,
         },
         { label: 'Close date', value: <CloseDate deal={deal} /> },
-        { label: 'Created', value: <span className="mono">{formatDate(deal.created_at)}</span> },
       ]}
     />
   );
@@ -106,6 +106,7 @@ export function DealPage() {
           deal && confirmDelete({ kind: 'deals', id: deal.id, onDeleted: () => navigate('/deals', { replace: true }) })
         }
         facts={deal ? <DealFacts deal={deal} /> : null}
+        who={deal ? whoLine(deal) : undefined}
       />
       <RecordColumns
         left={<Panel title="Details">{deal ? <DealDetails deal={deal} /> : null}</Panel>}

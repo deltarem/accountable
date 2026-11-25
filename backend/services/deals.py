@@ -15,6 +15,7 @@ from backend.services.stages import (
     make_customer,
 )
 from backend.services.timeline import deal_timeline
+from backend.services.users import name_map, with_names
 
 
 def _query():
@@ -29,8 +30,8 @@ def _query():
     )
 
 
-def _decorate(row, today) -> dict:
-    d = dict(row)
+def _decorate(row, today, names) -> dict:
+    d = with_names(dict(row), names)
     d["late"] = is_late(d["stage"], d["close_date"], today)
     d["expected_cents"] = expected_cents(d["value_cents"], d["probability"])
     return d
@@ -40,7 +41,8 @@ def list_deals() -> list[dict]:
     today = clock.today()
     with db.reading() as conn:
         rows = conn.execute(_query()).mappings().all()
-    items = [_decorate(r, today) for r in rows]
+        names = name_map(conn)
+    items = [_decorate(r, today, names) for r in rows]
     return sorted(items, key=lambda d: (ORDER.index(d["stage"]), d["position"], d["id"]))
 
 
@@ -49,7 +51,7 @@ def get_deal(deal_id: int) -> dict:
         row = conn.execute(_query().where(deals.c.id == deal_id)).mappings().first()
         if row is None:
             one(conn, deals, deal_id, "deal")
-        deal = _decorate(row, clock.today())
+        deal = _decorate(row, clock.today(), name_map(conn))
         deal["timeline"] = deal_timeline(conn, deal_id)
         return deal
 
@@ -64,9 +66,21 @@ def _check_links(conn, data: DealIn) -> None:
         raise ValidationFailed(errors)
 
 
+def column_query(stage: str):
+    """A column's deals in order, locked until the transaction ends. On Postgres two
+    moves at once could otherwise renumber the same column between each other's
+    reads (DEC-20, ARC-08). SQLite has no row locks and leaves FOR UPDATE out; it
+    allows one writer at a time anyway."""
+    return (
+        select(deals.c.id)
+        .where(deals.c.stage == stage)
+        .order_by(deals.c.position, deals.c.id)
+        .with_for_update()
+    )
+
+
 def column_ids(conn, stage: str, exclude: int | None = None) -> list[int]:
-    q = select(deals.c.id).where(deals.c.stage == stage).order_by(deals.c.position, deals.c.id)
-    return [i for i in conn.execute(q).scalars() if i != exclude]
+    return [i for i in conn.execute(column_query(stage)).scalars() if i != exclude]
 
 
 def write_positions(conn, ids: list[int]) -> None:
@@ -81,7 +95,7 @@ def write_positions(conn, ids: list[int]) -> None:
             conn.execute(update(deals).where(deals.c.id == deal_id).values(position=position))
 
 
-def create_deal(data: DealIn) -> dict:
+def create_deal(data: DealIn, user_id: str) -> dict:
     """RULE-01: a new deal takes its stage's probability unless one is given.
     It goes to the top of its column."""
     at = clock.now()
@@ -95,15 +109,22 @@ def create_deal(data: DealIn) -> dict:
         _check_links(conn, data)
         others = column_ids(conn, stage)
         new_id = conn.execute(
-            insert(deals).values(**values, position=0, created_at=at, updated_at=at)
+            insert(deals).values(
+                **values,
+                position=0,
+                created_at=at,
+                updated_at=at,
+                created_by=user_id,
+                updated_by=user_id,
+            )
         ).inserted_primary_key[0]
         write_positions(conn, [new_id, *others])
         if stage == "won":
-            make_customer(conn, values["contact_id"], at)
+            make_customer(conn, values["contact_id"], at, user_id)
     return get_deal(new_id)
 
 
-def update_deal(deal_id: int, data: DealIn) -> dict:
+def update_deal(deal_id: int, data: DealIn, user_id: str) -> dict:
     """RULE-02, RULE-03, DEC-07: a stage change goes through apply_stage_change.
 
     When the stage changes, a probability or close date that is still the old
@@ -118,7 +139,7 @@ def update_deal(deal_id: int, data: DealIn) -> dict:
         new_stage = values.pop("stage")
         probability = values.pop("probability")
         close_date = values.pop("close_date")
-        plain = {**values, "updated_at": at}
+        plain = {**values, "updated_at": at, "updated_by": user_id}
         if new_stage == current["stage"]:
             plain["probability"] = current["probability"] if probability is None else probability
             plain["close_date"] = close_date
@@ -138,6 +159,7 @@ def update_deal(deal_id: int, data: DealIn) -> dict:
                 conn,
                 {**current, **values},
                 new_stage,
+                user_id=user_id,
                 probability=chosen_probability,
                 close_date=chosen_date,
             )
@@ -146,15 +168,21 @@ def update_deal(deal_id: int, data: DealIn) -> dict:
     return get_deal(deal_id)
 
 
-def move_deal(deal_id: int, stage: str, index: int) -> dict:
-    """API-11: put the card at that stage and place, renumber, apply the stage rules."""
+def move_deal(deal_id: int, stage: str, index: int, user_id: str) -> dict:
+    """API-11: put the card at that stage and place, renumber, apply the stage rules.
+    A move counts as a change to the deal, even within its column (DM-08)."""
     with db.transaction() as conn:
         current = one(conn, deals, deal_id, "deal")
+        conn.execute(
+            update(deals)
+            .where(deals.c.id == deal_id)
+            .values(updated_at=clock.now(), updated_by=user_id)
+        )
         target = column_ids(conn, stage, exclude=deal_id)
         index = max(0, min(index, len(target)))
         target.insert(index, deal_id)
         if stage != current["stage"]:
-            apply_stage_change(conn, current, stage)
+            apply_stage_change(conn, current, stage, user_id=user_id)
             write_positions(conn, column_ids(conn, current["stage"], exclude=deal_id))
         write_positions(conn, target)
     return get_deal(deal_id)

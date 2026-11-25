@@ -1,7 +1,5 @@
 """The sample data (SEED-01 to SEED-06, RUN-03, ARC-13)."""
 
-import subprocess
-import sys
 import threading
 from collections import Counter
 from datetime import date, timedelta
@@ -11,7 +9,7 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from backend import db
+from backend import db, seed
 from backend.db import activities, contacts, deals, events, organizations
 from backend.seed import seed_database
 from backend.services.stages import ORDER, STAGES
@@ -140,15 +138,14 @@ def test_empty_leaves_every_table_empty(seeded):
 
 
 def test_command_line_resets(fresh_db):
+    # The command's own function, called in this process: two fresh Python processes
+    # took over a second, past the limit for a unit test (RUN-04).
     seed_database()
     with db.transaction() as conn:
         conn.execute(organizations.delete().where(organizations.c.id == 1))
-    db.dispose_engines()
-    subprocess.run([sys.executable, "-m", "backend.seed"], check=True, capture_output=True)
+    assert seed.main([]) == 0
     assert len(rows(organizations)) == 10
-    subprocess.run(
-        [sys.executable, "-m", "backend.seed", "--empty"], check=True, capture_output=True
-    )
+    assert seed.main(["--empty"]) == 0
     assert rows(organizations) == []
 
 

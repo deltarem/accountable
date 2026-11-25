@@ -16,17 +16,56 @@ export class ApiError extends Error {
   }
 }
 
-export async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+/**
+ * How the client reaches the session (auth/session.tsx): the token to send, and
+ * what to do when the server says the session is over (AUTH-03). Signed out,
+ * there's no token and nobody to tell.
+ */
+export interface SessionLink {
+  token: () => Promise<string | null>;
+  onUnauthorized: () => void;
+}
+
+const SIGNED_OUT: SessionLink = { token: async () => null, onUnauthorized: () => {} };
+let session: SessionLink = SIGNED_OUT;
+
+/** Connects the session; returns a function that disconnects it again. */
+export function connectSession(link: SessionLink): () => void {
+  session = link;
+  return () => {
+    if (session === link) session = SIGNED_OUT;
+  };
+}
+
+async function headersFor(body: unknown, signIn: boolean): Promise<Record<string, string> | undefined> {
+  const headers: Record<string, string> = {};
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const token = signIn ? null : await session.token();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return Object.keys(headers).length ? headers : undefined;
+}
+
+/**
+ * `signIn` marks the local sign-in call: it sends no token, and its 401 means a
+ * wrong password, not a session that has ended.
+ */
+export async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  { signIn = false }: { signIn?: boolean } = {},
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`/api${path}`, {
       method,
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers: await headersFor(body, signIn),
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
     throw new ApiError(0, "Couldn't reach the server. Check that Accountable is running.");
   }
+  if (response.status === 401 && !signIn) session.onUnauthorized();
   if (response.status === 204) return undefined as T;
   let data: unknown = null;
   try {

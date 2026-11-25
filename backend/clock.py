@@ -5,6 +5,7 @@ a time, "2026-11-23T14:00:00", which fixes the clock completely (used by tests).
 """
 
 import os
+import time
 from datetime import date, datetime
 
 
@@ -25,3 +26,9 @@ def now() -> datetime:
 
 def today() -> date:
     return now().date()
+
+
+def epoch_seconds() -> int:
+    """The real time in seconds since 1970, for sign-in tokens only. Never fixed by
+    ACCOUNTABLE_TODAY, because PyJWT checks a token's expiry against the real time."""
+    return int(time.time())

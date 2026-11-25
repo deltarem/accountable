@@ -23,6 +23,8 @@ const renewal: DealDetail = {
   expected_cents: 937_500,
   created_at: '2026-03-04T10:00:00',
   updated_at: '2026-11-01T10:00:00',
+  created_by_name: null,
+  updated_by_name: null,
   timeline: [
     entry({
       key: 'activity-3',
@@ -95,7 +97,7 @@ describe('DealPage (UI-REC-04)', () => {
     expect(within(summary).getByText('Late')).toBeTruthy();
   });
 
-  test('the details list links the organization and main contact, and says when it was created', async () => {
+  test('the details list links the organization and main contact', async () => {
     mockFetch({ ...common(), '/api/deals/20': renewal });
     renderPage();
     await screen.findByRole('heading', { level: 1, name: 'Northwind renewal' });
@@ -107,7 +109,6 @@ describe('DealPage (UI-REC-04)', () => {
       'Probability',
       'Expected revenue',
       'Close date',
-      'Created',
     ]);
     expect(
       within(detail('Organization') as HTMLElement)
@@ -124,7 +125,23 @@ describe('DealPage (UI-REC-04)', () => {
     expect(detail('Stage')?.textContent).toBe('Negotiation');
     expect(detail('Expected revenue')?.textContent).toBe('$9.375,00');
     expect(detail('Close date')?.textContent).toBe('15 Nov 2026 Late');
-    expect(detail('Created')?.textContent).toBe('4 Mar 2026');
+  });
+
+  test('the header ends with who added it and who last changed it, in place of "Created" (UI-WHO-01)', async () => {
+    mockFetch({
+      ...common(),
+      '/api/deals/20': { ...renewal, created_by_name: 'Priya Shah', updated_by_name: 'Sam Lee' },
+    });
+    renderPage();
+    expect((await screen.findByTestId('who')).textContent).toBe(
+      'Added by Priya Shah on 4 Mar 2026 · Last changed by Sam Lee on 1 Nov 2026',
+    );
+  });
+
+  test('sample data reads "Sample data"', async () => {
+    mockFetch({ ...common(), '/api/deals/20': renewal });
+    renderPage();
+    expect((await screen.findByTestId('who')).textContent).toBe('Added by Sample data on 4 Mar 2026');
   });
 
   test('a closed deal with no organization, contact or close date says so (RULE-07)', async () => {

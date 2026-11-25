@@ -63,11 +63,11 @@ describe('IconRail (UI-LAY-01)', () => {
     expect((await screen.findByRole('tooltip')).textContent).toBe('Contacts');
   });
 
-  test('the light and dark toggle comes last, after the five sections', () => {
+  test('holds the mark and the five sections, and nothing at its foot (UI-THEME-01)', () => {
     renderWithProviders(<IconRail />);
     const rail = screen.getByRole('navigation', { name: 'Sections' });
     const controls = Array.from(rail.querySelectorAll('a, button')).map((el) => el.getAttribute('aria-label'));
-    expect(controls).toEqual(['Accountable, go to the dashboard', ...SECTION_NAMES, 'Switch to dark mode']);
+    expect(controls).toEqual(['Accountable, go to the dashboard', ...SECTION_NAMES]);
   });
 
   test('a tooltip also shows on hover', async () => {

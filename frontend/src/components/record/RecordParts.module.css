@@ -39,6 +39,12 @@
   margin-top: 14px;
 }
 
+.who {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
 .headerFact {
   display: flex;
   flex-direction: column;

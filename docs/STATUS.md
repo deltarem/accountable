@@ -1,13 +1,15 @@
-The MVP is built (phases 1 to 8 of `docs/changes/mvp/plan.md`), and so is dark mode (`docs/changes/dark-mode/`). Checks by hand are still open; see the end. `npm run check` passes.
+The MVP is built (phases 1 to 8 of `docs/changes/mvp/plan.md`), and so are dark mode (`docs/changes/dark-mode/`) and sign-in, search and the user menu (`docs/changes/multi-user/`). Checks by hand are still open; see the end.
 
 ## How to run
 
 You need Node 24 or later and uv. Google Chrome is needed only for the end-to-end tests.
 
-- `npm run dev` installs what's missing on the first run, starts both servers and prints the address (http://127.0.0.1:5173). Ctrl+C stops both.
-- `npm run seed` resets the database (`data/accountable.db`) to the sample data. Add `-- --empty` for no data at all.
+- `npm run dev` runs against Supabase. It needs `DATABASE_URL`, `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in `.env` (copy `.env.example`, which says where each comes from), and an account added for you in Supabase's dashboard. It installs what's missing on the first run, starts both servers and prints the address (http://127.0.0.1:5173). Ctrl+C stops both.
+- `npm run dev:local` runs offline on `data/accountable.db`, with the built-in test user: email `test@example.com`, password `accountable` (both public, filled in on the sign-in screen). It ignores the Supabase settings.
+- `npm run build` then `npm start` runs the built app the way Render does, on port 8000 (or `PORT`), against Supabase. `render.yaml` describes the Render service; enter the three settings in Render's dashboard.
+- `npm run seed` resets the database `npm run dev` uses to the sample data. On Supabase it wipes the team's data, so it stops unless you add `-- --yes`. `npm run seed -- --local` resets the local file instead. Add `-- --empty` for no data at all.
 - `npm test` runs the traceability check, the script tests, pytest, Vitest and Playwright. It runs every suite even after one fails, prints a PASS/FAIL summary, and exits with 1 if any failed. `node scripts/test-all.mjs test:backend` runs only the named suites. The end-to-end tests start their own servers on ports 8100 and 5273 with their own database, so your data is never touched. Screenshots for review land in `test-results/screens/`, in light and dark mode.
-- **Light mode reference screenshots** (`e2e/light-mode.spec.ts-snapshots/`) prove light mode hasn't changed since dark mode was added. They're made per platform, and only the Windows ones exist. To make them on another computer, check out the commit that added them, before the styling changed, and run `npx playwright test e2e/light-mode.spec.ts --update-snapshots`. Never update them to make a failing comparison pass.
+- **Light mode reference screenshots** (`e2e/light-mode.spec.ts-snapshots/`) prove light mode hasn't changed since dark mode was added, apart from the top bar, the rail's empty foot and who added each record. They're made per platform, and only the Windows ones exist. To make them on another computer, check out the commit that last retook them and run `npx playwright test e2e/light-mode.spec.ts --update-snapshots`. Never update them to make a failing comparison pass.
 - `npm install` also installs the git pre-commit hook (`lefthook.yml`). `git commit --no-verify` skips it once.
 
 ## Log
@@ -42,6 +44,13 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - 2026-11-25: `npm run check:quick` passes on Windows again. A new `.gitattributes` keeps text files LF in the working copy whatever `core.autocrlf` says; before, files git had checked out came out CRLF and Prettier flagged 42 of them. Two tests in `frontend/src/api/hooks.test.tsx` (a refused save, a refused move) read the hook's error state straight after `mutateAsync` rejected, but TanStack Query delivers it in a `setTimeout(0)` batch, so they failed now and then. They now wait for it.
 - 2026-11-25: `docs/spec.md` split by area. It keeps the summary (problem, users, constraints, scope, success criteria, ID rules) and an index; the detail moved word for word into 13 files in `docs/specs/` (dashboard, pipeline, deals, contacts, organizations, activities, shared screens, theme, design, architecture, running, sample data, testing). The index lists every requirement ID under its file, which keeps `scripts/check-trace.mjs` working unchanged. AGENTS.md, REVIEW.md, STANDARDS.md and the reviewer and ui-check agents point at the area files.
 
+- 2026-11-25: Sign-in, search and a user menu (`docs/changes/multi-user/`).
+  - Postgres on Supabase through SQLAlchemy Core, with Alembic migrations run at startup. Migration 0003 widens two columns the forms already allowed to be longer (phone, website), which only Postgres would have refused.
+  - Supabase Auth sign-in, checked on every `/api` route against the project's public keys. A `users` table, and who added and last changed each record, shown on record pages and timelines.
+  - `npm run dev:local` with a built-in test user, `npm run build` and `npm start`, and `render.yaml`.
+  - A top bar with a search over organizations, contacts and deals, and a menu under your initials with Light, Dark, System and Sign out. The theme toggle left the rail.
+  - The light mode references were retaken once, after a script showed the tables and the pipeline identical below the top bar, and the other pages changed only where the who line and names appear.
+
 ## Notes from the build
 
 - **Library versions (risk 13).** npm's latest majors moved past the APIs the spec was written against, so these majors are pinned: React Router 7, TanStack Table 8, Vite 7, Vitest 3, TypeScript 5. The rest are current (React 19, TanStack Query 5, dnd-kit, Recharts 3, Radix, cmdk, React Hook Form 7, zod 4). `@hookform/resolvers` was left out: the forms use a small zod resolver of their own (`lib/schemas.ts`), which turns typed money into cents before validating.
@@ -56,6 +65,8 @@ You need Node 24 or later and uv. Google Chrome is needed only for the end-to-en
 - **Speed test flakiness.** The speed test sits close to its one-second limit on the development server. It failed now and then (1033 ms, 1132 ms) during the dark mode work, with and without that change's clock fix, and passed 8 runs in a row when repeated.
 
 ## Still to check by hand
+
+- **Supabase and Render** (multi-user change): sign in with a real account with `npm run dev`, then `npm run build` and `npm start`, then on Render after a deploy. Confirm the display name set in Supabase's dashboard shows (it's read from the token's `user_metadata`), that the project uses JWT signing keys rather than the older shared secret, and that every screen answers in under a second on Render. Two accounts at once should see each other's names, and each other's changes after coming back to the tab. `npm run seed` without `--yes` should stop. Check the built `frontend/dist/` doesn't contain the database address. `render.yaml` sets `TZ` to Europe/London; change it to the team's time zone.
 
 - **Ctrl+C on Windows:** press Ctrl+C on `npm run dev`, then check that no Python or Node process is left and both ports are free. The automated test covers the same shutdown through a `stop` message, because a test can't press Ctrl+C.
 - **Dark mode by hand:** use every section in both modes in Chrome, including a drag on the board, a form with errors, a delete, a message and a follow-up ticked off, with the console open.

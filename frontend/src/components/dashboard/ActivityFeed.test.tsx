@@ -58,14 +58,29 @@ describe('ActivityFeed (UI-DASH-07)', () => {
     expect(within(items[2]).getByRole('link', { name: 'Maria Lopez' }).getAttribute('href')).toBe('/contacts/4');
   });
 
-  test('an entry without a record shows only its time, with no separator', () => {
+  test('an entry without a record shows its time and who made it', () => {
     renderWithProviders(
       <ActivityFeed entries={[timelineEntry({ type: 'note', description: 'Kickoff', record: null })]} />,
     );
     const item = screen.getByTestId('activity-item');
     expect(within(item).getByText('Note: Kickoff')).toBeTruthy();
     expect(within(item).queryByRole('link')).toBeNull();
-    expect(item.textContent).not.toContain(' · ');
+    expect(item.textContent).toContain('23 Nov 2026, 14:05 · Sample data');
+  });
+
+  test('each entry ends with who made it (UI-WHO-02)', () => {
+    renderWithProviders(
+      <ActivityFeed
+        entries={[
+          timelineEntry({
+            description: 'Called',
+            created_by_name: 'Priya Shah',
+            record: { kind: 'deal', id: 5, name: 'Acme renewal' },
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByTestId('activity-item').textContent).toMatch(/Acme renewal · 23 Nov 2026, 14:05 · Priya Shah$/);
   });
 
   test('with no entries it reads "No activity yet" (UI-EMPTY-04)', () => {

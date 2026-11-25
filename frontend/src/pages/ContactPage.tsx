@@ -8,6 +8,7 @@ import { Panel } from '../components/Panel';
 import { HeaderFact, LinkedList, RecordColumns, RecordHeader } from '../components/record/RecordParts';
 import { Timeline } from '../components/record/Timeline';
 import { formatMoney } from '../lib/format';
+import { whoLine } from '../lib/who';
 import { BackLink, RecordLoadFailure } from './recordShared';
 
 export function ContactPage() {
@@ -35,6 +36,7 @@ export function ContactPage() {
       <RecordHeader
         loading={!contact}
         name={contact?.name}
+        who={contact ? whoLine(contact) : undefined}
         onEdit={() => contact && openForm({ kind: 'contact', record: contact })}
         onDelete={() =>
           contact &&

@@ -8,7 +8,12 @@ import { renderWithProviders } from './utils';
 
 export const TODAY = { today: '2026-11-23', now: '2026-11-23T14:05:00' };
 
-const STAMPS = { created_at: '2026-11-01T10:00:00', updated_at: '2026-11-01T10:00:00' };
+const STAMPS = {
+  created_at: '2026-11-01T10:00:00',
+  updated_at: '2026-11-01T10:00:00',
+  created_by_name: null,
+  updated_by_name: null,
+};
 
 export function makeDeal(id: number, extra: Partial<Deal> = {}): Deal {
   return {

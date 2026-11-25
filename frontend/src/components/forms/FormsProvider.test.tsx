@@ -23,6 +23,8 @@ const deal: Deal = {
   expected_cents: 1_200_000,
   created_at: '2026-01-05T09:00:00',
   updated_at: '2026-01-05T09:00:00',
+  created_by_name: null,
+  updated_by_name: null,
 };
 
 let calls: string[] = [];

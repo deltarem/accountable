@@ -1,10 +1,10 @@
 import { execFileSync } from 'node:child_process';
 
-const ENV = {
-  ...process.env,
-  ACCOUNTABLE_DB: 'data/e2e.db',
-  ACCOUNTABLE_TODAY: '2026-11-23T14:00:00',
-};
+import { E2E_ENV } from '../playwright.config';
+
+// Local mode, like the servers: it refuses Postgres, so this can only ever reset
+// the end-to-end SQLite file (DEC-19).
+const ENV = { ...process.env, ...E2E_ENV };
 
 function runSeed(args: string[]) {
   execFileSync('uv', ['run', 'python', '-m', 'backend.seed', ...args], {

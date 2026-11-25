@@ -77,5 +77,5 @@ def test_failed_move_changes_nothing(api, failing):
     before = snapshot()
     failing()
     with pytest.raises(Boom):
-        deal_svc.move_deal(a["id"], "won", 0)
+        deal_svc.move_deal(a["id"], "won", 0, "user-priya")
     assert snapshot() == before

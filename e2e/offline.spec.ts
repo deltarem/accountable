@@ -1,6 +1,9 @@
 import { expect, settled, test } from './fixtures';
 
-// DEC-02: fonts are bundled and nothing is fetched from the internet.
+// DEC-02, RUN-12: fonts are bundled and nothing is fetched from the internet,
+// signing in included: local mode never loads Supabase's client.
+
+test.use({ signedOut: true });
 
 test('every request stays on this computer', async ({ page }) => {
   const outside: string[] = [];
@@ -8,6 +11,10 @@ test('every request stays on this computer', async ({ page }) => {
     const host = new URL(request.url()).hostname;
     if (host !== '127.0.0.1' && host !== 'localhost') outside.push(request.url());
   });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('navigation', { name: 'Sections' })).toBeVisible();
 
   for (const path of ['/', '/pipeline', '/deals', '/contacts', '/organizations', '/deals/1', '/contacts/1', '/organizations/1']) {
     await page.goto(path);

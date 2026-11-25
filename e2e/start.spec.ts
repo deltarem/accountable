@@ -1,6 +1,19 @@
 import { expect, settled, test } from './fixtures';
 
-// SC-01: open the app, land on the dashboard, sample data on every screen.
+// SC-01: open the app, sign in, land on the dashboard, sample data on every screen.
+
+test.describe('starting signed out', () => {
+  test.use({ signedOut: true });
+
+  test('signs in as the test user and lands on the dashboard', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1, name: 'Sign in to Accountable' })).toBeVisible();
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page.getByRole('navigation', { name: 'Sections' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByTestId('open-pipeline')).toHaveText('$1.130.000');
+  });
+});
 
 test('opens on the dashboard with the icon rail', async ({ page }) => {
   await page.goto('/');

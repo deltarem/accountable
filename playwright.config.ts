@@ -4,9 +4,17 @@ import { defineConfig } from '@playwright/test';
 // their own database and the clock fixed to 23 Nov 2026, 14:00, so your data is
 // never touched (ARC-14, RUN-04). The time is fixed too, so the sample data and
 // every screen look the same on each run, which the light mode comparison needs.
+//
+// Both servers run in local mode, signed in as the built-in test user (DEC-19).
+// The Supabase settings are blanked, so even a shell that exports them can't
+// point a test at the team's data.
 export const E2E_ENV = {
   ACCOUNTABLE_DB: 'data/e2e.db',
   ACCOUNTABLE_TODAY: '2026-11-23T14:00:00',
+  ACCOUNTABLE_LOCAL: '1',
+  DATABASE_URL: '',
+  SUPABASE_URL: '',
+  SUPABASE_PUBLISHABLE_KEY: '',
   BACKEND_PORT: '8100',
   FRONTEND_PORT: '5273',
 };
@@ -29,6 +37,7 @@ export default defineConfig({
   webServer: [
     {
       command: 'uv run uvicorn backend.main:app --host 127.0.0.1 --port 8100',
+      // Signed out it answers 401, which Playwright counts as up.
       url: 'http://127.0.0.1:8100/api/today',
       env: E2E_ENV,
       reuseExistingServer: false,

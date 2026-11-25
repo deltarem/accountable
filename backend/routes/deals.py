@@ -1,9 +1,10 @@
 from fastapi import APIRouter
 
+from backend.auth import SignedIn
 from backend.schemas import DealIn, DealMove
 from backend.services import deals as svc
 
-router = APIRouter(prefix="/api/deals", tags=["deals"])
+router = APIRouter(prefix="/deals", tags=["deals"])
 
 
 @router.get("")
@@ -12,8 +13,8 @@ def list_deals():
 
 
 @router.post("", status_code=201)
-def create_deal(body: DealIn):
-    return svc.create_deal(body)
+def create_deal(body: DealIn, user: SignedIn):
+    return svc.create_deal(body, user.id)
 
 
 @router.get("/{deal_id}")
@@ -22,13 +23,13 @@ def get_deal(deal_id: int):
 
 
 @router.put("/{deal_id}")
-def update_deal(deal_id: int, body: DealIn):
-    return svc.update_deal(deal_id, body)
+def update_deal(deal_id: int, body: DealIn, user: SignedIn):
+    return svc.update_deal(deal_id, body, user.id)
 
 
 @router.post("/{deal_id}/move")
-def move_deal(deal_id: int, body: DealMove):
-    return svc.move_deal(deal_id, body.stage, body.index)
+def move_deal(deal_id: int, body: DealMove, user: SignedIn):
+    return svc.move_deal(deal_id, body.stage, body.index, user.id)
 
 
 @router.get("/{deal_id}/delete-impact")

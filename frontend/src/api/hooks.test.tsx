@@ -94,6 +94,8 @@ function deal(id: number, stage: Deal['stage'], position: number, extra: Partial
     expected_cents: 100_000,
     created_at: '2026-11-01T10:00:00',
     updated_at: '2026-11-01T10:00:00',
+    created_by_name: null,
+    updated_by_name: null,
     ...extra,
   };
 }

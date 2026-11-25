@@ -12,6 +12,7 @@ import {
 } from 'react-router';
 
 import { Toaster } from '../components/Toaster';
+import { TestSessionProvider } from './session';
 
 interface History {
   path: string;
@@ -32,7 +33,7 @@ function Routes({
 }
 
 /**
- * Renders a route tree in memory with the app's providers, so tests can follow
+ * Renders a route tree in memory with the app's providers, signed in, so tests can follow
  * links, read the address and go back. It uses MemoryRouter rather than a data
  * router: a data router's navigation builds a fetch Request, and jsdom's
  * AbortSignal is not one Node's Request accepts.
@@ -48,9 +49,11 @@ export function renderRoutes(routes: RouteObject[], path = '/') {
     <QueryClientProvider client={client}>
       <Tooltip.Provider delayDuration={0}>
         <Toaster>
-          <MemoryRouter initialEntries={[path]}>
-            <Routes routes={routes} onChange={onChange} />
-          </MemoryRouter>
+          <TestSessionProvider>
+            <MemoryRouter initialEntries={[path]}>
+              <Routes routes={routes} onChange={onChange} />
+            </MemoryRouter>
+          </TestSessionProvider>
         </Toaster>
       </Tooltip.Provider>
     </QueryClientProvider>,

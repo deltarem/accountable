@@ -6,7 +6,7 @@ Part of the [Accountable spec](../spec.md). Signing in, the people who use Accou
 
 18. `DEC-18` **Where names come from.** Supabase knows who everyone is, but the backend only sees the person making the request. So the backend keeps its own `users` table (`DM-07`):
     - Each time someone uses the app, the backend writes their id, email and name from their sign-in token into `users`, if anything there has changed.
-    - A person's name is the display name set for them in Supabase's dashboard, or the part of their email before the @ when there's none.
+    - A person's name is the display name set for them in Supabase's dashboard, or the part of their email before the @ when there's none. The token carries it in `user_metadata`, as `display_name`; `full_name` or `name`, which other Supabase tools write, count too.
     - Records point to `users` by id, so every screen can show who added what, including people who aren't signed in right now.
     - Someone can only add or change a record after signing in, so everyone named on a record is in `users`.
     - Removing someone in Supabase's dashboard stops them signing in. Their name stays on what they added.

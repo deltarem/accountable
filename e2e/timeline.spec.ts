@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures';
+import { expect, settled, test } from './fixtures';
 import { expectToast } from './tables';
 
 // SC-05, TL-01 to TL-04, UI-REC-05, UI-REC-06, UI-DEL-04.
@@ -57,6 +57,9 @@ test('edit an activity, then delete it', async ({ page, api }) => {
 test('stage changes show in the timeline, newest first', async ({ page, api }) => {
   const deal = await api.find('deals', 'Shop-floor tablets');
   await page.goto(`/deals/${deal.id}`);
+  // Wait for the timeline to load before reading it.
+  await settled(page);
+  await expect(page.getByTestId('timeline-entry').first()).toBeVisible();
   const texts = await page.getByTestId('timeline-entry').allInnerTexts();
   const moves = texts.filter((t) => t.startsWith('Moved from'));
   expect(moves.map((t) => t.split('\n')[0])).toEqual(['Moved from Qualified to Proposal', 'Moved from New to Qualified']);

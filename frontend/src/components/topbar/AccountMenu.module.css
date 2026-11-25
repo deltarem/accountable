@@ -1,0 +1,108 @@
+/* UI-MENU-01: a 36px circle, Midnight with white text; in dark mode Sea Mist with
+   Midnight text. --strong and --on-strong are exactly those pairs. */
+.initials {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--strong);
+  color: var(--on-strong);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.initials:hover,
+.initials[data-state='open'] {
+  background: var(--strong-hover);
+}
+
+.initials:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.tip {
+  background: var(--tip);
+  color: var(--on-tip);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-tip);
+  z-index: 50;
+}
+
+/* About 240px wide, in the Raised colour. */
+.menu {
+  width: 240px;
+  background: var(--raised);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
+  padding: 6px;
+  z-index: 30;
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.email {
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+/* The lines between groups sit inside the menu. */
+.separator {
+  height: 1px;
+  background: var(--line);
+  margin: 6px 4px;
+}
+
+.heading {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+
+.item[data-highlighted] {
+  background: var(--highlight);
+}
+
+.label {
+  flex: 1;
+}
+
+.tick {
+  display: inline-flex;
+  color: var(--sea-text);
+}

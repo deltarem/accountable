@@ -36,6 +36,15 @@ describe('RecordHeader (UI-REC-01)', () => {
     expect(within(header).queryByText('Software')).toBeNull();
     expect(within(header).queryByRole('button')).toBeNull();
   });
+
+  test('ends with who added and changed it, and not while loading (UI-WHO-01)', () => {
+    const who = 'Added by Priya Shah on 2 Mar 2026';
+    const { rerender } = renderWithProviders(<RecordHeader name="Acme Ltd" who={who} />);
+    const header = screen.getByRole('region', { name: 'Summary' });
+    expect(header.lastElementChild?.textContent).toBe(who);
+    rerender(<RecordHeader loading name="Acme Ltd" who={who} />);
+    expect(screen.queryByText(who)).toBeNull();
+  });
 });
 
 test('FactList pairs each label with its value', () => {

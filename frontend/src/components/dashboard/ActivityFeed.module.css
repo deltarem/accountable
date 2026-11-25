@@ -38,3 +38,8 @@
 .when {
   white-space: nowrap;
 }
+
+/* Who made the entry stays in one piece when the line wraps (UI-WHO-02). */
+.who {
+  white-space: nowrap;
+}

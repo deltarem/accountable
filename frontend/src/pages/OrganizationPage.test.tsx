@@ -18,6 +18,8 @@ const org: OrganizationDetail = {
   open_value_cents: 1_250_000,
   created_at: '2026-01-10T09:00:00',
   updated_at: '2026-11-01T09:00:00',
+  created_by_name: null,
+  updated_by_name: null,
   contacts: [
     { id: 10, name: 'Maria Lopez', job_title: 'Head of Ops', status: 'customer' },
     { id: 11, name: 'Tom Becker', job_title: null, status: 'lead' },

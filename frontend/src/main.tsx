@@ -12,6 +12,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
+import { watchSystemTheme } from './lib/theme';
+
+// With System chosen, the app follows the device's setting while it's open (UI-THEME-01).
+watchSystemTheme();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

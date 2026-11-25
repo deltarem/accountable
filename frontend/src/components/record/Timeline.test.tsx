@@ -111,13 +111,18 @@ describe('Timeline', () => {
     expect(screen.getByText('Nothing here yet. Log a call, email or note to start the history.')).toBeTruthy();
   });
 
-  test('shows the entries in the order given, with text, date and source (TL-04)', () => {
+  test('shows the entries in the order given, with text, date, source and who made it (TL-04, UI-WHO-02)', () => {
     mockFetch({ '/api/today': TODAY });
     renderWithForms(
       <Timeline
         entries={[
-          { ...call, occurred_at: '2026-11-22T16:45:00', source: { kind: 'deal', id: 5, name: 'Acme renewal' } },
-          { ...stageChange, occurred_at: '2026-11-21T09:00:00' },
+          {
+            ...call,
+            occurred_at: '2026-11-22T16:45:00',
+            source: { kind: 'deal', id: 5, name: 'Acme renewal' },
+            created_by_name: 'Priya Shah',
+          },
+          { ...stageChange, occurred_at: '2026-11-21T09:00:00', created_by_name: 'Sam Lee' },
           { ...statusChange, occurred_at: '2026-11-20T08:15:00', source: { kind: 'contact', id: 9, name: 'Maria' } },
         ]}
       />,
@@ -128,10 +133,9 @@ describe('Timeline', () => {
       'Moved from Proposal to Negotiation',
       'Status changed from Qualified to Customer',
     ]);
-    expect(rows[0].textContent).toContain('22 Nov 2026, 16:45 · on deal Acme renewal');
-    expect(rows[1].textContent).toContain('21 Nov 2026, 09:00');
-    expect(rows[1].textContent).not.toContain('·');
-    expect(rows[2].textContent).toContain('20 Nov 2026, 08:15 · with Maria');
+    expect(rows[0].textContent).toContain('22 Nov 2026, 16:45 · on deal Acme renewal · Priya Shah');
+    expect(rows[1].textContent).toContain('21 Nov 2026, 09:00 · Sam Lee');
+    expect(rows[2].textContent).toContain('20 Nov 2026, 08:15 · with Maria · Sample data');
   });
 
   test('only activities have the Edit and Delete menu (UI-REC-06)', () => {

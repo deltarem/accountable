@@ -31,6 +31,7 @@ export function timelineEntry(overrides: Partial<TimelineEntry> = {}): TimelineE
     follow_up_done: false,
     deal_id: null,
     contact_id: null,
+    created_by_name: null,
     record: null,
     ...overrides,
   };

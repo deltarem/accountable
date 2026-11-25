@@ -8,6 +8,7 @@ from backend.schemas import OrganizationIn
 from backend.services.common import one
 from backend.services.stages import OPEN_STAGES, ORDER
 from backend.services.timeline import organization_timeline
+from backend.services.users import name_map, with_names
 
 
 def _with_counts(conn, rows) -> list[dict]:
@@ -24,9 +25,10 @@ def _with_counts(conn, rows) -> list[dict]:
         .group_by(deals.c.organization_id)
     ).all()
     open_counts = {r[0]: (r[1], r[2]) for r in open_rows}
+    names = name_map(conn)
     out = []
     for row in rows:
-        item = dict(row)
+        item = with_names(dict(row), names)
         item["contact_count"] = contact_counts.get(item["id"], 0)
         count, value = open_counts.get(item["id"], (0, 0))
         item["open_deal_count"] = count
@@ -69,22 +71,28 @@ def get_organization(org_id: int) -> dict:
         return org
 
 
-def create_organization(data: OrganizationIn) -> dict:
+def create_organization(data: OrganizationIn, user_id: str) -> dict:
     at = clock.now()
     with db.transaction() as conn:
         new_id = conn.execute(
-            insert(organizations).values(**data.model_dump(), created_at=at, updated_at=at)
+            insert(organizations).values(
+                **data.model_dump(),
+                created_at=at,
+                updated_at=at,
+                created_by=user_id,
+                updated_by=user_id,
+            )
         ).inserted_primary_key[0]
     return get_organization(new_id)
 
 
-def update_organization(org_id: int, data: OrganizationIn) -> dict:
+def update_organization(org_id: int, data: OrganizationIn, user_id: str) -> dict:
     with db.transaction() as conn:
         one(conn, organizations, org_id, "organization")
         conn.execute(
             update(organizations)
             .where(organizations.c.id == org_id)
-            .values(**data.model_dump(), updated_at=clock.now())
+            .values(**data.model_dump(), updated_at=clock.now(), updated_by=user_id)
         )
     return get_organization(org_id)
 

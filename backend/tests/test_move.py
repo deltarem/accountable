@@ -1,3 +1,8 @@
+from sqlalchemy.dialects import postgresql, sqlite
+
+from backend.services.deals import column_query
+
+
 def column(api, stage):
     return [d["name"] for d in api.get("/api/deals") if d["stage"] == stage]
 
@@ -60,3 +65,11 @@ def test_bad_move_body_gives_422(api, client):
 
 def test_missing_deal_gives_404(client):
     assert client.post("/api/deals/123/move", json={"stage": "new", "index": 0}).status_code == 404
+
+
+def test_a_move_locks_the_columns_it_renumbers():
+    """On Postgres, two moves at once wait for each other instead of interleaving their
+    renumbering (DEC-20). SQLite leaves FOR UPDATE out and allows one writer anyway."""
+    query = column_query("new")
+    assert "FOR UPDATE" in str(query.compile(dialect=postgresql.dialect()))
+    assert "FOR UPDATE" not in str(query.compile(dialect=sqlite.dialect()))

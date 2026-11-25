@@ -6,13 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Accountable</title>
     <!--
-      The saved light or dark choice, applied before anything draws, so a page in
-      dark mode never shows light first. It has to be a plain inline script: a
-      module script runs too late. Same key and rule as src/lib/theme.ts.
+      The saved theme choice (light, dark or system), applied before anything draws,
+      so a page in dark mode never shows light first, the sign-in screen included.
+      It has to be a plain inline script: a module script runs too late. Same key
+      and rule as src/lib/theme.ts.
     -->
     <script>
       try {
-        if (localStorage.getItem('accountable-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+        var choice = localStorage.getItem('accountable-theme');
+        var deviceIsDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (choice === 'dark' || (choice === 'system' && deviceIsDark)) document.documentElement.dataset.theme = 'dark';
       } catch {
         // The browser blocks storage: stay in light mode, the default.
       }

@@ -20,6 +20,8 @@ export function organization(overrides: Partial<Organization> = {}): Organizatio
     open_value_cents: 0,
     created_at: '2026-01-05T09:00:00',
     updated_at: '2026-01-05T09:00:00',
+    created_by_name: null,
+    updated_by_name: null,
     ...overrides,
   };
 }
@@ -36,6 +38,8 @@ export function contact(overrides: Partial<Contact> = {}): Contact {
     status: 'lead',
     created_at: '2026-01-05T09:00:00',
     updated_at: '2026-01-05T09:00:00',
+    created_by_name: null,
+    updated_by_name: null,
     ...overrides,
   };
 }
@@ -54,6 +58,7 @@ export function activity(overrides: Partial<TimelineEntry> = {}): TimelineEntry 
     follow_up_done: false,
     deal_id: null,
     contact_id: 10,
+    created_by_name: null,
     ...overrides,
   };
 }

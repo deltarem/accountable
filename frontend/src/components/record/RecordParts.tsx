@@ -7,16 +7,21 @@ import { EmptyState } from '../EmptyState';
 import { Skeleton } from '../Skeleton';
 import styles from './RecordParts.module.css';
 
-/** UI-REC-01: the record's name, its key facts, and Edit and Delete. */
+/**
+ * UI-REC-01: the record's name, its key facts, and Edit and Delete. `who` ends the
+ * panel: who added the record and who last changed it (UI-WHO-01).
+ */
 export function RecordHeader({
   name,
   facts,
+  who,
   onEdit,
   onDelete,
   loading,
 }: {
   name?: string;
   facts?: ReactNode;
+  who?: string;
   onEdit?: () => void;
   onDelete?: () => void;
   loading?: boolean;
@@ -37,6 +42,11 @@ export function RecordHeader({
         )}
       </div>
       <div className={styles.facts}>{loading ? <Skeleton width="50%" /> : facts}</div>
+      {!loading && who ? (
+        <p className={styles.who} data-testid="who">
+          {who}
+        </p>
+      ) : null}
     </section>
   );
 }

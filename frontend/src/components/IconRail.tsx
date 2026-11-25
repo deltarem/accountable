@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 
 import styles from './IconRail.module.css';
 import { RailLink } from './RailLink';
-import { ThemeToggle } from './ThemeToggle';
 
 export const SECTIONS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -14,8 +13,8 @@ export const SECTIONS = [
 ];
 
 /**
- * UI-LAY-01: a fixed Midnight rail with the mark and five section buttons, and
- * the light and dark toggle at its foot.
+ * UI-LAY-01: a fixed Midnight rail with the mark and five section buttons. Its
+ * foot is empty: the theme choice is in the menu under your initials (UI-THEME-01).
  */
 export function IconRail() {
   return (
@@ -26,9 +25,6 @@ export function IconRail() {
       {SECTIONS.map((s) => (
         <RailLink key={s.to} to={s.to} label={s.label} icon={s.icon} end={s.end} />
       ))}
-      <div className={styles.foot}>
-        <ThemeToggle />
-      </div>
     </nav>
   );
 }

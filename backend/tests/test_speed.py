@@ -23,6 +23,8 @@ def test_every_get_is_fast(client):
         "/api/dashboard",
         "/api/industries",
         "/api/today",
+        "/api/search?q=a",
+        "/api/me",
     ]
     for path in paths:
         client.get(path)  # warm up

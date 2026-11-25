@@ -1,6 +1,7 @@
-// The one-command start (DEC-03, RUN-02). No dependencies of its own.
+// The one-command start (DEC-03, DEC-22, RUN-02, RUN-12). No dependencies of its own.
 //
-//   npm run dev
+//   npm run dev         against Supabase, with the settings in .env
+//   npm run dev:local   offline, on the local SQLite file, as the built-in test user
 //
 // Installs Node packages when needed, starts the backend (uvicorn) and the
 // frontend (Vite), and prints the address. Ctrl+C stops both, and so does a
@@ -10,9 +11,10 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+import { ROOT, localEnv, settingsProblem, supabaseEnv } from './env.mjs';
+
 const IS_WINDOWS = process.platform === 'win32';
 
 /** True when node_modules is missing or older than package-lock.json. */
@@ -70,12 +72,16 @@ function stopTree(child) {
   });
 }
 
-async function waitForApp(url, timeoutMs) {
+/**
+ * Waits until the URL answers. `signedOut` counts a 401 as an answer: every API
+ * route refuses until someone signs in (AUTH-01), but a 401 means the server is up.
+ */
+async function waitFor(url, timeoutMs, { signedOut = false } = {}) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
     try {
       const response = await fetch(url);
-      if (response.ok) return true;
+      if (response.ok || (signedOut && response.status === 401)) return true;
     } catch {
       // not up yet
     }
@@ -84,7 +90,8 @@ async function waitForApp(url, timeoutMs) {
   return false;
 }
 
-export async function main() {
+export async function main({ local = false } = {}) {
+  const command = local ? 'npm run dev:local' : 'npm run dev';
   const backendPort = Number(process.env.BACKEND_PORT || 8000);
   const frontendPort = Number(process.env.FRONTEND_PORT || 5173);
 
@@ -92,9 +99,16 @@ export async function main() {
     console.log('Installing Node packages (first run only)...');
     const result = spawnSync('npm', ['install'], { cwd: ROOT, stdio: 'inherit', shell: IS_WINDOWS });
     if (result.status !== 0) {
-      console.error('npm install failed. Check the messages above, then run npm run dev again.');
+      console.error(`npm install failed. Check the messages above, then run ${command} again.`);
       process.exit(1);
     }
+  }
+
+  const settings = local ? localEnv(process.env) : supabaseEnv(process.env);
+  const problem = local ? null : settingsProblem(settings, command);
+  if (problem) {
+    console.error(problem);
+    process.exit(1);
   }
 
   for (const [name, port, envName] of [
@@ -111,12 +125,12 @@ export async function main() {
           : problem === 'EACCES'
             ? `Port ${port} is blocked by the system, so the ${name} can't start (on Windows, see "netsh interface ipv4 show excludedportrange protocol=tcp"). Set`
             : `Port ${port} can't be used (${problem}), so the ${name} can't start. Set`;
-      console.error(`${why} ${envName} to another port, for example: ${envName}=${port + 90} npm run dev`);
+      console.error(`${why} ${envName} to another port, for example: ${envName}=${port + 90} ${command}`);
       process.exit(1);
     }
   }
 
-  const env = { ...process.env, BACKEND_PORT: String(backendPort), FRONTEND_PORT: String(frontendPort) };
+  const env = { ...settings, BACKEND_PORT: String(backendPort), FRONTEND_PORT: String(frontendPort) };
   const children = [
     start('uv', ['run', 'uvicorn', 'backend.main:app', '--host', '127.0.0.1', '--port', String(backendPort)], env),
     start('npm', ['run', 'dev', '--workspace', 'frontend'], env),
@@ -146,8 +160,14 @@ export async function main() {
   }
 
   const address = `http://127.0.0.1:${frontendPort}`;
-  if (await waitForApp(`${address}/api/today`, 120_000)) {
-    console.log(`\nAccountable is running. Open ${address} in your browser. Press Ctrl+C to stop.\n`);
+  const up =
+    (await waitFor(`http://127.0.0.1:${backendPort}/api/today`, 120_000, { signedOut: true })) &&
+    (await waitFor(address, 30_000));
+  if (up) {
+    const mode = local
+      ? `It's in local mode, on ${settings.ACCOUNTABLE_DB || 'data/accountable.db'}, signed in as the built-in test user (test@example.com, password accountable).`
+      : `It's using Supabase (${new URL(settings.SUPABASE_URL).host}); sign in with your own email and password.`;
+    console.log(`\nAccountable is running. Open ${address} in your browser. Press Ctrl+C to stop.\n${mode}\n`);
     if (process.send) process.send('ready');
   } else if (!stopping) {
     console.error(`Accountable didn't start within 2 minutes. Check the messages above.`);
@@ -156,5 +176,5 @@ export async function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main();
+  main({ local: process.argv.includes('--local') });
 }

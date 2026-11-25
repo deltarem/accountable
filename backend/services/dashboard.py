@@ -9,7 +9,7 @@ from backend import clock, db
 from backend.db import activities, deals, events
 from backend.money import round_half_up_div, total_expected_cents
 from backend.services.stages import OPEN_STAGES, STAGES
-from backend.services.timeline import activity_entry, all_entries, name_maps, record_ref
+from backend.services.timeline import activity_entry, all_entries, name_maps, named, record_ref
 
 FUNNEL_STAGES = [*OPEN_STAGES, "won"]
 
@@ -93,6 +93,8 @@ def get_dashboard() -> dict:
         acts = [dict(r) for r in conn.execute(select(activities)).mappings()]
         deal_map, contact_map, org_map = name_maps(conn)
         entries = all_entries(conn)
+        follow_up_rows = [activity_entry(a) for a in acts]
+        named(conn, follow_up_rows)
 
     open_deals = [d for d in all_deals if STAGES[d["stage"]].open]
 
@@ -122,19 +124,18 @@ def get_dashboard() -> dict:
     week_end = today + timedelta(days=7)
     due = [
         a
-        for a in acts
+        for a in follow_up_rows
         if a["follow_up_date"] is not None
         and not a["follow_up_done"]
         and a["follow_up_date"] <= week_end
     ]
     due.sort(key=lambda a: (a["follow_up_date"], a["occurred_at"], a["id"]))
     follow_ups = []
-    for a in due:
-        entry = activity_entry(a)
+    for entry in due:
         entry["record"] = record_ref(entry, deal_map, contact_map, org_map)
-        if a["follow_up_date"] < today:
+        if entry["follow_up_date"] < today:
             entry["group"] = "overdue"
-        elif a["follow_up_date"] == today:
+        elif entry["follow_up_date"] == today:
             entry["group"] = "today"
         else:
             entry["group"] = "week"

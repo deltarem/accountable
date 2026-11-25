@@ -7,7 +7,8 @@ import { expect } from './fixtures';
 /** Choose an option in a searchable select (RecordSelect). */
 export async function choose(page: Page, label: string, option: string) {
   await page.getByRole('combobox', { name: label }).click();
-  await page.locator('[cmdk-input]').fill(option);
+  // The select's own search, in its pop-up; the top bar's search is a cmdk input too.
+  await page.locator('[data-radix-popper-content-wrapper] [cmdk-input]').fill(option);
   await page.getByRole('option', { name: new RegExp(`^${option}`) }).first().click();
 }
 

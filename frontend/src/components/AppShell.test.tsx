@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test } from 'vitest';
 
@@ -36,10 +36,14 @@ const tree = [
 ];
 
 describe('AppShell', () => {
-  test('the page sits in the main area beside the rail', () => {
+  test('the page sits in the main area beside the rail, under the top bar (UI-LAY-05)', () => {
     renderRoutes(tree, '/deals');
     const main = screen.getByRole('main');
-    expect(main.textContent).toBe('Deals page');
+    const [bar, page] = Array.from(main.children) as HTMLElement[];
+    expect(bar.getAttribute('data-testid')).toBe('top-bar');
+    expect(within(bar).getByRole('combobox', { name: 'Search everything' })).toBeTruthy();
+    expect(within(bar).getByRole('button', { name: 'Account menu for Priya Shah' })).toBeTruthy();
+    expect(page.textContent).toBe('Deals page');
     expect(screen.getByRole('navigation', { name: 'Sections' })).toBeTruthy();
   });
 

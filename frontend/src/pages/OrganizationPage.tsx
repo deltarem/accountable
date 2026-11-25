@@ -8,6 +8,7 @@ import { Panel } from '../components/Panel';
 import { HeaderFact, LinkedList, RecordColumns, RecordHeader } from '../components/record/RecordParts';
 import { Timeline } from '../components/record/Timeline';
 import { displayWebsite, formatMoney } from '../lib/format';
+import { whoLine } from '../lib/who';
 import { BackLink, RecordLoadFailure } from './recordShared';
 
 function OrganizationFacts({ org }: { org: OrganizationDetail }) {
@@ -60,6 +61,7 @@ export function OrganizationPage() {
       <RecordHeader
         loading={!org}
         name={org?.name}
+        who={org ? whoLine(org) : undefined}
         onEdit={() => org && openForm({ kind: 'organization', record: org })}
         onDelete={() =>
           org &&

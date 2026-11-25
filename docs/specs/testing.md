@@ -6,7 +6,7 @@ Part of the [Accountable spec](../spec.md). What the test suites cover. How to r
 
 - **Backend (pytest):**
   - every endpoint, against a temporary database, signed in with a test token
-  - sign-in: every route refusing a missing, expired, wrongly signed or tampered token with a 401; the user taken from the token and never from the body; `users` kept up to date and names falling back to the email; local mode refusing to start on Postgres; the local sign-in route missing outside local mode
+  - sign-in: every route refusing a missing, expired, wrongly signed or tampered token with a 401; the user taken from the token and never from the body; `users` kept up to date and names falling back to the email; initials from a name (`API-19`); local mode refusing to start on Postgres; the local sign-in route missing outside local mode
   - who added and changed each record and activity, and who made each stage and status change, with two different users
   - search: part of a name, any case, accented letters, `%` and `_` as plain characters, the order, and at most 5 per group
   - the migrations on an empty SQLite database and on a file from before them, keeping its data
@@ -24,7 +24,7 @@ Part of the [Accountable spec](../spec.md). What the test suites cover. How to r
   - the late-deal and expected-revenue helpers
   - the table, the deal form, the delete dialog, the board's totals and the dashboard's placeholders
   - the theme choice in the menu, including System following the device, and the contrast of every text pair listed for dark mode under Design (`docs/specs/design.md`)
-  - the sign-in form and its errors, initials from a name, the account menu, and the search dropdown's groups, keyboard use and empty state
+  - the sign-in form and its errors, the account menu, and the search dropdown's groups, keyboard use and empty state
   - a 401 from the API showing the sign-in screen.
 - **End to end (Playwright with Chrome), for each success criterion that can be automated:**
   - starting signed out, signing in as the test user and landing on the dashboard, and nothing fetched from the internet

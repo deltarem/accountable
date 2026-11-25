@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import { ApiError, api, request } from './client';
+import { ApiError, api, connectSession, request } from './client';
 
 function answer(status: number, body?: unknown) {
   const text = body === undefined ? null : typeof body === 'string' ? body : JSON.stringify(body);
@@ -115,5 +115,57 @@ describe('api', () => {
     const spy = answer(204);
     await expect(api.delete('/deals/3')).resolves.toBeUndefined();
     expect(spy).toHaveBeenCalledWith('/api/deals/3', { method: 'DELETE', headers: undefined, body: undefined });
+  });
+});
+
+describe('the session (AUTH-01, AUTH-03)', () => {
+  test("every call carries the session's token", async () => {
+    const spy = answer(200, []);
+    const disconnect = connectSession({ token: async () => 'abc', onUnauthorized: vi.fn() });
+    await api.get('/deals');
+    await api.post('/deals', { name: 'Renewal' });
+    disconnect();
+    expect(spy).toHaveBeenNthCalledWith(1, '/api/deals', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer abc' },
+      body: undefined,
+    });
+    expect(spy).toHaveBeenNthCalledWith(2, '/api/deals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer abc' },
+      body: '{"name":"Renewal"}',
+    });
+  });
+
+  test('a 401 tells the session, which ends it', async () => {
+    answer(401, { detail: 'Sign in to continue' });
+    const onUnauthorized = vi.fn();
+    const disconnect = connectSession({ token: async () => 'old', onUnauthorized });
+    const error = await failure(api.get('/deals'));
+    disconnect();
+    expect(error.status).toBe(401);
+    expect(onUnauthorized).toHaveBeenCalledOnce();
+  });
+
+  test('the local sign-in sends no token, and its 401 is a wrong password, not an ended session', async () => {
+    const spy = answer(401, { detail: 'Email or password is wrong' });
+    const onUnauthorized = vi.fn();
+    const disconnect = connectSession({ token: async () => 'old', onUnauthorized });
+    const error = await failure(request('POST', '/local/sign-in', { email: 'a', password: 'b' }, { signIn: true }));
+    disconnect();
+    expect(error.message).toBe('Email or password is wrong');
+    expect(onUnauthorized).not.toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith('/api/local/sign-in', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{"email":"a","password":"b"}',
+    });
+  });
+
+  test('disconnecting leaves the client signed out', async () => {
+    const spy = answer(200, []);
+    connectSession({ token: async () => 'abc', onUnauthorized: vi.fn() })();
+    await api.get('/deals');
+    expect(spy).toHaveBeenCalledWith('/api/deals', { method: 'GET', headers: undefined, body: undefined });
   });
 });

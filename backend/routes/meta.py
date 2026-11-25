@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from backend import clock
 from backend.services.organizations import industries
 
-router = APIRouter(prefix="/api", tags=["meta"])
+router = APIRouter(tags=["meta"])
 
 
 @router.get("/today")

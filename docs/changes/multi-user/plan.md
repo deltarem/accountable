@@ -132,6 +132,15 @@ Deleted: `frontend/src/components/ThemeToggle.tsx`, `ThemeToggle.test.tsx`, `e2e
 - `docs/specs/testing.md`: initials are tested in pytest, since the backend works them out (`API-19`); anything else the build shows the spec got wrong, in its area file, and in `docs/spec.md` if the summary or the ID index changes.
 - This plan, if the build departs from it.
 
+### Found during the build
+
+Where the build departed from the lists above, each file still in one part:
+
+- **Part A** also has `backend/migrations/versions/0003_fit_text_columns.py`. The length test showed two columns narrower than the forms allow, which SQLite never enforced and Postgres would refuse: a phone may be 200 characters (the column held 100), and a website 500 as typed plus the `https://` the server adds (the column held 500). `db.py` matches. `backend/clock.py` gained `epoch_seconds()`, the real time for token expiry, because PyJWT checks expiry against the real clock, not the fixed test clock. `backend/tests/test_seed.py` calls the seed command in-process: two fresh Python processes took 1.7 seconds before this change and 2.4 after it, over the one-second limit.
+- **Part B** also has `scripts/seed.mjs`. Its tests and `scripts/start.mjs`'s are in `scripts/env.test.mjs`.
+- **Part C** split the session into `auth/service.ts` (what a way of signing in provides), `auth/local.ts` (the test user) and `auth/supabase.ts` (Supabase, with `auth/supabase.test.ts`), so `session.tsx` can import Supabase's client only outside local mode. `Me` lives in `api/auth.ts`, leaving `api/types.ts` to Part D. `App` takes a router, so tests can start at an address of their own: jsdom's `AbortSignal` clashes with Node's `Request` when the browser router navigates in a test. `frontend/src/test/setup.ts` clears localStorage after each test, so a kept session can't leak into the next.
+- **Part F** calls `watchSystemTheme()` once from `frontend/src/main.tsx`, so System follows the device on every screen, the sign-in screen included. No new colour tokens were needed: the initials circle uses `--strong` and `--on-strong`, which are Midnight with white text in light mode and Sea Mist with Midnight text in dark mode.
+
 ## Order of work
 
 Each step ends with a commit once its tests pass. Each phase ends with `npm test` passing in full.

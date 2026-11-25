@@ -1,7 +1,0 @@
-/* Applied while the light mode comparison captures a screen. The reference
-   screenshots were taken before the toggle existed, so the toggle is hidden and
-   the foot of the rail is plain Midnight in both. It matches by name, so it
-   hides nothing on the app as it was. */
-button[aria-label^='Switch to'] {
-  visibility: hidden;
-}

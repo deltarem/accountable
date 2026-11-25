@@ -7,16 +7,22 @@ today, so the dashboard's last 12 months are always filled (DEC-13). On
 
     uv run python -m backend.seed           reset to the sample data
     uv run python -m backend.seed --empty   reset to an empty database
+    uv run python -m backend.seed --yes     needed when the database is Postgres (RUN-03)
+
+`npm run seed` runs this through scripts/seed.mjs, which loads .env first.
+Sample records get no author (SEED-07), and `users` is never cleared.
 """
 
 import argparse
 import calendar
 import random
+import sys
 from datetime import date, datetime, time, timedelta
 
-from sqlalchemy import delete, insert
+from sqlalchemy import delete, func, insert, select
+from sqlalchemy.engine import make_url
 
-from backend import clock, db
+from backend import clock, db, settings
 from backend.db import ALL_TABLES, activities, contacts, deals, events, organizations
 from backend.services.stages import OPEN_STAGES, STAGES
 
@@ -394,29 +400,62 @@ def seed(conn, today: date, now: datetime) -> None:
 
 
 def clear(conn) -> None:
+    """Every table except `users`, children first (SEED-07)."""
     for table in ALL_TABLES:
         conn.execute(delete(table))
 
 
 def seed_database(empty: bool = False) -> None:
     """Reset the database in one transaction: clear every table, then seed."""
-    db.create_tables()
+    db.run_migrations()
     with db.transaction() as conn:
         clear(conn)
         if not empty:
             seed(conn, clock.today(), clock.now())
 
 
-def main() -> None:
+def count_records() -> int:
+    """How many organizations, contacts, deals and activities the database holds."""
+    with db.reading() as conn:
+        return sum(
+            conn.execute(select(func.count()).select_from(t)).scalar_one()
+            for t in (organizations, contacts, deals, activities)
+        )
+
+
+def describe(config: settings.Settings) -> str:
+    """The database, for messages, without its password."""
+    if not config.is_postgres:
+        return str(db.db_path())
+    url = make_url(config.database_url)
+    return f"Postgres database {url.database} on {url.host}"
+
+
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Reset the Accountable database to the sample data."
     )
     parser.add_argument("--empty", action="store_true", help="leave every table empty instead")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--yes", action="store_true", help="go ahead when the database is Postgres on Supabase"
+    )
+    args = parser.parse_args(argv)
+    config = settings.load()
+    where = describe(config)
+    if config.is_postgres and not args.yes:
+        # RUN-03: this would wipe the team's data, so it has to be asked for twice.
+        print(
+            f"This would reset the {where}, which holds {count_records()} records, "
+            "and wipe the team's data.\n"
+            "To go ahead: npm run seed -- --yes\n"
+            "To reset the local SQLite file instead: npm run seed -- --local",
+            file=sys.stderr,
+        )
+        return 1
     seed_database(empty=args.empty)
-    where = db.db_path()
     print(f"Database {where} reset to {'no data' if args.empty else 'the sample data'}.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

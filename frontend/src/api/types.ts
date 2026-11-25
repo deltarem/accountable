@@ -13,6 +13,9 @@ export interface Organization {
   open_value_cents: number;
   created_at: string;
   updated_at: string;
+  /** Who added it and who last changed it; null for sample data (DM-08). */
+  created_by_name: string | null;
+  updated_by_name: string | null;
 }
 
 export interface OrganizationDetail extends Organization {
@@ -32,6 +35,9 @@ export interface Contact {
   status: StatusKey;
   created_at: string;
   updated_at: string;
+  /** Who added it and who last changed it; null for sample data (DM-08). */
+  created_by_name: string | null;
+  updated_by_name: string | null;
 }
 
 export interface ContactDetail extends Contact {
@@ -55,6 +61,9 @@ export interface Deal {
   expected_cents: number;
   created_at: string;
   updated_at: string;
+  /** Who added it and who last changed it; null for sample data (DM-08). */
+  created_by_name: string | null;
+  updated_by_name: string | null;
 }
 
 export interface DealDetail extends Deal {
@@ -70,6 +79,8 @@ export interface Activity {
   occurred_at: string;
   follow_up_date: string | null;
   follow_up_done: boolean;
+  created_by_name: string | null;
+  updated_by_name: string | null;
 }
 
 export interface RecordRef {
@@ -94,6 +105,8 @@ export interface TimelineEntry {
   contact_id: number | null;
   source?: RecordRef | null;
   record?: RecordRef | null;
+  /** Who made it: who added an activity, or who changed the stage or status (UI-WHO-02). */
+  created_by_name: string | null;
 }
 
 export interface FollowUp extends TimelineEntry {

@@ -1,17 +1,77 @@
-"""Each test gets a fresh temporary database and a fixed clock (ARC-12, ARC-14)."""
+"""Each test gets a fresh temporary database, a fixed clock and a signed-in client
+(ARC-12, ARC-14).
 
+No test may touch Supabase or the internet: the team's settings are removed from
+the environment, the sign-in keys are the tests' own, and any connection to
+anything but this computer fails the test.
+"""
+
+import socket
+import time
+
+import jwt
 import pytest
 from fastapi.testclient import TestClient
 
-from backend import db
+from backend import auth, db
 from backend.main import app
+from backend.tests.tokens import (
+    PRIYA,
+    SAM,
+    TEST_SUPABASE_URL,
+    Person,
+    bearer,
+    make_token,
+    published_keys,
+)
 
 TODAY = "2026-11-23"
 NOW = "2026-11-23T14:00:00"
 
+TEAM_SETTINGS = ("DATABASE_URL", "SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "ACCOUNTABLE_LOCAL")
+LOCAL_HOSTS = {"127.0.0.1", "::1", "localhost"}
+_real_connect = socket.socket.connect
+
+
+def _local_only(sock, address):
+    host = address[0] if isinstance(address, tuple) else address
+    if host not in LOCAL_HOSTS:
+        raise RuntimeError(f"A test tried to connect to {host}; tests must stay offline (ARC-14)")
+    return _real_connect(sock, address)
+
+
+class KeyDownloads:
+    """Stands in for Supabase's published keys, and counts how often they're fetched."""
+
+    def __init__(self):
+        self.count = 0
+        self.keys = published_keys()
+
+    def fetch(self, client):
+        """Does what PyJWKClient.fetch_data does after a successful download."""
+        self.count += 1
+        if client.jwk_set_cache is not None:
+            client.jwk_set_cache.put(self.keys)
+        client._last_successful_fetch = time.monotonic()
+        return self.keys
+
 
 @pytest.fixture(autouse=True)
-def fresh_db(tmp_path, monkeypatch):
+def offline(monkeypatch):
+    for name in TEAM_SETTINGS:
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("SUPABASE_URL", TEST_SUPABASE_URL)
+    monkeypatch.setattr(socket.socket, "connect", _local_only)
+    downloads = KeyDownloads()
+    # A plain function, so Python passes the client in as `self`.
+    monkeypatch.setattr(jwt.PyJWKClient, "fetch_data", lambda client: downloads.fetch(client))
+    auth.forget_keys()
+    auth.forget_users()
+    return downloads
+
+
+@pytest.fixture(autouse=True)
+def fresh_db(tmp_path, monkeypatch, offline):
     monkeypatch.setenv("ACCOUNTABLE_DB", str(tmp_path / "test.db"))
     monkeypatch.setenv("ACCOUNTABLE_TODAY", NOW)
     db.dispose_engines()
@@ -20,9 +80,26 @@ def fresh_db(tmp_path, monkeypatch):
     db.dispose_engines()
 
 
+def signed_in(person: Person) -> TestClient:
+    # Not used as a context manager, so startup (and its seeding) doesn't run.
+    return TestClient(app, headers=bearer(make_token(person)))
+
+
 @pytest.fixture
 def client():
-    # Not used as a context manager, so startup (and its seeding) doesn't run.
+    """Signed in as Priya Shah."""
+    return signed_in(PRIYA)
+
+
+@pytest.fixture
+def other_client():
+    """Signed in as Sam Lee, a second person."""
+    return signed_in(SAM)
+
+
+@pytest.fixture
+def anon_client():
+    """Not signed in."""
     return TestClient(app)
 
 

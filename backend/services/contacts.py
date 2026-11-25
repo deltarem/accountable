@@ -8,6 +8,7 @@ from backend.schemas import ContactIn
 from backend.services.common import ValidationFailed, exists, one
 from backend.services.stages import ORDER, write_status_change
 from backend.services.timeline import contact_timeline
+from backend.services.users import name_map, with_names
 
 
 def _query():
@@ -19,7 +20,8 @@ def _query():
 def list_contacts() -> list[dict]:
     with db.reading() as conn:
         rows = conn.execute(_query().order_by(func.lower(contacts.c.name))).mappings().all()
-        return [dict(r) for r in rows]
+        names = name_map(conn)
+        return [with_names(dict(r), names) for r in rows]
 
 
 def get_contact(contact_id: int) -> dict:
@@ -27,7 +29,7 @@ def get_contact(contact_id: int) -> dict:
         row = conn.execute(_query().where(contacts.c.id == contact_id)).mappings().first()
         if row is None:
             one(conn, contacts, contact_id, "contact")
-        contact = dict(row)
+        contact = with_names(dict(row), name_map(conn))
         contact_deals = [
             dict(r)
             for r in conn.execute(
@@ -56,17 +58,23 @@ def _check_links(conn, data: ContactIn) -> None:
         raise ValidationFailed({"organization_id": "That organization no longer exists"})
 
 
-def create_contact(data: ContactIn) -> dict:
+def create_contact(data: ContactIn, user_id: str) -> dict:
     at = clock.now()
     with db.transaction() as conn:
         _check_links(conn, data)
         new_id = conn.execute(
-            insert(contacts).values(**data.model_dump(), created_at=at, updated_at=at)
+            insert(contacts).values(
+                **data.model_dump(),
+                created_at=at,
+                updated_at=at,
+                created_by=user_id,
+                updated_by=user_id,
+            )
         ).inserted_primary_key[0]
     return get_contact(new_id)
 
 
-def update_contact(contact_id: int, data: ContactIn) -> dict:
+def update_contact(contact_id: int, data: ContactIn, user_id: str) -> dict:
     """A change of status, by hand, writes a status-change event (DEC-09)."""
     at = clock.now()
     with db.transaction() as conn:
@@ -75,10 +83,12 @@ def update_contact(contact_id: int, data: ContactIn) -> dict:
         values = data.model_dump()
         new_status = values.pop("status")
         conn.execute(
-            update(contacts).where(contacts.c.id == contact_id).values(**values, updated_at=at)
+            update(contacts)
+            .where(contacts.c.id == contact_id)
+            .values(**values, updated_at=at, updated_by=user_id)
         )
         if new_status != current["status"]:
-            write_status_change(conn, current, new_status, at)
+            write_status_change(conn, current, new_status, at, user_id)
     return get_contact(contact_id)
 
 

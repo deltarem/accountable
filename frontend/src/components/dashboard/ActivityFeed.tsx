@@ -1,5 +1,6 @@
 import type { TimelineEntry } from '../../api/types';
 import { formatDateTime } from '../../lib/format';
+import { whoName } from '../../lib/who';
 import { EmptyState } from '../EmptyState';
 import { entryIcon, entryText } from '../record/Timeline';
 import styles from './ActivityFeed.module.css';
@@ -23,6 +24,8 @@ export function ActivityFeed({ entries }: { entries: TimelineEntry[] }) {
                 <RecordName record={e.record ?? null} />
                 {e.record ? ' · ' : ''}
                 <span className={`mono ${styles.when}`}>{formatDateTime(e.occurred_at)}</span>
+                {' · '}
+                <span className={styles.who}>{whoName(e.created_by_name)}</span>
               </div>
             </div>
           </li>

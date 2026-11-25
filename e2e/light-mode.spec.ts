@@ -1,20 +1,19 @@
-import { fileURLToPath } from 'node:url';
-
 import { type Page } from '@playwright/test';
 
 import { type Api, expect, settled, test } from './fixtures';
 
-// Dark mode intent, success criterion 4: light mode looks exactly as it did
-// before dark mode was added, apart from the toggle. The reference screenshots
-// in light-mode.spec.ts-snapshots/ were captured from the app before any
-// styling changed. Never update them to make this pass: a difference means
-// light mode changed, and the fix belongs in tokens.css.
+// Success criterion 13: light mode looks exactly as it did before dark mode was
+// added, apart from the top bar, the rail's empty foot and who added each record.
+// The reference screenshots in light-mode.spec.ts-snapshots/ were captured before
+// dark mode's styling changed, and retaken once by the sign-in, search and menu
+// change (docs/changes/multi-user/), after checking that the only differences
+// were those three. Never update them to make this pass: a difference means light
+// mode changed, and the fix belongs in tokens.css.
 //
-// To make references on another computer, check out the commit that added
-// them (before the styling changed) and run this file with --update-snapshots.
+// To make references on another computer, check out the commit that last retook
+// them and run this file with --update-snapshots.
 
 const WIDTHS = [1280, 1024];
-const HIDE_TOGGLE = fileURLToPath(new URL('./hide-theme-toggle.css', import.meta.url));
 
 // No tolerance: any pixel that differs fails, so a slightly different shade
 // can't slip through.
@@ -60,7 +59,6 @@ for (const width of WIDTHS) {
         await expect(page).toHaveScreenshot(`${screen.name}-${width}.png`, {
           fullPage: true,
           animations: 'disabled',
-          stylePath: HIDE_TOGGLE,
           ...EXACT,
         });
       });
@@ -74,7 +72,6 @@ for (const width of WIDTHS) {
       await expect(page.getByRole('dialog').getByText('Enter a name')).toBeVisible();
       await expect(page).toHaveScreenshot(`deal-form-${width}.png`, {
         animations: 'disabled',
-        stylePath: HIDE_TOGGLE,
         ...EXACT,
       });
     });
@@ -86,7 +83,6 @@ for (const width of WIDTHS) {
       await expect(page.getByRole('alertdialog')).toBeVisible();
       await expect(page).toHaveScreenshot(`delete-dialog-${width}.png`, {
         animations: 'disabled',
-        stylePath: HIDE_TOGGLE,
         ...EXACT,
       });
     });

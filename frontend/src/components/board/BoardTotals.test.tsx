@@ -21,6 +21,8 @@ function deal(id: number, stage: Deal['stage'], value: number, probability: numb
     expected_cents: 0,
     created_at: '2026-11-01T10:00:00',
     updated_at: '2026-11-01T10:00:00',
+    created_by_name: null,
+    updated_by_name: null,
   };
 }
 

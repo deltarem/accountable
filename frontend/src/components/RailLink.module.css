@@ -34,14 +34,3 @@
   box-shadow: var(--shadow-pop);
   z-index: 50;
 }
-
-/* The same look on a <button>: the light and dark toggle. */
-.button {
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.button:hover {
-  background: var(--dark-hover);
-}

@@ -46,11 +46,12 @@ def is_late(stage: str, close_date: date | None, today: date) -> bool:
     return is_open(stage) and close_date is not None and close_date < today
 
 
-def write_status_change(conn, contact: dict, new_status: str, at) -> None:
+def write_status_change(conn, contact: dict, new_status: str, at, user_id: str | None) -> None:
+    """Change a contact's status and record who did it (DM-08)."""
     conn.execute(
         update(contacts)
         .where(contacts.c.id == contact["id"])
-        .values(status=new_status, updated_at=at)
+        .values(status=new_status, updated_at=at, updated_by=user_id)
     )
     conn.execute(
         insert(events).values(
@@ -59,20 +60,22 @@ def write_status_change(conn, contact: dict, new_status: str, at) -> None:
             from_value=contact["status"],
             to_value=new_status,
             occurred_at=at,
+            created_by=user_id,
             created_at=at,
             updated_at=at,
         )
     )
 
 
-def make_customer(conn, contact_id: int | None, at) -> None:
-    """RULE-05 and DEC-08: winning makes the main contact a customer, once."""
+def make_customer(conn, contact_id: int | None, at, user_id: str | None) -> None:
+    """RULE-05 and DEC-08: winning makes the main contact a customer, once. The
+    person who won the deal is recorded on the status change too (DM-08)."""
     if contact_id is None:
         return
     row = conn.execute(select(contacts).where(contacts.c.id == contact_id)).mappings().first()
     if row is None or row["status"] == "customer":
         return
-    write_status_change(conn, dict(row), "customer", at)
+    write_status_change(conn, dict(row), "customer", at, user_id)
 
 
 def apply_stage_change(
@@ -80,6 +83,7 @@ def apply_stage_change(
     deal: dict,
     new_stage: str,
     *,
+    user_id: str | None,
     probability: int | None = None,
     close_date: date | None = None,
 ) -> dict:
@@ -87,6 +91,7 @@ def apply_stage_change(
 
     probability: a figure chosen in the form; None means the stage's usual one.
     close_date: a date chosen in the form when closing; None means today.
+    user_id: who made the change, written on the deal and the event (DM-08).
     Returns the values written to the deal ({} when the stage is unchanged).
     """
     old_stage = deal["stage"]
@@ -97,6 +102,7 @@ def apply_stage_change(
         "stage": new_stage,
         "probability": STAGES[new_stage].probability if probability is None else probability,
         "updated_at": at,
+        "updated_by": user_id,
     }
     if not STAGES[new_stage].open:
         values["close_date"] = close_date or clock.today()
@@ -110,10 +116,11 @@ def apply_stage_change(
             from_value=old_stage,
             to_value=new_stage,
             occurred_at=at,
+            created_by=user_id,
             created_at=at,
             updated_at=at,
         )
     )
     if new_stage == "won":
-        make_customer(conn, deal.get("contact_id"), at)
+        make_customer(conn, deal.get("contact_id"), at, user_id)
     return values

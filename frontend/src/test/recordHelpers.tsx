@@ -23,6 +23,7 @@ export function entry(overrides: Partial<TimelineEntry> = {}): TimelineEntry {
     follow_up_done: false,
     deal_id: 5,
     contact_id: null,
+    created_by_name: null,
     ...overrides,
   };
 }

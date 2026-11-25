@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 
 import type { RecordRef, TimelineEntry as Entry } from '../../api/types';
 import { formatDate, formatDateTime, formatRelative } from '../../lib/format';
+import { whoName } from '../../lib/who';
 import { stage as stageInfo, status as statusInfo } from '../../lib/stages';
 import { useTodayValue } from '../../lib/today';
 import { EmptyState } from '../EmptyState';
@@ -93,6 +94,9 @@ function TimelineEntry({ entry }: { entry: Entry }) {
               <RecordLink record={entry.source} />
             </>
           ) : null}
+          {/* The line ends with who made the entry (UI-WHO-02). */}
+          {' · '}
+          <span className={styles.who}>{whoName(entry.created_by_name)}</span>
         </p>
         {isActivity && entry.follow_up_date ? (
           <div className={styles.followUp}>

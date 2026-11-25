@@ -34,8 +34,3 @@
     0 0 0 2px var(--dark-panel),
     0 0 0 4px var(--sea);
 }
-
-/* Pins the light and dark toggle to the bottom of the rail. */
-.foot {
-  margin-top: auto;
-}

@@ -7,6 +7,7 @@ carry a `source` naming it, so the screen can say "on deal Acme renewal".
 from sqlalchemy import select
 
 from backend.db import activities, contacts, deals, events, organizations
+from backend.services.users import name_map
 
 
 def name_maps(conn):
@@ -38,6 +39,7 @@ def activity_entry(row) -> dict:
         "follow_up_done": row["follow_up_done"],
         "deal_id": row["deal_id"],
         "contact_id": row["contact_id"],
+        "created_by": row["created_by"],
     }
 
 
@@ -55,6 +57,7 @@ def event_entry(row) -> dict:
         "follow_up_done": False,
         "deal_id": row["deal_id"],
         "contact_id": row["contact_id"],
+        "created_by": row["created_by"],
     }
 
 
@@ -78,6 +81,15 @@ def _contact_own_entries(conn, contact_ids) -> list[dict]:
         select(events).where(events.c.contact_id.in_(ids), events.c.kind == "status_change")
     ).mappings()
     return [activity_entry(r) for r in acts] + [event_entry(r) for r in evs]
+
+
+def named(conn, entries: list[dict]) -> list[dict]:
+    """UI-WHO-02: who made each entry. An activity names who added it, not who last
+    edited it."""
+    names = name_map(conn)
+    for e in entries:
+        e["created_by_name"] = names.get(e.pop("created_by"))
+    return entries
 
 
 def _sorted(entries: list[dict]) -> list[dict]:
@@ -104,7 +116,7 @@ def deal_timeline(conn, deal_id: int) -> list[dict]:
     entries = _deal_entries(conn, [deal_id])
     for e in entries:
         e["source"] = None
-    return _sorted(entries)
+    return _sorted(named(conn, entries))
 
 
 def contact_timeline(conn, contact_id: int) -> list[dict]:
@@ -113,7 +125,8 @@ def contact_timeline(conn, contact_id: int) -> list[dict]:
     deal_map, contact_map, _ = name_maps(conn)
     deal_ids = [d["id"] for d in deal_map.values() if d["contact_id"] == contact_id]
     entries = _contact_own_entries(conn, [contact_id]) + _deal_entries(conn, deal_ids)
-    return _sorted(_with_source(entries, deal_map, contact_map, skip_contact=contact_id))
+    entries = _with_source(entries, deal_map, contact_map, skip_contact=contact_id)
+    return _sorted(named(conn, entries))
 
 
 def organization_timeline(conn, org_id: int) -> list[dict]:
@@ -124,7 +137,7 @@ def organization_timeline(conn, org_id: int) -> list[dict]:
     deal_ids |= {d["id"] for d in deal_map.values() if d["contact_id"] in contact_ids}
     entries = _contact_own_entries(conn, contact_ids) + _deal_entries(conn, deal_ids)
     unique = {e["key"]: e for e in entries}
-    return _sorted(_with_source(list(unique.values()), deal_map, contact_map))
+    return _sorted(named(conn, _with_source(list(unique.values()), deal_map, contact_map)))
 
 
 def all_entries(conn) -> list[dict]:
@@ -134,7 +147,7 @@ def all_entries(conn) -> list[dict]:
     entries += [event_entry(r) for r in conn.execute(select(events)).mappings()]
     for e in entries:
         e["record"] = record_ref(e, deal_map, contact_map, org_map)
-    return _sorted(entries)
+    return _sorted(named(conn, entries))
 
 
 def record_ref(e, deal_map, contact_map, org_map) -> dict | None:

@@ -1,0 +1,27 @@
+# Accountable on Render: one web service on the free plan (RUN-15, ARC-18).
+# FastAPI serves the API and the built frontend from one address. The backend
+# runs any missing migrations when it starts, before it takes requests.
+# No secrets here: the three Supabase settings are entered in Render's dashboard.
+services:
+  - type: web
+    name: accountable
+    runtime: python
+    plan: free
+    # uv installs the backend's packages from uv.lock; npm builds the frontend.
+    buildCommand: pip install uv && npm ci && npm run build && uv sync --frozen --no-dev
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.13
+      - key: NODE_VERSION
+        value: "24"
+      # The team's time zone, so "today" turns over at the team's midnight (DEC-12).
+      - key: TZ
+        value: Europe/London
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false

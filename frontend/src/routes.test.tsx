@@ -22,6 +22,8 @@ const organization: OrganizationDetail = {
   open_value_cents: 0,
   created_at: STAMP,
   updated_at: STAMP,
+  created_by_name: null,
+  updated_by_name: null,
   contacts: [],
   deals: [],
   timeline: [],
@@ -38,6 +40,8 @@ const contact: ContactDetail = {
   status: 'lead',
   created_at: STAMP,
   updated_at: STAMP,
+  created_by_name: null,
+  updated_by_name: null,
   deals: [],
   timeline: [],
 };
@@ -58,6 +62,8 @@ const deal: DealDetail = {
   expected_cents: 500_000,
   created_at: STAMP,
   updated_at: STAMP,
+  created_by_name: null,
+  updated_by_name: null,
   timeline: [],
 };
 

@@ -15,7 +15,10 @@ for (const mode of MODES) {
       await page.setViewportSize({ width, height: 800 });
       if (mode === 'dark') {
         await page.goto('/');
-        await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+        // The theme choice is in the menu under your initials (UI-THEME-01).
+        await page.getByRole('button', { name: /^Account menu for/ }).click();
+        await page.getByRole('menuitemradio', { name: 'Dark' }).click();
+        await page.keyboard.press('Escape');
       }
       const deal = await api.find('deals', 'Compliance suite');
       const contact = await api.find('contacts', 'Priya Raman');

@@ -23,4 +23,6 @@ for (const name of ['localStorage', 'sessionStorage', 'Storage'] as const) {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  // A kept session or theme choice must not carry over into the next test.
+  localStorage.clear();
 });

@@ -1,6 +1,7 @@
-// Every test reseeds first, and fails if the page logs a console error or
-// warning (UI-ERR-02). `api` makes records directly, for tests that need a
-// particular starting point.
+// Every test reseeds first, signs in as the built-in test user (local mode,
+// DEC-19), and fails if the page logs a console error or warning (UI-ERR-02).
+// `api` makes records directly, signed in, for tests that need a particular
+// starting point. `test.use({ signedOut: true })` starts on the sign-in screen.
 
 import { type APIRequestContext, type Page, test as base, expect } from '@playwright/test';
 
@@ -8,23 +9,41 @@ import { empty, reseed } from './seed';
 
 export { empty, reseed };
 
+export const TEST_USER = { email: 'test@example.com', password: 'accountable', name: 'Test User' };
+// Where the app keeps the local session (frontend/src/auth/local.ts).
+const LOCAL_SESSION_KEY = 'accountable-local-session';
+
+/** Signs the test user in through the backend, as the sign-in screen does (API-20). */
+export async function signInToken(request: APIRequestContext): Promise<string> {
+  const r = await request.post('/api/local/sign-in', { data: { email: TEST_USER.email, password: TEST_USER.password } });
+  expect(r.ok(), `sign in: ${await r.text()}`).toBeTruthy();
+  return (await r.json()).access_token;
+}
+
 export class Api {
-  constructor(private readonly request: APIRequestContext) {}
+  constructor(
+    private readonly request: APIRequestContext,
+    private readonly token: string,
+  ) {}
+
+  private get headers() {
+    return { Authorization: `Bearer ${this.token}` };
+  }
 
   async get<T = any>(path: string): Promise<T> {
-    const r = await this.request.get(`/api${path}`);
+    const r = await this.request.get(`/api${path}`, { headers: this.headers });
     expect(r.ok(), `GET ${path}`).toBeTruthy();
     return r.json();
   }
 
   async post<T = any>(path: string, body: unknown): Promise<T> {
-    const r = await this.request.post(`/api${path}`, { data: body });
+    const r = await this.request.post(`/api${path}`, { data: body, headers: this.headers });
     expect(r.ok(), `POST ${path}: ${await r.text()}`).toBeTruthy();
     return r.json();
   }
 
   async put<T = any>(path: string, body: unknown): Promise<T> {
-    const r = await this.request.put(`/api${path}`, { data: body });
+    const r = await this.request.put(`/api${path}`, { data: body, headers: this.headers });
     expect(r.ok(), `PUT ${path}`).toBeTruthy();
     return r.json();
   }
@@ -42,10 +61,17 @@ type Fixtures = {
   api: Api;
   allowConsole: RegExp[];
   seeded: void;
+  signedOut: boolean;
+  token: string;
 };
 
 export const test = base.extend<Fixtures>({
   allowConsole: [[], { option: true }],
+  signedOut: [false, { option: true }],
+
+  token: async ({ request }, use) => {
+    await use(await signInToken(request));
+  },
 
   seeded: [
     async ({}, use) => {
@@ -55,7 +81,19 @@ export const test = base.extend<Fixtures>({
     { auto: true },
   ],
 
-  page: async ({ page, allowConsole }, use) => {
+  page: async ({ page, allowConsole, signedOut, token }, use) => {
+    if (!signedOut) {
+      // Signed in before the first page loads, as after an earlier sign-in. Only
+      // once per tab, so a test that signs out stays signed out after a reload.
+      await page.addInitScript(
+        ([key, value]) => {
+          if (sessionStorage.getItem('e2e-signed-in')) return;
+          sessionStorage.setItem('e2e-signed-in', '1');
+          localStorage.setItem(key, value);
+        },
+        [LOCAL_SESSION_KEY, token],
+      );
+    }
     const problems: string[] = [];
     page.on('console', (message) => {
       if (message.type() !== 'error' && message.type() !== 'warning') return;
@@ -68,8 +106,8 @@ export const test = base.extend<Fixtures>({
     expect(problems, 'the browser console stays free of errors and warnings').toEqual([]);
   },
 
-  api: async ({ request }, use) => {
-    await use(new Api(request));
+  api: async ({ request, token }, use) => {
+    await use(new Api(request, token));
   },
 });
 
