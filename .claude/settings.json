@@ -17,20 +17,6 @@
         ],
         "matcher": "Edit|MultiEdit|Write|NotebookEdit|Bash|PowerShell"
       }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/scripts/agent-check-on-stop.mjs"
-            ],
-            "command": "node",
-            "statusMessage": "Running npm run check:quick",
-            "type": "command"
-          }
-        ]
-      }
     ]
   },
   "permissions": {

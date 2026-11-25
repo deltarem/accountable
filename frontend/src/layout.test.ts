@@ -30,7 +30,7 @@ describe("talking to the backend", () => {
     const callers = filesIn(SOURCE)
       .filter((file) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file) && !file.endsWith("test-utils.tsx"))
       .filter((file) => /\bfetch\(/.test(readFileSync(file, "utf8")))
-      .map((file) => path.relative(SOURCE, file));
+      .map((file) => path.relative(SOURCE, file).split(path.sep).join("/"));
     expect(callers).toEqual(["lib/api.ts"]);
   });
 });

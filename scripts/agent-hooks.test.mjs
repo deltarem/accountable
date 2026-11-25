@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   envGuardReply,
@@ -9,8 +9,6 @@ import {
   playwrightFolderGuardReply,
   readOnlyGuardReply,
   readsOnly,
-  shorten,
-  stopHookReply,
 } from "./agent-hooks.mjs";
 
 const HERE = import.meta.dirname;
@@ -190,57 +188,5 @@ describe("playwrightFolderGuardReply", () => {
       code: 0,
       reply: null,
     });
-  });
-});
-
-describe("stopHookReply", () => {
-  it("lets the agent stop when the checks pass", () => {
-    expect(stopHookReply({ stop_hook_active: false }, () => ({ passed: true, output: "All passed" }))).toBeNull();
-  });
-
-  it("sends a failure back to the agent, without the color codes", () => {
-    const reply = stopHookReply({ stop_hook_active: false }, () => ({
-      passed: false,
-      output: "\u001b[31mESLint\u001b[39m\n  2:9  error  'unused' is assigned a value but never used\n",
-    }));
-
-    expect(reply.decision).toBe("block");
-    expect(reply.reason).toContain("npm run check:quick failed");
-    expect(reply.reason).toContain("ESLint\n  2:9  error  'unused' is assigned a value but never used");
-  });
-
-  it("blocks only once, so the agent can always stop in the end", () => {
-    const runCheck = vi.fn(() => ({ passed: false, output: "Still failing" }));
-
-    expect(stopHookReply({ stop_hook_active: true }, runCheck)).toBeNull();
-    expect(runCheck).not.toHaveBeenCalled();
-  });
-
-  it("lets the agent stop straight away through the hook script, once it has been sent back", () => {
-    expect(hook("agent-check-on-stop.mjs", { hook_event_name: "Stop", stop_hook_active: true })).toEqual({
-      code: 0,
-      reply: null,
-    });
-  });
-});
-
-describe("shorten", () => {
-  it("leaves short output alone", () => {
-    expect(shorten("Summary\n  ESLint  FAILED", 100)).toBe("Summary\n  ESLint  FAILED");
-  });
-
-  it("cuts whole lines from the middle, keeping the first problems and the summary", () => {
-    const lines = Array.from({ length: 2000 }, (_, i) => `line ${i}`);
-    const output = ["first problem", ...lines, "Summary: ESLint FAILED"].join("\n");
-
-    const short = shorten(output, 8000);
-
-    expect(short.length).toBeLessThanOrEqual(8000);
-    expect(short.startsWith("first problem\n")).toBe(true);
-    expect(short.endsWith("\nSummary: ESLint FAILED")).toBe(true);
-    expect(short).toContain("Run npm run check:quick to see all of it.");
-    expect(short.split("\n").every((line) => /^(line \d+|first problem|Summary.*|\[Some output.*|)$/.test(line))).toBe(
-      true,
-    );
   });
 });

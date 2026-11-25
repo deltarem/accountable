@@ -41,9 +41,10 @@ pre-commit:
           - name: backend types
             run: uv run --frozen ty check
 
+          # No double quotes in here: on Windows, lefthook wraps the command in them, so one inside cuts it short.
           - name: secrets
             run: >-
               if ! command -v gitleaks > /dev/null; then
-              echo "The secrets check needs gitleaks, which isn't installed. Install it from https://github.com/gitleaks/gitleaks#installing and try again.";
+              echo 'The secrets check needs gitleaks, which is not installed. Install it from https://github.com/gitleaks/gitleaks#installing and try again.';
               exit 1; fi;
               gitleaks git --pre-commit --staged --redact --no-banner --verbose

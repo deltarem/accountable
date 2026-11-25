@@ -25,13 +25,16 @@ Everything the checks found was fixed in the code, with no rule turned off or lo
 
 ## Hooks
 
-Three hooks run the checks without anyone having to remember them:
+Two hooks run checks without anyone having to remember them:
 
 - **Before each commit:** lefthook formats the staged files and adds the changes to the commit, then runs ESLint, ruff check, tsc, ty and gitleaks. It leaves out the tests and takes a few seconds. `npm install` sets it up.
-- **When the coding agent finishes a turn:** a hook runs `npm run check:quick` and sends any failure back to the agent, once a turn, so it can't loop.
 - **Edits to `.env`:** a hook stops the agent's file tools on any file called `.env`, and any shell command that names it.
 
-Testing them showed that gitleaks only said how many secrets it found, not where, in the hook and in `npm run check` alike. Both now name the file and line, with the secret hidden. `npm run check:quick -- --failures-only` is new: it shows only what failed, and the agent's hook sends that.
+Testing them showed that gitleaks only said how many secrets it found, not where, in the hook and in `npm run check` alike. Both now name the file and line, with the secret hidden. `npm run check:quick -- --failures-only` is new: it shows only what failed.
+
+The Stop hook that ran `npm run check:quick` at the end of every agent turn has been removed, along with `scripts/agent-check-on-stop.mjs`, at the owner's request. So has the AGENTS.md rule that the agent runs `npm run check` before calling work finished. The owner runs the checks when they choose.
+
+On Windows, lefthook wraps each command in double quotes, so a double quote inside one cuts it short. The secrets job's install message had some, which failed every commit with a shell syntax error. It now uses single quotes.
 
 ## CI
 

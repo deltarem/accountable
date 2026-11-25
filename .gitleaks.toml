@@ -6,3 +6,7 @@ useDefault = true
 [[allowlists]]
 description = "The local .env file, which git ignores"
 paths = ['''(^|/)\.env$''']
+
+[[allowlists]]
+description = "Installed Python packages, which git ignores. gitleaks' own rules skip them on macOS and Linux (lib/python3.x/site-packages) but not on Windows (Lib/site-packages)"
+paths = ['''(^|/)\.venv/''']

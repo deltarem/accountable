@@ -58,8 +58,7 @@ Every test runs as the local copy, on SQLite. The checks never read `.env`, and 
 **Hooks:**
 
 - Before each commit, lefthook formats the staged files with Prettier and ruff and adds the changes to the commit. Then it runs ESLint and ruff check on those files, tsc and ty on the whole project, and gitleaks on what's staged. It leaves out the tests, so a commit takes a few seconds. `npm install` sets it up. If a staged file also has unstaged changes on the lines formatting touches, lefthook stops the commit and leaves both as they were, rather than mix them.
-- When the coding agent finishes a turn, a hook in `.claude/settings.json` runs `npm run check:quick -- --failures-only` and sends what failed back to the agent to fix. It does that once a turn: the next time the agent stops, the hook lets it, so it can't loop. The check takes about 30 seconds, so every turn ends with that wait.
-- Another hook stops the agent's file tools from changing any file called `.env`, and stops any shell command that names `.env`, because a command can change a file in too many ways to tell a read from a write. It guards against mistakes. It isn't a sandbox: a command could still reach the file without naming it. If the hook itself fails, the edit or command is stopped too.
+- A hook in `.claude/settings.json` stops the agent's file tools from changing any file called `.env`, and stops any shell command that names `.env`, because a command can change a file in too many ways to tell a read from a write. It guards against mistakes. It isn't a sandbox: a command could still reach the file without naming it. If the hook itself fails, the edit or command is stopped too.
 
 **Subagents:** the coding agent has two, in `.claude/agents/`. Claude Code loads that folder when a session starts. Each one ends with a report in a set layout, and the hook in its file runs only once the project folder is trusted in Claude Code. If the hook itself fails, the tool call is stopped.
 

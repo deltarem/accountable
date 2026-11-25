@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { MAX_WORKERS, chooseWorkers, stackFor } from "./test-plan.mjs";
@@ -45,7 +47,7 @@ describe("stackFor", () => {
   });
 
   it("keeps every worker's database in the run's temporary folder", () => {
-    expect(stackFor(3, "/tmp/run/test.db").database).toBe("/tmp/run/worker-3/test.db");
+    expect(stackFor(3, "/tmp/run/test.db").database).toBe(path.join("/tmp/run", "worker-3", "test.db"));
   });
 
   it("never lets one range of ports reach another, even at the most workers", () => {

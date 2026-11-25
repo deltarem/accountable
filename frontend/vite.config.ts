@@ -49,6 +49,9 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}", "../scripts/*.test.mjs"],
     setupFiles: ["src/test-setup.ts"],
     restoreMocks: true,
+    // The checks run these beside the backend's tests, which share the cores. On
+    // a machine with fewer cores a table test can pass 5s, Vitest's default.
+    testTimeout: 15_000,
     // A leftover .only would skip the rest of its file and still pass.
     allowOnly: false,
     // On when npm test asks for it, so a run while working stays quick.

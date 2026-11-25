@@ -27,7 +27,7 @@ The working tree holds the owner's uncommitted work, and `data/accountable.db` h
 
 ## Checks and tests
 
-Run `npm run check` from the project root before calling any work finished, and fix failures until it passes. Fix the code, not the rules: don't add disable comments, ignores or exclusions, or loosen a setting. If a rule doesn't suit this project, ask first.
+When a check fails, fix the code, not the rules: don't add disable comments, ignores or exclusions, or loosen a setting. If a rule doesn't suit this project, ask first.
 
 It runs Prettier, ESLint, ruff format, ruff check and gitleaks, then everything `npm test` runs, ends with a summary, and exits with an error if any of them failed. `npm run format` fixes the formatting. `npm run check:quick` leaves out the end-to-end tests, for checking as you go.
 
@@ -37,6 +37,6 @@ Pytest and Playwright refuse to start on their own, because `npm test` is what s
 
 In an end-to-end test, wait for the exact thing the next step needs, such as the row it scrolls to or the reply to the save it checks. A wait for the page to load or the network to go quiet returns at once on a page that has already loaded, so the test passes on its own and fails under the load of a full run.
 
-Hooks run some of this for you. Before each commit, lefthook formats the staged files, then runs the lint, type and secrets checks; don't skip it with `--no-verify`. When you finish a turn, a hook runs `npm run check:quick` and sends any failure back to you, once. Another hook stops any edit to `.env`, including any shell command that names it.
+Hooks run some of this for you. Before each commit, lefthook formats the staged files, then runs the lint, type and secrets checks; don't skip it with `--no-verify`. A Claude Code hook stops any edit to `.env`, including any shell command that names it.
 
 On every push, GitHub Actions runs gitleaks and then `npm run check:quick`, from `.github/workflows/ci.yml`. CI leaves out the end-to-end tests, so a green CI run doesn't replace running `npm run check` yourself. The end-to-end tests leave a report, with a screenshot of each failure, in `playwright-report/`.
