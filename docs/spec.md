@@ -228,6 +228,8 @@ These settle questions where a simpler reading of the product would be wrong or 
   It runs no tests, so a commit stays quick. `git commit --no-verify` skips it.
 - `RUN-08` **When the coding agent finishes a turn**, a Claude Code Stop hook (`.claude/hooks/check-on-stop.mjs`) runs `npm run check:quick`. If it fails, the agent is sent the output of the failed steps and keeps working. It is blocked only once: the next time it stops, it may.
 - `RUN-09` **The coding agent can't change `.env`**: a Claude Code PreToolUse hook (`.claude/hooks/protect-env.mjs`) blocks the file-editing tools on `.env` and `.env.*` in any folder, except `.env.example`, and any shell command that names one of those files.
+- `RUN-10` **The reviewer subagent** (`.claude/agents/reviewer.md`, on Sonnet) reviews the changes on a branch, a commit or a range against `docs/REVIEW.md`. It makes one pass per section of the policy and reports Important findings and at most five nits, each with a file and line, then a line per pass on what it checked. It has Read, Grep, Glob and Bash, and never changes anything. Its own PreToolUse hook (`.claude/hooks/reviewer-read-only.mjs`) lets its shell run only commands that read: listed git subcommands (`diff`, `log`, `show`, `grep`, `status` and similar, and `branch`, `tag`, `stash`, `remote` and `worktree` only when they list), and `grep`, `rg`, `find`, `cat`, `head`, `ls` and a few more. It denies everything else, redirects into files, `$(...)` and backticks, subshells, the flags that make a reader write or run a program (`find -exec`, `git diff --output` and the like), and PowerShell.
+- `RUN-11` **The ui-check subagent** (`.claude/agents/ui-check.md`, on Sonnet) checks the running app in Chrome through the Playwright MCP server, set up for the project in `.mcp.json`. It opens each page from `UI-LAY-04` (or the ones it's asked about) at 1280 x 800, takes a full-page screenshot in light and dark mode, checks it against the brand skill and this spec, and reports what's broken and what's off-brand, naming the screenshot. Screenshots go to `.playwright-mcp/`, which git ignores. It has Read, Grep, Glob and the browser tools, and no tool that edits files. It doesn't start the app, save forms, delete, drag cards or tick follow-ups, and it puts the light or dark choice back as it found it.
 
 `RUN-06` `docs/STATUS.md` explains how to run, seed and test the app, in a few lines.
 
@@ -255,7 +257,9 @@ package.json            root scripts: dev, seed, test; frontend/ as a workspace
 scripts/                dev.mjs (one-command start), test-all.mjs (npm test),
                         check-trace.mjs (traceability), and their tests
 lefthook.yml            the git pre-commit hook
-.claude/                the coding agent's settings and hooks (check on stop, .env guard)
+.claude/                the coding agent's settings, hooks (check on stop, .env guard,
+                        reviewer's read-only shell) and subagents (reviewer, ui-check)
+.mcp.json               the Playwright MCP server, used by ui-check
 pyproject.toml, uv.lock backend dependencies
 shared/                 validation-cases.json, read by both test suites
 backend/
