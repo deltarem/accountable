@@ -18,7 +18,7 @@ How I want code written in this repo. The architecture docs describe how the app
 - Raw SQL, a second engine, or reading the system clock outside `clock.py`.
 - Floats for money.
 - `fetch` outside `frontend/src/api/`.
-- Code that `docs/spec.md` doesn't describe, or features nobody asked for.
+- Code that `docs/spec.md` and its area files in `docs/specs/` don't describe, or features nobody asked for.
 - Errors that are swallowed: a bare `except`, an empty `catch`, or logging a failure and carrying on as if it worked.
 - Tests that are skipped, loosened or deleted to get a green run. If a test was wrong, fix it and say why in the commit.
 - Fixes without a root cause. Show what broke and why before changing anything.
@@ -39,4 +39,4 @@ A change I'd merge without fuss:
 - Looks like the code around it: same names, same patterns, same folder layout.
 - Lets a newcomer follow a request from route to service to table without hunting.
 - Comes with a test that would fail without the change, and `npm test` passes.
-- Updates `docs/spec.md` and `docs/STATUS.md` in the same change.
+- Updates the spec (the area files in `docs/specs/` it affects, and `docs/spec.md` when the summary or the ID index changes) and `docs/STATUS.md` in the same change.

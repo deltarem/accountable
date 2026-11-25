@@ -1,6 +1,6 @@
 # Backend architecture
 
-How the FastAPI app in `backend/` is put together: its layers, the data model, how a request flows through it, and the decisions behind the less obvious parts. The requirements live in `docs/spec.md`, and IDs such as `ARC-04` point there. This document describes the code as built. Its companion is `docs/frontend-architecture.md`.
+How the FastAPI app in `backend/` is put together: its layers, the data model, how a request flows through it, and the decisions behind the less obvious parts. The requirements live in `docs/spec.md` and its area files in `docs/specs/`, and IDs such as `ARC-04` point there. This document describes the code as built. Its companion is `docs/frontend-architecture.md`.
 
 ## At a glance
 

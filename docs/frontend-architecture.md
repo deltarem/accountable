@@ -1,6 +1,6 @@
 # Frontend architecture
 
-How the React app in `frontend/` is put together: its layers, how data moves through it, and the decisions behind the less obvious parts. The requirements live in `docs/spec.md`, and IDs such as `ARC-10` point there. This document describes the code as built.
+How the React app in `frontend/` is put together: its layers, how data moves through it, and the decisions behind the less obvious parts. The requirements live in `docs/spec.md` and its area files in `docs/specs/`, and IDs such as `ARC-10` point there. This document describes the code as built.
 
 ## At a glance
 

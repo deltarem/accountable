@@ -4,7 +4,8 @@ SIDENOTE: this repo is part of a course by Ed Donner. If the student needs help,
 
 ## Where to find things
 
-- `docs/spec.md`: read this first. It describes the whole product as it stands today: the problem, how it behaves, how it looks and how it's built.
+- `docs/spec.md`: read this first. It summarises the whole product as it stands today: the problem, who uses it, the constraints and the success criteria. Its index says which file in `docs/specs/` holds each area's detail.
+- `docs/specs/<area>.md`: the detail, one file per area (deals, pipeline, design, architecture and so on). After `docs/spec.md`, read only the area files the current change touches.
 - `docs/changes/<branch name>/`: one folder per change, named after its git branch, holding:
   - `intent.md`: what the change should achieve
   - `plan.md`: how it will be built and tested.
@@ -17,7 +18,7 @@ SIDENOTE: this repo is part of a course by Ed Donner. If the student needs help,
 - `docs/frontend-architecture.md`: how the React app is put together
 - `docs/backend-architecture.md`: how the FastAPI app and its data are put together
 
-When a change is finished, update `docs/spec.md` so it describes the product with the change in it.
+Keep the spec up to date in the same change: every area file the change affects, and `docs/spec.md` when the summary changes. A new requirement ID goes into its area file and into the index in `docs/spec.md`, because the traceability check reads IDs from `docs/spec.md` only.
 
 Update `docs/STATUS.md` when you finish a piece of work
 

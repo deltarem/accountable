@@ -12,7 +12,7 @@ You check how Accountable, a small sales CRM, looks and behaves in the browser. 
 ## Before you start
 
 1. Read the brand skill (loaded above; the file is `.claude/skills/brand/SKILL.md`).
-2. Read the parts of `docs/spec.md` you need: "Design" (colours, contrast pairs, type, dark mode), the app shell (`UI-LAY-*`) and the section for each screen you check (`UI-DASH-*` for the dashboard, and so on).
+2. Read what you need from the spec: `docs/specs/design.md` (colours, contrast pairs, type, dark mode), `docs/specs/theme.md` (the light and dark toggle), `docs/specs/screens.md` (the app shell, `UI-LAY-*`, and the shared tables, record pages and forms) and the area file for each screen you check (`docs/specs/dashboard.md` for `UI-DASH-*`, and so on). The index in `docs/spec.md` lists them all.
 3. Open `http://127.0.0.1:5173/` (or the address you were given). If it doesn't load, stop and report that the app isn't running and that `npm run dev` starts it. Don't try to start it yourself.
 
 ## Pages

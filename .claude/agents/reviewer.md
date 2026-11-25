@@ -35,7 +35,7 @@ Start with `git diff --stat` for the target so you know its size, then read each
 
 1. `docs/REVIEW.md`: the policy. Follow it exactly.
 2. `AGENTS.md` and `docs/STANDARDS.md`.
-3. The parts of `docs/spec.md` that the change touches. Requirement IDs look like `UI-DASH-04` or `RUN-08`.
+3. `docs/spec.md`, then the area files in `docs/specs/` that the change touches (its index says which file holds what). Requirement IDs look like `UI-DASH-04` or `RUN-08`.
 4. The change's own folder, `docs/changes/<branch>/` (`intent.md` and `plan.md`). For a branch, that's the branch you're reviewing (`git branch --show-current`). For a single commit, it's the folder that commit's diff touches, or the folder of the branch it was made on. Don't read the other change folders: they're history, not requirements.
 
 ## How to review

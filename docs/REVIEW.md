@@ -8,8 +8,8 @@ Make a separate pass over every change for each of these:
 
 - **Bugs:** the code does what it's meant to, including when something goes wrong.
 - **Security:** no secrets or personal data are exposed, and nobody can do what they shouldn't.
-- **Matches spec.md and plan.md:** the change does what those documents say, with nothing missing and nothing extra.
-- **Described by spec.md:** flag any code that `docs/spec.md` doesn't describe: either the spec is missing something the product does, or the code does something nobody asked for.
+- **Matches spec.md and plan.md:** the change does what `docs/spec.md`, the area files in `docs/specs/` that it touches, and its `plan.md` say, with nothing missing and nothing extra.
+- **Described by spec.md:** flag any code that `docs/spec.md` and its area files don't describe: either the spec is missing something the product does, or the code does something nobody asked for. Also flag a change that alters behaviour without updating the area file that describes it, and a requirement ID in an area file that isn't listed in the index in `docs/spec.md`.
 - **Follows STANDARDS.md:** the change meets `docs/STANDARDS.md`. Anything on its "What I won't accept" list is an Important finding.
 
 ## Important
