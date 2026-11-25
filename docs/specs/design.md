@@ -4,7 +4,7 @@ Part of the [Accountable spec](../spec.md). Colours, contrast, type, shape, dark
 
 ## Decisions
 
-2. `DEC-02` **Fonts with no internet.** The brand's fonts are bundled with the app through the `@fontsource` npm packages, so nothing is fetched from Google at runtime.
+2. `DEC-02` **Fonts with no internet.** The brand's fonts are bundled with the app through the `@fontsource` npm packages, so nothing is fetched from Google at runtime, and `npm run dev:local` works offline.
 4. `DEC-04` **The money format.** Money shows as `$12.500,00`: a US dollar sign on European separators. That's unusual for US dollars, but it's used everywhere, forms included.
    - Forms accept `12500`, `12.500`, `12.500,50` and `$12.500,00`, and turn down `12.5` with "Use a comma for cents, like 12.500,50".
    - Headline figures on the dashboard drop the cents (`$412.500`).
@@ -49,7 +49,7 @@ Colours are CSS variables in `tokens.css`, named by their role. Light mode defin
 | Rail and headline panels | `#073B4C` Midnight, with Sea Mist `#CDD8DB` icons, white figures and `#9FB4BA` labels | the same (see the decision "Dark surfaces") | the icon rail, the dashboard headline panel, the pipeline totals strip |
 | Card | `#F3F7F8` | `#0F2027` | pipeline cards, follow-up rows, "Add deal" buttons |
 | Line | `#E8EEF0` | `#1C3038` | table row dividers and input fills (never an outline around a panel) |
-| Midnight fill | `#073B4C` with white text | Sea Mist `#CDD8DB` with Midnight text (8.3:1) (see the decision "Dark surfaces") | main action buttons, the initials circle, the chosen filter or activity type, tooltips, confirmation messages |
+| Midnight fill | `#073B4C` with white text | Sea Mist `#CDD8DB` with Midnight text (8.3:1) (see the decision "Dark surfaces") | main action buttons, the initials circles on cards and in the top bar, the chosen filter or activity type, tooltips, confirmation messages |
 | Primary | Sea Green `#06D6A0`, Midnight text | the same | "Save" and "Log it" buttons, focus rings |
 | Secondary | Marigold `#FFC145`, Midnight text | the same | Qualified, highlights |
 | Tertiary | Coral `#F78C6B`, Midnight text | the same | Proposal, email activity |
@@ -103,6 +103,7 @@ Dark mode keeps every layout, size, shape and font. Only colours change, taken f
 - **Solid stage blocks** (column headers, pipeline-by-stage rows, funnel columns) keep their light-mode colours and text, except Negotiation, which is Sea Mist with Midnight text.
 - **Charts:** grid lines use the Line colour and axis labels use Muted ink. The series keep their brand colours: the won line and bars in Sea Green, lost bars in the Lost grey. The headline panel's chart is unchanged, since that panel stays Midnight.
 - **Tooltips**, on charts and on the rail, are Sea Mist with Midnight text.
+- **The top bar and sign-in screen:** the search box and the sign-in panel use the Panel colour, black on the dark page as white is on the light one. The search dropdown and the menu under your initials are pop-up lists, in the Raised colour.
 - **Dialogs, menus and pop-up lists** use the Raised colour, `#0F2027`, a step lighter than the black panels. Shadows don't show on black, so a black dialog would have no visible edge. The page behind a dialog dims with black at 60% (light mode dims it with Midnight at 45%).
 - **Messages:** a confirmation is Sea Mist with Midnight text and a dark Sea Green `#067A5C` icon (3.7:1, above the 3:1 an icon needs). An error is `#2B0D14` with Sea Mist text (12.3:1) and a `#FF7F9C` icon, so the two still look different at a glance.
 - **Follow-ups:** overdue rows sit on `#2B0D14` with the date in `#FF7F9C` (7.5:1). Other rows use the Card colour.
@@ -126,4 +127,4 @@ All formatting lives in one frontend module, `frontend/src/lib/format.ts`, which
 
 ### Tone `DES-06`
 
-Plain business English, as the brand asks. Labels are short ("New deal", "Log activity", "Mark done"), with no jargon and no exclamation marks. Money is always shown with its currency.
+Plain business English, as the brand asks. Labels are short ("New deal", "Log activity", "Mark done", "Sign in", "Sign out"), with no jargon and no exclamation marks. Money is always shown with its currency. People are named by their name, never by their email or id, apart from the email under the name in the menu under your initials.

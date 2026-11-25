@@ -33,6 +33,7 @@ Part of the [Accountable spec](../spec.md). Deals, their stages and the rules fo
 | probability | integer | 0 to 100 |
 | close_date | date | optional while open; set to today when the deal is won or lost (`DEC-07`) |
 | position | integer | the card's place in its pipeline column, 0 at the top |
+| created_by, updated_by | text | who added the deal and who last changed it, set by the server; a move on the board counts as a change (`DM-08`) |
 
 ### Stage rules
 
@@ -49,8 +50,8 @@ Part of the [Accountable spec](../spec.md). Deals, their stages and the rules fo
 - `RULE-02` `RULE-03` When the stage changes, the probability becomes the new stage's usual figure.
   - In the form, picking a new stage fills in that figure, and the user can change it before saving.
   - A probability set by hand is kept until the stage changes again.
-- `RULE-04` Every change of stage writes a `stage_change` event, whether it comes from the board or the form.
-- `RULE-05` Moving to Won makes the main contact a customer (`DEC-08`) and writes a `status_change` event for them. A deal created at Won does the same.
+- `RULE-04` Every change of stage writes a `stage_change` event, whether it comes from the board or the form. The event records who made the change.
+- `RULE-05` Moving to Won makes the main contact a customer (`DEC-08`) and writes a `status_change` event for them. A deal created at Won does the same. The person who won the deal is recorded on the event and as the contact's last change.
 - `RULE-06` A deal is **late** when it's open and its close date is before today.
 - `RULE-07` **Expected revenue** for a deal is value times probability. The open pipeline's figures add up open deals only.
 
@@ -72,7 +73,8 @@ Part of the [Accountable spec](../spec.md). Deals, their stages and the rules fo
 
 - `UI-REC-04` **Deal:**
   - Facts: stage badge, value, probability, expected revenue, close date (with "Late" if it applies).
-  - Left: details, including organization and main contact (as links) and when it was created.
+  - Left: details, including organization and main contact (as links).
+  - The header's last line says who added the deal and when, and who last changed it (`UI-WHO-01`).
   - Right: the timeline, with "Log activity" at the top.
 
 ### Deal form

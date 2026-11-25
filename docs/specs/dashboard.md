@@ -46,7 +46,7 @@ From top to bottom:
      - Overdue rows sit on a pale Raspberry tint with the date in dark Raspberry. The other rows sit on a pale grey (`#F3F7F8`).
      - Ticking the box removes the row and updates the figure in the headline panel.
    - `UI-DASH-07` **Recent activity:** the 10 newest entries across all timelines with `occurred_at` up to now: activities, stage changes and status changes.
-     - Each has a rounded-square icon in its type's colour, a line of text, and the record (as a link) with its date and time.
+     - Each has a rounded-square icon in its type's colour, a line of text, and the record (as a link) with its date and time and who made it ("Compliance suite · 23 Nov 2026, 09:30 · Priya Shah", `UI-WHO-02`).
 
 `UI-DASH-08` Charts use Recharts.
 - Axes and grid lines are quiet: Sea Mist grid lines and muted labels on white, and lighter Midnight grid lines and pale labels on the headline panel.
@@ -60,6 +60,8 @@ Below 1280px wide, the headline panel stacks its figures above the chart, and th
 ### Dashboard (`/`)
 
 ```
+[Q Search organizations, contacts and deals ]                         (PS)
+
 ACCOUNTABLE
 Dashboard                                         Monday, 23 Nov 2026 (serif)
 
@@ -96,13 +98,14 @@ Dashboard                                         Monday, 23 Nov 2026 (serif)
 | OVERDUE                              | | [>] Moved from Proposal to      |
 | +----------------------------------+ | |     Negotiation                 |
 | |[ ] Call back about contract terms| | |     Telehealth add-on ·         |
-| |    Booking engine  5 days overdue| | |     23 Nov 2026, 10:12          |
-| +----------------------------------+ | | [c] Call: agreed a two-year     |
-| TODAY                                | |     term                        |
-| +----------------------------------+ | |     Compliance suite ·          |
-| |[ ] Call about onboarding   Today | | |     23 Nov 2026, 09:30          |
-| +----------------------------------+ | | ...                 (10 rows)   |
-| NEXT 7 DAYS                          | |                                 |
+| |    Booking engine  5 days overdue| | |     23 Nov 2026, 10:12 ·        |
+| +----------------------------------+ | |     Sam Lee                     |
+| TODAY                                | | [c] Call: agreed a two-year     |
+| +----------------------------------+ | |     term                        |
+| |[ ] Call about onboarding   Today | | |     Compliance suite ·          |
+| +----------------------------------+ | |     23 Nov 2026, 09:30 ·        |
+| NEXT 7 DAYS                          | |     Priya Shah                  |
+|                                      | | ...                 (10 rows)   |
 +--------------------------------------+ +---------------------------------+
 ```
 

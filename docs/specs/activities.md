@@ -15,6 +15,7 @@ Part of the [Accountable spec](../spec.md). Notes, calls and emails logged on a 
 | occurred_at | datetime | required; the form defaults it to now |
 | follow_up_date | date | optional |
 | follow_up_done | boolean | defaults to false |
+| created_by, updated_by | text | who logged it and who last changed it, set by the server (`DM-08`) |
 
 Exactly one of `contact_id` and `deal_id` is set, which a check constraint enforces. Deleting the contact or deal deletes its activities.
 
@@ -29,12 +30,13 @@ Entries the system writes by itself. They show in timelines and can't be edited 
 | contact_id | integer | set for a status change |
 | from_value, to_value | text | for example `proposal` and `negotiation` |
 | occurred_at | datetime | when the change was made |
+| created_by | text | who made the change, set by the server; empty for sample data (`DM-08`) |
 
 Deleting the deal or contact deletes its events.
 
 ### What each timeline shows
 
-`TL-04` Timelines are newest first, by `occurred_at`. Each entry shows its type, its text and its date. An entry rolled up from another record also says which record it came from: "on deal Acme renewal", or "with Maria Lopez" for a contact's own entry on an organization's timeline.
+`TL-04` Timelines are newest first, by `occurred_at`. Each entry shows its type, its text, its date and who made it (`UI-WHO-02`). An entry rolled up from another record also says which record it came from: "on deal Acme renewal", or "with Maria Lopez" for a contact's own entry on an organization's timeline.
 
 - `TL-01` **Deal:** its activities and its stage changes.
 - `TL-02` **Contact:**
@@ -65,5 +67,6 @@ Deleting the deal or contact deletes its events.
 `UI-REC-06` **Timeline entries:**
 - Each entry has a round icon in its type's colour: note Midnight, call Cerulean, email Coral, stage change in the new stage's colour, status change Sea Green.
 - Activities read "Call: agreed a two-year term", and have Edit and Delete in a small menu.
+- Each entry's date line ends with who made it: "15 Nov 2026, 16:40 · Priya Shah", or "· Sample data" (`UI-WHO-02`).
 - An activity with a follow-up shows its due date, "3 days overdue" if it has passed, and a "Done" checkbox.
 - `UI-EMPTY-04` An empty timeline reads "Nothing here yet. Log a call, email or note to start the history."

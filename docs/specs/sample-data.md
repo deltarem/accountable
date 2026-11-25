@@ -8,6 +8,10 @@ Part of the [Accountable spec](../spec.md). The data Accountable starts with.
 
 ## The data
 
+`SEED-07` Sample records, activities and events have no author: their `created_by` and `updated_by` are empty, and the screens show "Sample data" as who added them (`DM-08`). Seeding never adds people to `users`, and keeps the people already there.
+
+The same sample data fills the local SQLite file and, on its first start or with `npm run seed -- --yes`, the team's database on Supabase (`RUN-03`, `RUN-05`).
+
 Created by `backend/seed.py`. It uses a fixed random seed, so every reset gives the same data relative to today. On 23 Nov 2026 it gives these figures:
 - $1.130.000 open in 14 deals, with $529.500 expected
 - $668.000 won over 12 months

@@ -1,6 +1,6 @@
 # Shared screens
 
-Part of the [Accountable spec](../spec.md). The look, the layout and the parts every screen shares: tables, record pages, forms, deleting, empty and loading states, errors, and their wireframes. Each area's own columns, page and form are in its area file.
+Part of the [Accountable spec](../spec.md). The look, the layout and the parts every screen shares: the rail and top bar, tables, record pages, forms, deleting, empty and loading states, errors, and their wireframes. Each area's own columns, page and form are in its area file. The sign-in screen and the menu under your initials are in `docs/specs/accounts.md`, and the search in the top bar is in `docs/specs/search.md`.
 
 Colours named in the screen sections, in this file and in the area files, are light mode's. In dark mode each one takes its dark value from Design in `docs/specs/design.md` (`DES-01`, `DES-02` and "Dark mode"); layout and behaviour stay the same.
 
@@ -21,8 +21,12 @@ What it means for every screen:
   - At the top is the Accountable mark: a Sea Green rounded square with a Midnight "A". It links to the dashboard.
   - Below it are five 44px icon buttons from Lucide, for Dashboard, Pipeline, Deals, Contacts and Organizations, with Sea Mist icons. The current page's button is filled Sea Green with a Midnight icon, and marked as the current page for screen readers.
   - Each button has an accessible name, and a tooltip with the section's name shows on hover and on keyboard focus.
-  - At the foot of the rail is the light and dark toggle (see "Light and dark toggle" in `docs/specs/theme.md`).
-- `UI-LAY-02` **Main area:** the page background is `#F0F4F5`. Each page has a title row:
+  - The foot of the rail is empty. The theme choice is in the menu under your initials (`UI-MENU-01`).
+- `UI-LAY-05` **Top bar:** a slim bar, 56px tall, across the top of the main area on every page, above the title row. It scrolls away with the page.
+  - On the left, the search box (`UI-SRCH-01`).
+  - On the right, the circle with your initials, which opens the menu (`UI-MENU-01`).
+  - It sits straight on the page background, with no panel, no fill and no line under it, so it never reads as a border across the top of the page. The space below it separates it from the title row.
+- `UI-LAY-02` **Main area:** the page background is `#F0F4F5`. Each page has a title row, under the top bar:
   - on the left, a small uppercase "Accountable" line in Muted ink above the page title
   - on the right, the page's main action ("New deal") as a Midnight button with white text, or on the dashboard, today's date in Instrument Serif.
 
@@ -37,6 +41,8 @@ What it means for every screen:
 
   The browser's back button works throughout. Any other address shows a "Page not found" page with a way back to the dashboard.
 
+  Signed out, every address, an unknown one included, shows the sign-in screen instead (`UI-AUTH-02`). Signing in has no address of its own.
+
 ### Tables (Organizations, Contacts, Deals)
 
 All three use TanStack Table in a white panel, with the same behaviour:
@@ -50,7 +56,7 @@ All three use TanStack Table in a white panel, with the same behaviour:
 
 ### Record pages
 
-`UI-REC-01` Each page starts with a "< Deals" (or Contacts, Organizations) link back to its list, then a header panel with the record's name, its key facts, and Edit and Delete buttons. Below it are two columns: linked records on the left (about 40%) and the timeline on the right (about 60%). Below 1100px wide the two columns stack.
+`UI-REC-01` Each page starts with a "< Deals" (or Contacts, Organizations) link back to its list, then a header panel with the record's name, its key facts, and Edit and Delete buttons. The header ends with who added the record and who last changed it (`UI-WHO-01`). Below it are two columns: linked records on the left (about 40%) and the timeline on the right (about 60%). Below 1100px wide the two columns stack.
 
 A record that doesn't exist, for example after it was deleted elsewhere, shows "That deal doesn't exist. It may have been deleted." with a way back to the list.
 
@@ -100,6 +106,8 @@ A record that doesn't exist, for example after it was deleted elsewhere, shows "
 
 `UI-ERR-01` If the backend can't be reached or returns an error, a message at the bottom right says what failed ("Couldn't save the deal. Try again."). Nothing the user typed is lost, so an open form stays open. A screen whose data can't be loaded shows a short message with "Try again" instead of a blank page.
 
+A 401 is the exception: the session has ended, so the app shows the sign-in screen instead of a message (`AUTH-03`). An open form loses what was typed then. Renewing the token before it expires keeps this rare.
+
 `UI-ERR-02` The browser's console stays free of errors and warnings during normal use.
 
 ## Screen structures
@@ -112,31 +120,33 @@ Every page sits inside this shell.
 
 ```
 +------+-----------------------------------------------------------------+
-| [A]  |  ACCOUNTABLE                                   [ Main action ]  |
-|      |  Page title                                                     |
-| [#]  |                                                                 |
+| [A]  |  [Q Search organizations, contacts and deals ]          (PS)    |
+|      |                                                                 |
+| [#]  |  ACCOUNTABLE                                   [ Main action ]  |
+|  #   |  Page title                                                     |
+|  #   |                                                                 |
 |  #   |  +-----------------------------------------------------------+  |
 |  #   |  |  Panel (20px corners)                                     |  |
-|  #   |  |                                                           |  |
-|  #   |  +-----------------------------------------------------------+  |
+|      |  |                                                           |  |
+|      |  +-----------------------------------------------------------+  |
 |      |                                                                 |
 |      |  +-----------------------------------------------------------+  |
 |      |  |  Panel                                                    |  |
 |      |  +-----------------------------------------------------------+  |
 |      |                                            +-----------------+  |
 |      |                                            | Message (toast) |  |
-| (m)  |                                            +-----------------+  |
+|      |                                            +-----------------+  |
 +------+-----------------------------------------------------------------+
  Rail,    Main area: page background, 32px padding (24px below 1320px)
  72px,
  Midnight
 ```
 
-- **Built from:** `AppShell`, `IconRail`, `RailLink` (icon button with tooltip), `ThemeToggle` (the light and dark button), `PageHeader` (eyebrow, title, action slot), `Panel`, `Toaster`, and `FormsProvider`, which hosts the form and delete dialogs for every page.
+- **Built from:** `AppShell`, `IconRail`, `RailLink` (icon button with tooltip), `TopBar`, `GlobalSearch` (the search box and its dropdown), `AccountMenu` (the initials and the menu, with the theme choice), `PageHeader` (eyebrow, title, action slot), `Panel`, `Toaster`, and `FormsProvider`, which hosts the form and delete dialogs for every page. `RequireSignIn` wraps the shell and shows `SignInPage` when signed out.
 - **Notes:**
-  - The rail stays fixed and the main area scrolls.
+  - The rail stays fixed and the main area, top bar included, scrolls.
   - `[A]` is the brand mark, `#` is a Lucide icon, and `[#]` is the current page's button, filled Sea Green.
-  - `(m)` is the light and dark toggle, pinned to the foot of the rail.
+  - `[Q ...]` is the search box and `(PS)` the circle with your initials. The top bar has no line under it.
 
 ### Tables (`/deals`, `/contacts`, `/organizations`)
 
@@ -177,6 +187,7 @@ All three share one structure. A deal is shown here.
 +--------------------------------------------------------------------------+
 | Acme renewal                                       [ Edit ]  [ Delete ]  |
 | (Negotiation)  $24.000,00   75%   Expected $18.000,00   Close 12 Dec 2026 |
+| Added by Priya Shah on 2 Mar 2026 · Last changed by Sam Lee on 20 Nov 2026|
 +--------------------------------------------------------------------------+
 
 +-----------------------------+ +------------------------------------------+
@@ -188,11 +199,11 @@ All three share one structure. A deal is shown here.
 | Value         $24.000,00    | | | When [23 Nov 2026 14:05]             | |
 | Probability   75%           | | | Follow-up [         ]   [ Log it ]  | |
 | Close date    12 Dec 2026   | | +--------------------------------------+ |
-| Created       2 Mar 2026    | |                                          |
+|                             | |                                          |
 |                             | | (o) Moved from Proposal to Negotiation   |
-|                             | |     18 Nov 2026, 10:12                   |
+|                             | |     18 Nov 2026, 10:12 · Sam Lee         |
 |                             | | (o) Call: agreed on a 2-year term    ... |
-|                             | |     15 Nov 2026, 16:40                   |
+|                             | |     15 Nov 2026, 16:40 · Priya Shah      |
 |                             | |     Follow-up 20 Nov 2026  [ ] Done      |
 |                             | |     3 days overdue                       |
 |                             | | (o) Email: sent the proposal         ... |

@@ -12,6 +12,7 @@ Part of the [Accountable spec](../spec.md). The companies we do business with.
 | website | text | optional; `https://` is added if no scheme is given |
 | industry | text | optional, free text; the form suggests industries already in use |
 | notes | text | optional, up to 5.000 characters |
+| created_by, updated_by | text | who added the organization and who last changed it, set by the server (`DM-08`) |
 
 ## API
 
@@ -39,6 +40,7 @@ Part of the [Accountable spec](../spec.md). The companies we do business with.
   - Facts: industry, website, open value and notes.
   - Left: its contacts (name, job title, status) and its deals (name, stage, value), each as a link, each with a "New" button that starts the form with this organization filled in.
   - Right: the organization's timeline.
+  - The header's last line says who added the organization and who last changed it (`UI-WHO-01`).
 
 ### Organization form
 

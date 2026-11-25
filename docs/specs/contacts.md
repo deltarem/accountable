@@ -4,7 +4,7 @@ Part of the [Accountable spec](../spec.md). The people we deal with. A lead is a
 
 ## Decisions
 
-9. `DEC-09` **Status changes in the timeline.** Every change of a contact's status makes an entry, whether it was made by hand or by a win, for example "Status changed from Lead to Qualified".
+9. `DEC-09` **Status changes in the timeline.** Every change of a contact's status makes an entry, whether it was made by hand or by a win, for example "Status changed from Lead to Qualified". The entry names who made the change; for a win, that's the person who won the deal.
 
 ## Data model
 
@@ -18,6 +18,7 @@ Part of the [Accountable spec](../spec.md). The people we deal with. A lead is a
 | job_title | text | optional |
 | organization_id | integer | optional; set to empty when the organization is deleted |
 | status | text | `lead`, `qualified` or `customer`; new contacts default to `lead` |
+| created_by, updated_by | text | who added the contact and who last changed it, set by the server (`DM-08`) |
 
 ## API
 
@@ -39,3 +40,4 @@ Part of the [Accountable spec](../spec.md). The people we deal with. A lead is a
   - Facts: status badge, organization (as a link), job title, email (as a `mailto:` link) and phone.
   - Left: the deals where they're the main contact, with a "New" button that starts a deal with them and their organization filled in.
   - Right: the timeline, with "Log activity" at the top.
+  - The header's last line says who added the contact and who last changed them (`UI-WHO-01`).
