@@ -1,0 +1,3 @@
+# Text files use LF in the working copy on every platform, whatever
+# core.autocrlf says, so Prettier's line-ending check passes on Windows too.
+* text=auto eol=lf

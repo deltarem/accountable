@@ -18,9 +18,7 @@ export default defineConfig({
   retries: 0,
   timeout: 45_000,
   expect: { timeout: 5_000 },
-  // CI also writes an HTML report to playwright-report/, which the workflow
-  // uploads when the run fails.
-  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
+  reporter: [['list']],
   globalSetup: './e2e/global-setup.ts',
   use: {
     baseURL: 'http://127.0.0.1:5273',

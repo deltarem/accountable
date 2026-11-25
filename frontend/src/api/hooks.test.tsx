@@ -284,7 +284,9 @@ describe('saves invalidate everything they affect (ARC-10)', () => {
     await act(async () => {
       await result.current.mutateAsync({ body: dealBody }).catch(() => undefined);
     });
-    expect(result.current.error).toBeInstanceOf(ApiError);
+    // The hook's error state arrives in TanStack Query's setTimeout batch, which
+    // can land after mutateAsync rejects, so wait for it.
+    await waitFor(() => expect(result.current.error).toBeInstanceOf(ApiError));
     expect((result.current.error as ApiError).fieldErrors).toEqual({ name: 'Enter a name.' });
     expect(staleKeys(client)).toEqual([]);
   });
@@ -398,7 +400,8 @@ describe('moving a deal on the board (ARC-08)', () => {
     await act(async () => {
       await result.current.mutateAsync({ id: 1, stage: 'qualified', index: 0 }).catch(() => undefined);
     });
-    expect(result.current.isError).toBe(true);
+    // Same as the refused save above: the error state arrives in a later batch.
+    await waitFor(() => expect(result.current.isError).toBe(true));
     expect(client.getQueryData(keys.deals)).toBeUndefined();
   });
 });
