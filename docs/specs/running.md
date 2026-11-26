@@ -31,22 +31,24 @@ Part of the [spec](../spec.md), which has the summary, the terms, the quality ru
 | | | 32 won and 12 lost across the past 12 months, with a win in every month and an upward trend |
 | | | At least 2 wins dated this month, even on the 1st |
 | Activities | 300 | All three types, at least 6 overdue follow-ups and at least 10 upcoming |
+| Products | 12 | What the sample deals sell, such as licenses, support plans, training days, setup and integrations, at realistic prices from about $100 to $10,000. At least 3 prices with cents that aren't `.00`, such as $49.50, and 2 archived, such as a support plan that's been replaced |
 
 - **M4.** Every sample deal has a full stage history, so timelines and the funnel look right from the start.
 - **M5.** Emails and websites use the reserved `.example` domain, so nothing points at a real company.
 - **M6.** The sample Won and Lost columns start newest first.
 - **M7.** The sample data adds the four made-up teammates, and puts every sample record and stage change down to them (U14).
+- **M8.** A database made before products existed gets an empty Products section when this change's migration runs, because sample data only goes into a new database (M1), and made-up products would otherwise land among the team's real records. In the local copy, `npm run seed` brings in the sample products with the rest.
 
 ## Running and keeping data
 
 - **C1.** `npm run dev` starts the local copy, the same on Mac, Linux and Windows. With Node and uv installed, it fetches what's missing, starts the app and prints its address. It has only been run on a Mac so far: the build avoids anything platform-specific, but Windows and Linux are unproven until someone tries them.
 - **C2.** After the first run, the local copy starts and works with no internet connection. It loads nothing from outside the computer, including fonts. The shared app needs a connection for Supabase, and loads nothing else from outside its own address.
 - **C3.** Every change survives a browser refresh and a restart, in both.
-- **C4.** `npm run seed` resets the local copy to the sample data. `npm run empty` removes every record from it. Both show how many of each record will be lost and go ahead only if `yes` is typed. They leave the made-up teammates in place, so there's still someone to sign in as, and add them if they're missing, as on a database that was never started.
-- **C5.** After `npm run empty`, every screen still works and invites the first record.
+- **C4.** `npm run seed` resets the local copy to the sample data. `npm run empty` removes every record from it, products included. Both show how many of each record will be lost and go ahead only if `yes` is typed. They leave the made-up teammates in place, so there's still someone to sign in as, and add them if they're missing, as on a database that was never started.
+- **C5.** After `npm run empty`, every screen still works and invites the first record, Products included.
 - **C6.** Both commands are safe to run while the local copy is running. A refresh shows the result.
 - **C7.** There are no backups and no export. The local copy keeps everything in `data/accountable.db`, so a reset, `git clean -x`, deleting the folder or losing the computer loses it all, and `docs/STATUS.md` explains that copying the file is the backup. The team's data lives in Supabase, and anything deleted in the shared app is gone.
-- **C11.** Only the local copy has commands to reset or empty it, so no command can wipe the team's data. The shared app starts with the sample data, and `docs/STATUS.md` explains how to clear it in Supabase's SQL editor, leaving the `users` table and the tables' structure in place.
+- **C11.** Only the local copy has commands to reset or empty it, so no command can wipe the team's data. The shared app starts with the sample data, and `docs/STATUS.md` explains how to clear it in Supabase's SQL editor, products included, leaving the `users` table and the tables' structure in place.
 
 ## Commands and first run
 

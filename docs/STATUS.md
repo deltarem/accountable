@@ -265,6 +265,10 @@ A third review of the `mvp` branch against `main` using `docs/REVIEW.md` found t
 
 `npm test` now runs 1,368 tests.
 
+## Products: design
+
+On the `products` branch, `docs/spec.md` and the area files now describe Accountable with a Products section in it, as it will be once the branch merges. One area file is new: `products.md`, with G1 to G11. The spec also gains Q5, which makes `npm test` fail any unit test that takes more than a second. Nothing is built yet, and there's no plan yet.
+
 ## Running Accountable
 
 Accountable runs two ways:

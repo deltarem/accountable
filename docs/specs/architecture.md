@@ -83,21 +83,22 @@ backend/accountable/
     timeline.py                   merged timelines and last-activity queries
     who.py                        who added and last changed: the values a save writes, and the names in replies (U10)
     sample_data.py                sample records and the made-up teammates, dated from a given day
-    routers/                      meta, organizations, contacts, deals, activities, dashboard, search
-backend/tests/
+    routers/                      meta, organizations, contacts, deals, activities, products, dashboard, search
+backend/tests/                    conftest.py also fails any test that takes more than a second (Q5)
 frontend/index.html               the page, with a short script that applies the saved theme before anything draws
 frontend/src/
   main.tsx, App.tsx, styles.css   styles.css holds every color, as light and dark tokens
   test-utils.tsx, test-setup.ts   the unit tests' helpers, and test-supabase.ts, which stands in for Supabase's client
-  lib/                            fetch client, session, query defaults, money and date formatting, useToday, validation,
+  lib/                            fetch client, session, query defaults, money and date formatting, reading typed prices into
+                                  cents, useToday, validation,
                                   the saved theme
   components/                     Shell, SignIn, UserMenu, DataTable, RecordPicker, ConfirmDelete, LoadFailed, Chip and others
   crm/
     queries.ts, deals.ts, Timeline.tsx, Search.tsx and others
-    forms/                        organization, contact, deal and activity forms
+    forms/                        organization, contact, deal, activity and product forms
     board/                        Board, Column, DealCard
     charts/                       RevenueChart, DealsWonChart, SalesFunnel, PipelineBand
-    pages/                        one file per screen
+    pages/                        one file per screen, Products.tsx and Product.tsx included
 frontend/dist/                    the built frontend, from npm start and Render, git-ignored
 e2e/
 data/                             the local copy's database and what it needs to sign its own tokens, created on first
@@ -108,7 +109,7 @@ data/                             the local copy's database and what it needs to
 
 Accountable will grow from a sales CRM into a Business OS, including ERP, so the layout leaves room for the next business area and adds nothing else. `backend/tests/test_layout.py` and `frontend/src/layout.test.ts` enforce the rules a test can check.
 
-- **`crm/` holds everything specific to the sales CRM, on both sides.** A later business area gets a folder beside it with its own tables, routers and pages.
+- **`crm/` holds everything specific to the sales CRM, on both sides.** A later business area gets a folder beside it with its own tables, routers and pages. Products sit in `crm/` for now, because they're what the sales team sells and the search in `crm/` finds them. If quotes and invoices become an area of their own, products move with them.
 - **The top level holds only what every area needs.** Signing in and people are needed by every area, so `auth.py` and `users.py` sit there. `crm/` can import `db.py`, `auth.py` and `users.py`, but they never import `crm/`, so `main.py` passes `db.py` the function that fills a new database. Only `main.py`, `cli.py` and the migrations name `crm/`.
 - **One database setup.** All tables share one `metadata` and one migration history, and anything specific to SQLite or Postgres stays in `db.py` and the migrations. There's no raw SQL, check constraints included, apart from turning on row-level security in the migrations, which SQLAlchemy can't say.
 - **A router file holds its routes and their queries.** The dashboard's figures and funnel live in its router, and search lives in its own. A module outside `routers/` exists only because several files use it.
