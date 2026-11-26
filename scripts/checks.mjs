@@ -3,7 +3,10 @@
 // 1. The quick layers, side by side: the code checks (npm run check only), the type
 //    checks and the unit tests with their coverage.
 // 2. The end-to-end tests, on as many workers as this machine can run well.
-// 3. The speed tests, alone, because their timings need a quiet machine.
+// 3. The speed tests, alone, because their timings need a quiet machine. They also wait
+//    for the checks in any other worktree, and new checks there wait for them.
+//
+// Each run takes a block of ports of its own, so worktrees can run the checks at once.
 //
 // The database path is chosen here, once, because Playwright reads its config again
 // in every worker: a path made there would differ between the servers and the resets.
@@ -13,8 +16,9 @@ import { createRequire } from "node:module";
 import { availableParallelism, tmpdir, totalmem } from "node:os";
 import path from "node:path";
 
-import { ROOT, localEnv, setup, start } from "./setup.mjs";
-import { chooseWorkers } from "./test-plan.mjs";
+import { ROOT, localEnv, setup, start, stop } from "./setup.mjs";
+import { MAX_RUNS, chooseWorkers } from "./test-plan.mjs";
+import { claimBlock, claimQuiet, startBusy } from "./test-sharing.mjs";
 import { readPlaywright, readPytest, readVitest, summarize } from "./test-report.mjs";
 
 const node = process.execPath;
@@ -147,6 +151,12 @@ function chooseBrowserWorkers() {
   }
 }
 
+async function claimPorts(workers) {
+  const claim = await claimBlock(workers);
+  if (!claim) stop(`Every block of test ports is in use. Only ${MAX_RUNS} runs of the checks can share this computer.`);
+  return claim;
+}
+
 /**
  * Runs the type checks and unit tests, plus the code checks and the browser tests when asked.
  * With failuresOnly, a check that passes shows only its line in the summary.
@@ -155,6 +165,7 @@ export async function runChecks({ withCodeChecks, withBrowserTests, failuresOnly
   setup();
   const startedAt = performance.now();
   const workers = withBrowserTests ? chooseBrowserWorkers() : 0;
+  const { block } = await claimPorts(workers);
 
   const folder = mkdtempSync(path.join(tmpdir(), "accountable-test-"));
   const report = (name) => path.join(folder, name);
@@ -166,17 +177,24 @@ export async function runChecks({ withCodeChecks, withBrowserTests, failuresOnly
     ACCOUNTABLE_DB: report("test.db"),
     // Kept between runs to save filling it each time, and apart from the cache npm run dev uses.
     ACCOUNTABLE_VITE_CACHE: path.join(ROOT, "node_modules", ".vite-test"),
+    ACCOUNTABLE_TEST_BLOCK: String(block),
   };
 
+  const endBusy = await startBusy(block);
   const quickLayers = [...(withCodeChecks ? codeChecks : []), ...unitLayers(report, text)];
   const finished = await Promise.all(quickLayers.map((layer) => run(layer, env, failuresOnly)));
 
   if (withBrowserTests) {
     console.log(`\nEnd-to-end tests, on ${workers} ${workers === 1 ? "worker" : "workers"}\n`);
     finished.push(await run(browserLayer("End-to-end", "main", workers, report, text), env));
+  }
+  await endBusy();
 
+  if (withBrowserTests) {
     console.log("\nSpeed tests, on their own\n");
+    const endQuiet = await claimQuiet(block);
     finished.push(await run(browserLayer("Speed", "speed", 1, report, text), env));
+    await endQuiet();
   }
 
   rmSync(folder, { recursive: true, force: true });

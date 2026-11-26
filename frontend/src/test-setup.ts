@@ -1,5 +1,10 @@
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach } from "vitest";
+
+// The checks run these beside the backend's tests, and maybe beside another worktree's
+// checks, so something a test waits for can take more than the default second to show.
+// A wait returns as soon as it's met, so this only matters on a busy machine.
+configure({ asyncUtilTimeout: 5000 });
 
 // jsdom keeps storage and the page's own element between tests, so one test's mode
 // or session would otherwise carry into the next. The page goes first, so nothing

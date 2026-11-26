@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { MAX_WORKERS, chooseWorkers, stackFor } from "./test-plan.mjs";
+import { MAX_RUNS, MAX_WORKERS, QUIET_PORT, chooseWorkers, claimPortsFor, stackFor } from "./test-plan.mjs";
 
 describe("chooseWorkers", () => {
   it("uses 6 workers on 10 cores, the most that still made the tests faster", () => {
@@ -39,23 +39,34 @@ describe("chooseWorkers", () => {
 
 describe("stackFor", () => {
   it("gives each worker its own ports and database", () => {
-    const first = stackFor(0, "/tmp/run/test.db");
-    const second = stackFor(1, "/tmp/run/test.db");
+    const first = stackFor(0, "/tmp/run/test.db", 0);
+    const second = stackFor(1, "/tmp/run/test.db", 0);
     for (const key of ["webPort", "apiPort", "copyWebPort", "copyApiPort", "database"]) {
       expect(first[key]).not.toBe(second[key]);
     }
   });
 
   it("keeps every worker's database in the run's temporary folder", () => {
-    expect(stackFor(3, "/tmp/run/test.db").database).toBe(path.join("/tmp/run", "worker-3", "test.db"));
+    expect(stackFor(3, "/tmp/run/test.db", 2).database).toBe(path.join("/tmp/run", "worker-3", "test.db"));
   });
 
-  it("never lets one range of ports reach another, even at the most workers", () => {
-    const ports = (index) =>
-      Object.values(stackFor(index, "/tmp/run/test.db")).filter((value) => typeof value === "number");
-    const all = Array.from({ length: MAX_WORKERS }, (_, index) => ports(index)).flat();
+  it("never lets one port reach another, at the most workers in the most runs at once", () => {
+    const blocks = Array.from({ length: MAX_RUNS }, (_, block) => block);
+    const workers = Array.from({ length: MAX_WORKERS }, (_, index) => index);
+    const stackPorts = (index, block) =>
+      Object.values(stackFor(index, "/tmp/run/test.db", block)).filter((value) => typeof value === "number");
+    const all = [
+      QUIET_PORT,
+      ...blocks.flatMap((block) => Object.values(claimPortsFor(block))),
+      ...blocks.flatMap((block) => workers.flatMap((index) => stackPorts(index, block))),
+    ];
     expect(new Set(all).size).toBe(all.length);
     expect(all).not.toContain(5173);
     expect(all).not.toContain(8765);
+    expect(Math.max(...all)).toBeLessThan(65536);
+  });
+
+  it.each([-1, 1.5, NaN, MAX_RUNS])("refuses a block of %s", (block) => {
+    expect(() => stackFor(0, "/tmp/run/test.db", block)).toThrow("block of test ports");
   });
 });

@@ -13,6 +13,10 @@ const database = process.env.ACCOUNTABLE_DB;
 if (!database) {
   throw new Error("ACCOUNTABLE_DB isn't set. Run the tests with npm test.");
 }
+// The run's block of ports, which scripts/checks.mjs takes so other worktrees' runs can't use it.
+if (!process.env.ACCOUNTABLE_TEST_BLOCK) {
+  throw new Error("ACCOUNTABLE_TEST_BLOCK isn't set. Run the tests with npm test.");
+}
 const fromData = path.relative(path.join(root, "data"), path.resolve(database));
 if (!fromData.startsWith("..") && !path.isAbsolute(fromData)) {
   throw new Error(`Refusing to run against ${database}: that's where real data lives.`);

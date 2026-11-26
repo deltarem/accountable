@@ -7,6 +7,15 @@ export const READY = "All test servers are up.";
 
 export const MAX_WORKERS = 64;
 
+// Runs of the checks in different worktrees can go at once, and each takes a block of
+// ports of its own. Blocks are 1000 apart, so no range in one reaches a range in
+// another, and block 0 has the ports every run used before there were blocks.
+export const MAX_RUNS = 10;
+const BLOCK_SIZE = 1000;
+
+// Held open by a run, which the system closes however the run ends, so nothing is left to clear up.
+export const QUIET_PORT = 5190;
+
 // Measured on 10 cores: the time stops falling at 6 workers, and 8 to 12 are slower,
 // because each worker is a browser, a backend and a Vite server.
 const WORKERS_PER_CORE = 0.6;
@@ -28,13 +37,29 @@ export function chooseWorkers({ cores, memoryGb, requested }) {
   return Math.max(1, Math.min(byCores, byMemory, MAX_WORKERS));
 }
 
+function checkBlock(block) {
+  if (!Number.isInteger(block) || block < 0 || block >= MAX_RUNS) {
+    throw new Error(`The block of test ports must be a whole number from 0 to ${MAX_RUNS - 1}, not ${block}.`);
+  }
+}
+
+/** The ports a run holds open while it has its block, and while it's busy with anything but the speed tests. */
+export function claimPortsFor(block) {
+  checkBlock(block);
+  return { taken: QUIET_PORT + 1 + block * BLOCK_SIZE, busy: QUIET_PORT + 2 + block * BLOCK_SIZE };
+}
+
+/** The ports one Playwright worker's servers use, in the run's block. */
+export function portsFor(index, block) {
+  checkBlock(block);
+  const offset = block * BLOCK_SIZE + index;
+  return { webPort: 5200 + offset, apiPort: 8800 + offset, copyWebPort: 5300 + offset, copyApiPort: 8900 + offset };
+}
+
 /** Everything one Playwright worker has to itself, so workers can run side by side. */
-export function stackFor(index, database) {
+export function stackFor(index, database, block) {
   return {
-    webPort: 5200 + index,
-    apiPort: 8800 + index,
-    copyWebPort: 5300 + index,
-    copyApiPort: 8900 + index,
+    ...portsFor(index, block),
     database: path.join(path.dirname(database), `worker-${index}`, path.basename(database)),
   };
 }

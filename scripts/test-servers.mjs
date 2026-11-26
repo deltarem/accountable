@@ -11,6 +11,7 @@ const WAIT_MS = 60_000;
 
 const vite = path.join(ROOT, "node_modules", "vite", "bin", "vite.js");
 const workers = Number(process.env.ACCOUNTABLE_TEST_WORKERS);
+const block = Number(process.env.ACCOUNTABLE_TEST_BLOCK);
 const servers = [];
 
 function stopEverything(message) {
@@ -25,7 +26,7 @@ if (runSync(process.execPath, [vite, "optimize", "frontend", "--logLevel", "warn
 }
 
 for (let index = 0; index < workers; index += 1) {
-  const stack = stackFor(index, process.env.ACCOUNTABLE_DB);
+  const stack = stackFor(index, process.env.ACCOUNTABLE_DB, block);
   mkdirSync(path.dirname(stack.database), { recursive: true });
   const env = {
     ...localEnv(),
