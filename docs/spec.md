@@ -101,7 +101,7 @@ Around them, a search box in the top bar finds any organization, contact, deal o
 - **Q2.** No errors in the browser's console, on any screen, at any time.
 - **Q3.** All controls can be reached by keyboard, with a visible focus ring. Animations respect the system's reduced motion setting.
 - **Q4.** Chrome is the one supported and tested browser. Safari and Firefox may work, but nobody has checked.
-- **Q5.** Every unit test, backend and frontend, runs in under a second on the developer's computer, because CI runs on a much slower machine. `npm test` fails any unit test that takes longer ([Testing](specs/testing.md#testing)).
+- **Q5.** Every unit test, backend and frontend, runs in under a second on the developer's computer, because CI runs on a much slower machine. `npm test` fails any unit test that takes longer, apart from in CI, where it names them ([Testing](specs/testing.md#testing)).
 
 ## Area files
 

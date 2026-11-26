@@ -62,7 +62,8 @@ scripts/
   test-plan.mjs                   how npm test shares out the machine, and where each worker's servers are, in each run's block of ports
   test-sharing.mjs                lets worktrees run the checks at once: a block of ports each, shared end-to-end workers, and quiet for the speed tests
   test-servers.mjs                starts one backend and one Vite server for each Playwright worker
-  test-report.mjs                 turns what each test runner wrote into the summary that ends npm test
+  test-report.mjs                 turns what each test runner wrote into the summary that ends npm test, failing any unit
+                                  test that took a second or more (Q5)
   agent-guard-env.mjs             the coding agent's hook that stops any edit to .env
   agent-guard-read-only.mjs       the reviewer's hook that lets its shell run only commands that read
   agent-guard-playwright-folder.mjs   ui-check's hook that keeps the files it saves in .playwright-mcp/
@@ -84,7 +85,7 @@ backend/accountable/
     who.py                        who added and last changed: the values a save writes, and the names in replies (U10)
     sample_data.py                sample records and the made-up teammates, dated from a given day
     routers/                      meta, organizations, contacts, deals, activities, products, dashboard, search
-backend/tests/                    conftest.py also fails any test that takes more than a second (Q5)
+backend/tests/
 frontend/index.html               the page, with a short script that applies the saved theme before anything draws
 frontend/src/
   main.tsx, App.tsx, styles.css   styles.css holds every color, as light and dark tokens

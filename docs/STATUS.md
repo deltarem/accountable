@@ -267,7 +267,7 @@ A third review of the `mvp` branch against `main` using `docs/REVIEW.md` found t
 
 ## Products: design
 
-On the `products` branch, `docs/spec.md` and the area files now describe Accountable with a Products section in it, as it will be once the branch merges. One area file is new: `products.md`, with G1 to G11. The spec also gains Q5, which makes `npm test` fail any unit test that takes more than a second. Nothing is built yet, and there's no plan yet.
+On the `products` branch, `docs/spec.md` and the area files now describe Accountable with a Products section in it, as it will be once the branch merges. One area file is new: `products.md`, with G1 to G11. The spec also gains Q5, which makes `npm test` fail any unit test that takes more than a second. The build plan is in `docs/changes/products/plan.md`, in six steps for one agent, starting with the time limit so every new test is held to it. While planning, the limit in the spec changed from cutting each test off at a second to failing the run from the timings the runners already write, with CI naming slow tests without failing. Nothing is built yet.
 
 ## Running Accountable
 

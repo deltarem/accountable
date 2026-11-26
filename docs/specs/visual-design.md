@@ -153,7 +153,7 @@ Plain business English, short labels, no exclamation marks.
 | Price errors | Enter a price. Enter a price in dollars and cents, such as 49.50. Enter a price of $1,000,000.00 or less. |
 | Errors | Enter a name. Choose an organization. Enter your email. |
 | Empty table | No deals yet. Add the first one. |
-| No archived products | No archived products. |
+| Empty product views | No archived products. No active products. |
 | Empty funnel | Deals will show here once you've added some. |
 | Empty follow-ups | No follow-ups due. |
 | Connection lost, local copy | Can't reach Accountable. Check that it's still running. |
