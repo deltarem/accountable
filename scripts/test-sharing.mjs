@@ -1,13 +1,14 @@
 // Lets runs of the checks in different worktrees share this computer. Each run takes a
-// block of ports of its own, and the speed tests wait until no other run is busy, because
-// their timings only mean something on a quiet machine.
+// block of ports of its own. The end-to-end tests share the workers this computer can run
+// well, so two runs' tests together don't overload it. The speed tests wait until no
+// other run is busy, because their timings only mean something on a quiet machine.
 //
 // Every claim is a port held open on 127.0.0.1. The system closes it when the run ends,
 // however it ends, so a run that crashed leaves nothing behind for the next one to clear.
 
 import net from "node:net";
 
-import { MAX_RUNS, QUIET_PORT, claimPortsFor, portsFor } from "./test-plan.mjs";
+import { MAX_RUNS, MAX_WORKERS, QUIET_PORT, SEAT_LOCK_PORT, claimPortsFor, portsFor, seatPort } from "./test-plan.mjs";
 
 const CHECK_EVERY_MS = 200;
 const LONGEST_WAIT_MS = 30 * 60_000;
@@ -15,13 +16,22 @@ const LONGEST_WAIT_MS = 30 * 60_000;
 export const WAITING_FOR_SPEED_TESTS = "Waiting for the speed tests in another worktree to finish.";
 export const WAITING_FOR_QUIET =
   "Waiting for the checks in another worktree to finish, so the speed tests have the computer to themselves.";
+export const WAITING_FOR_SEATS =
+  "Waiting for the end-to-end tests in another worktree to finish, so the two don't overload this computer.";
 
 function workerPorts(block, workers) {
   return Array.from({ length: workers }, (_, index) => Object.values(portsFor(index, block))).flat();
 }
 
 /** Where the claims are. The unit tests pass their own, so they never meet a real run's. */
-export const COMPUTER = { runs: MAX_RUNS, quiet: QUIET_PORT, claims: claimPortsFor, workerPorts };
+export const COMPUTER = {
+  runs: MAX_RUNS,
+  quiet: QUIET_PORT,
+  claims: claimPortsFor,
+  workerPorts,
+  seatLock: SEAT_LOCK_PORT,
+  seats: Array.from({ length: MAX_WORKERS }, (_, seat) => seatPort(seat)),
+};
 
 /** Resolves to the open server, or to the error code that stopped it opening. */
 function listen(port, host = "127.0.0.1") {
@@ -108,6 +118,41 @@ export async function startBusy(block, computer = COMPUTER) {
     told = true;
     await poll(async () => !(await isHeld(computer.quiet)));
   }
+}
+
+// A seat port the system keeps back is no seat at all, so the next one stands in for it.
+async function takeFreeSeats(wanted, budget, computer) {
+  const taken = [];
+  let seats = 0;
+  for (const port of computer.seats) {
+    if (seats === budget || taken.length === wanted) break;
+    const result = await listen(port);
+    if (isOpen(result)) taken.push(result);
+    if (isOpen(result) || result === "EADDRINUSE") seats += 1;
+  }
+  return taken;
+}
+
+/**
+ * Waits until this run's end-to-end workers fit in what's left of the computer's budget,
+ * and holds their seats until the returned function is called. A run asking for more
+ * workers than the budget waits for all of it.
+ */
+export async function claimSeats(workers, budget, computer = COMPUTER) {
+  const wanted = Math.min(workers, budget);
+  let told = false;
+  return poll(async () => {
+    // One run at a time, so two runs can't each take half of what both need and both wait.
+    const lock = await take(computer.seatLock);
+    if (!lock) return null;
+    const taken = await takeFreeSeats(wanted, budget, computer);
+    await close(lock);
+    if (taken.length === wanted) return () => Promise.all(taken.map(close)).then(() => {});
+    await Promise.all(taken.map(close));
+    if (!told) console.log(WAITING_FOR_SEATS);
+    told = true;
+    return null;
+  });
 }
 
 /**

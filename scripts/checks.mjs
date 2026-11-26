@@ -2,7 +2,8 @@
 //
 // 1. The quick layers, side by side: the code checks (npm run check only), the type
 //    checks and the unit tests with their coverage.
-// 2. The end-to-end tests, on as many workers as this machine can run well.
+// 2. The end-to-end tests, on as many workers as this machine can run well. Runs in other
+//    worktrees share those workers, so one run's tests may wait for another's.
 // 3. The speed tests, alone, because their timings need a quiet machine. They also wait
 //    for the checks in any other worktree, and new checks there wait for them.
 //
@@ -18,7 +19,7 @@ import path from "node:path";
 
 import { ROOT, localEnv, setup, start, stop } from "./setup.mjs";
 import { MAX_RUNS, chooseWorkers } from "./test-plan.mjs";
-import { claimBlock, claimQuiet, startBusy } from "./test-sharing.mjs";
+import { claimBlock, claimQuiet, claimSeats, startBusy } from "./test-sharing.mjs";
 import { readPlaywright, readPytest, readVitest, summarize } from "./test-report.mjs";
 
 const node = process.execPath;
@@ -138,13 +139,11 @@ function run(layer, env, failuresOnly) {
   });
 }
 
+const computer = { cores: availableParallelism(), memoryGb: totalmem() / 2 ** 30 };
+
 function chooseBrowserWorkers() {
   try {
-    return chooseWorkers({
-      cores: availableParallelism(),
-      memoryGb: totalmem() / 2 ** 30,
-      requested: process.env.ACCOUNTABLE_TEST_WORKERS,
-    });
+    return chooseWorkers({ ...computer, requested: process.env.ACCOUNTABLE_TEST_WORKERS });
   } catch (error) {
     console.error(error.message);
     process.exit(1);
@@ -186,7 +185,10 @@ export async function runChecks({ withCodeChecks, withBrowserTests, failuresOnly
 
   if (withBrowserTests) {
     console.log(`\nEnd-to-end tests, on ${workers} ${workers === 1 ? "worker" : "workers"}\n`);
+    // Every run on this computer shares the workers it can run well, which is what one run gets.
+    const endSeats = await claimSeats(workers, chooseWorkers(computer));
     finished.push(await run(browserLayer("End-to-end", "main", workers, report, text), env));
+    await endSeats();
   }
   await endBusy();
 

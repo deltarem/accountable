@@ -2,7 +2,16 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { MAX_RUNS, MAX_WORKERS, QUIET_PORT, chooseWorkers, claimPortsFor, stackFor } from "./test-plan.mjs";
+import {
+  MAX_RUNS,
+  MAX_WORKERS,
+  QUIET_PORT,
+  SEAT_LOCK_PORT,
+  chooseWorkers,
+  claimPortsFor,
+  seatPort,
+  stackFor,
+} from "./test-plan.mjs";
 
 describe("chooseWorkers", () => {
   it("uses 6 workers on 10 cores, the most that still made the tests faster", () => {
@@ -57,6 +66,8 @@ describe("stackFor", () => {
       Object.values(stackFor(index, "/tmp/run/test.db", block)).filter((value) => typeof value === "number");
     const all = [
       QUIET_PORT,
+      SEAT_LOCK_PORT,
+      ...workers.map(seatPort),
       ...blocks.flatMap((block) => Object.values(claimPortsFor(block))),
       ...blocks.flatMap((block) => workers.flatMap((index) => stackPorts(index, block))),
     ];

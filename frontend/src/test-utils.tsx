@@ -71,9 +71,9 @@ export function renderApp(ui: ReactNode) {
   return { ...view, client };
 }
 
-export function user(options: Parameters<typeof userEvent.setup>[0] = {}) {
+export function user() {
   // Radix sets pointer-events on the body while a dialog is open.
-  return userEvent.setup({ pointerEventsCheck: 0, ...options });
+  return userEvent.setup({ pointerEventsCheck: 0 });
 }
 
 // The board's layout. jsdom lays nothing out, so dnd-kit would find every card and

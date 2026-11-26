@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -254,22 +254,16 @@ describe("after a drop", () => {
   }
 
   it("keeps the gap open until the new order arrives", async () => {
-    // Only the test moves the clock, so a slow, busy machine can't use up the board's
-    // wait for the new order before the gap is checked.
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    try {
-      const { showDeals, aBelowB } = threeCards();
-      card("A").focus();
-      const person = user({ advanceTimers: vi.advanceTimersByTime });
-      for (const key of ["Space", "ArrowDown", "Space"]) await person.keyboard(`[${key}]`);
-      expect(screen.getByTestId("drop-gap")).toBeTruthy();
+    const { showDeals, aBelowB } = threeCards();
+    await press("A", "Space", "ArrowDown");
+    // Dropped and checked with no pause between, so however busy the machine is, the
+    // board's own limit on waiting for the new order can't run out first.
+    fireEvent.keyDown(card("A"), { code: "Space", key: " " });
+    expect(screen.getByTestId("drop-gap")).toBeTruthy();
 
-      showDeals(aBelowB);
-      expect(screen.queryByTestId("drop-gap")).toBeNull();
-      expect(namesIn("proposal")).toEqual(["B", "A", "C"]);
-    } finally {
-      vi.useRealTimers();
-    }
+    showDeals(aBelowB);
+    expect(screen.queryByTestId("drop-gap")).toBeNull();
+    expect(namesIn("proposal")).toEqual(["B", "A", "C"]);
   });
 
   it("closes the gap anyway if the new order is slow to come", async () => {

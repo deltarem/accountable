@@ -60,7 +60,7 @@ scripts/
   checks.mjs                      runs the layers behind both, side by side where it can, and prints one summary
   data.mjs                        npm run seed and npm run empty
   test-plan.mjs                   how npm test shares out the machine, and where each worker's servers are, in each run's block of ports
-  test-sharing.mjs                lets worktrees run the checks at once: a block of ports each, and quiet for the speed tests
+  test-sharing.mjs                lets worktrees run the checks at once: a block of ports each, shared end-to-end workers, and quiet for the speed tests
   test-servers.mjs                starts one backend and one Vite server for each Playwright worker
   test-report.mjs                 turns what each test runner wrote into the summary that ends npm test
   agent-guard-env.mjs             the coding agent's hook that stops any edit to .env

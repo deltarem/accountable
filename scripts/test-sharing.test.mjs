@@ -2,9 +2,18 @@ import net from "node:net";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { WAITING_FOR_QUIET, WAITING_FOR_SPEED_TESTS, claimBlock, claimQuiet, startBusy } from "./test-sharing.mjs";
+import {
+  WAITING_FOR_QUIET,
+  WAITING_FOR_SEATS,
+  WAITING_FOR_SPEED_TESTS,
+  claimBlock,
+  claimQuiet,
+  claimSeats,
+  startBusy,
+} from "./test-sharing.mjs";
 
 const RUNS = 3;
+const SEATS = 3;
 const toRelease = [];
 
 function open(port = 0) {
@@ -25,15 +34,17 @@ async function freePorts(count) {
   return ports;
 }
 
-/** A computer with three blocks, each with one claim, one busy port and two ports per worker. */
+/** A computer with three blocks, each with a claim, a busy port and two ports per worker, and three seats. */
 async function makeComputer() {
-  const ports = await freePorts(1 + RUNS * 4);
+  const ports = await freePorts(1 + RUNS * 4 + 1 + SEATS);
   const block = (index) => ports.slice(1 + index * 4, 5 + index * 4);
   return {
     runs: RUNS,
     quiet: ports[0],
     claims: (index) => ({ taken: block(index)[0], busy: block(index)[1] }),
     workerPorts: (index, workers) => block(index).slice(2, 2 + workers * 2),
+    seatLock: ports[1 + RUNS * 4],
+    seats: ports.slice(2 + RUNS * 4),
   };
 }
 
@@ -75,6 +86,45 @@ describe("claimBlock", () => {
     const computer = await makeComputer();
     for (let run = 0; run < RUNS; run += 1) await claim(1, computer);
     expect(await claim(1, computer)).toBeNull();
+  });
+});
+
+describe("claimSeats", () => {
+  it("holds back a run's end-to-end tests while another run has the computer's workers", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const computer = await makeComputer();
+    const endFirst = await claimSeats(2, 2, computer);
+
+    const second = claimSeats(1, 2, computer);
+    expect(await stillWaiting(second)).toBe(true);
+    expect(log).toHaveBeenCalledWith(WAITING_FOR_SEATS);
+
+    await endFirst();
+    await (
+      await second
+    )();
+  });
+
+  it("lets runs whose workers fit in the computer's go at once", async () => {
+    const computer = await makeComputer();
+    const endFirst = await claimSeats(1, 2, computer);
+    const endSecond = await claimSeats(1, 2, computer);
+    await endFirst();
+    await endSecond();
+  });
+
+  it("gives a run that asks for more workers than the computer's all of them, once they're free", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const computer = await makeComputer();
+    const endFirst = await claimSeats(1, 2, computer);
+
+    const greedy = claimSeats(5, 2, computer);
+    expect(await stillWaiting(greedy)).toBe(true);
+
+    await endFirst();
+    await (
+      await greedy
+    )();
   });
 });
 
