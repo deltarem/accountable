@@ -26,7 +26,7 @@ Accountable is a business management system: a sales CRM that will grow into a f
 | Deals | The potential sales, each with its stage, value, close date and timeline |
 | Pipeline | The deals as cards on a board, one column per stage, moved by dragging |
 
-Around them, a search box in the top bar finds any organization, contact or deal, and a menu under your initials holds the theme and Sign out.
+Around them, a search box in the top bar finds any organization, contact or deal, and a menu under your initials holds the theme, the company settings and Sign out. The **company settings** are the business's own details, ready for the quotes and invoices that come later: its name, address, email and phone, its tax label and rate, its payment terms, and the prefixes for quote and invoice numbers. The team shares one set, and anyone can change them.
 
 **Four kinds of record:**
 
@@ -45,6 +45,8 @@ Around them, a search box in the top bar finds any organization, contact or deal
 - A history of every change. Each record keeps who added it and who last changed it, nothing in between.
 - A layout for phones
 - AI features
+- Quotes and invoices, so nothing uses the company settings yet
+- More than one tax rate, or a logo
 - Email, calendar or phone integrations
 - Currencies other than US dollars
 - Reports beyond the dashboard
@@ -76,6 +78,10 @@ Around them, a search box in the top bar finds any organization, contact or deal
 | Overdue follow-up | Not done, with a follow-up date before today |
 | Upcoming follow-up | Not done, with a follow-up date of today or later |
 | Blank link | A deal's organization or main contact, or a contact's organization, cleared by a delete. Shown as "None". |
+| Company settings | The team's one set of business details for its documents, on the Company settings page ([company-settings.md](specs/company-settings.md)) |
+| Tax rate | A percentage from 0 to 100 with up to three decimal places, such as 8.875%, kept exactly |
+| Payment terms | How many days a customer has to pay, a whole number from 0 to 365 |
+| Quote prefix, invoice prefix | The start of every quote or invoice number, such as QT- and INV- |
 
 | Stage | Usual probability |
 |---|---|
@@ -102,13 +108,14 @@ Each area of the product has a file in `docs/specs/` with its requirements and, 
 | File | What it covers | Requirements |
 |---|---|---|
 | [shell.md](specs/shell.md) | The top bar, addresses, missing pages, the connection message, failed reads, the menu, the theme, and the shell's screen | N1 to N7, L1 to L5 |
+| [company-settings.md](specs/company-settings.md) | The company settings: their fields and rules, who changed them last, the starting settings, and the page's screen | B1 to B13 |
 | [sign-in.md](specs/sign-in.md) | Signing in and out, names and initials, who added and changed each record, the local copy's made-up teammates, and the sign-in screen | U1 to U16 |
 | [search.md](specs/search.md) | The top bar's search, and its screen | K1 to K8 |
 | [records.md](specs/records.md) | Organizations, contacts and deals: the tables, adding and editing, deleting, the record pages, and their screens | T1 to T10, F1 to F12, D1 to D3, R1 to R6 |
 | [deals.md](specs/deals.md) | Stage changes, the pipeline board and its screen | S1 to S9, P1 to P11 |
 | [activities.md](specs/activities.md) | Activities, follow-ups and timelines | A1 to A7 |
 | [dashboard.md](specs/dashboard.md) | The dashboard's figures, charts and lists, and its screen | H1 to H9 |
-| [running.md](specs/running.md) | The local copy and the shared app, sample data, keeping data, and the commands and first run | M1 to M7, C1 to C11 |
+| [running.md](specs/running.md) | The local copy and the shared app, sample data, keeping data, and the commands and first run | M1 to M8, C1 to C11 |
 | [deploy.md](specs/deploy.md) | The shared app on Render: `render.yaml`, building, starting, settings and the free plans' limits | W1 to W9 |
 
 **Across every area**

@@ -18,9 +18,10 @@ Every test runs as the local copy, on SQLite. The checks never read `.env`, and 
 - Dashboard figures against a small dataset with known answers, including month boundaries, an edited close date and a reopened deal
 - The funnel, including skipped stages, a deal moved backwards, a lost deal and a deal added at Won
 - All three timelines, with no duplicates
-- Sample data meets every line of M3, including when seeded on the 1st of a month, and M7
+- Sample data meets every line of M3, including when seeded on the 1st of a month, M7 and M8
 - An emptied database stays empty after a restart
-- Migrations build the same tables as `tables.py`
+- Migrations build the same tables as `tables.py` and `company.py`
+- Company settings: every rule and message in B3 and B4, using the cases in `shared/company-settings-cases.json`, including a tax rate of 150, of 8.8751, of 0 and of 100, payment terms of 400, of -1 and of 30.5, a prefix of 11 characters or with a space, and a blank company name. A save that changes nothing leaves who and when alone, a save that changes a field records the person from the token, and a request body naming someone changes nothing (B7). Only the fields sent change (B8). The migration gives a database that already has records B12's settings with nobody recorded, seeding writes B11's, and emptying leaves them (B13)
 - The migrations, written out for Postgres by Alembic's offline mode, which needs no database, skip the SQLite-only steps, make `deals.value` a `bigint` and turn on row-level security for every table, Alembic's own included
 - The startup check for row-level security, given a list of tables with it on and off, refuses to start and names each table that has it off
 - Every route the app has gets the security and bad-input checks, taken from the app's own list of routes. That includes refusing a request with no token, an expired one, one signed with another key and one issued for something other than a signed-in user, in the local copy and in the shared app
@@ -40,6 +41,8 @@ Every test runs as the local copy, on SQLite. The checks never read `.env`, and 
 - The menu, and the theme: each choice, the saved choice, one that can't be read, and System following the device as it changes, with the browser's `prefers-color-scheme` stood in
 - The search box: the pause before searching, an older reply arriving late, the groups, "See all", the keyboard, each message in K7, trying a failed search again with a click or the down arrow, and telling screen readers whether its results are open
 - Who added and last changed, on each record page and timeline, including a record with no one recorded
+- The Company settings page: each message in B3 beside its field, using the same shared cases as the backend, a save sending only what changed, the backend's field messages landing beside their fields, a failed save keeping what was typed, a refetch leaving unsaved changes alone (B9), a failed read showing no form (B10), and both lines from B7
+- `frontend/src/layout.test.ts` also checks that `company/` never imports `crm/`
 
 **Colors in one place:** `frontend/src/colors.test.ts` fails if any file in `frontend/src` other than `styles.css` names a color value, such as `#fff` or `rgba(...)`, so every color comes from a token and has a dark value. It also fails if the dark block sets a token that `@theme` doesn't have, so a misspelled one can't go unnoticed.
 
@@ -90,6 +93,7 @@ Every test runs as the local copy, on SQLite. The checks never read `.env`, and 
 | The menu and the theme | N7, L1 to L4 | `e2e/menu.spec.ts`, `frontend/src/lib/theme.test.ts`, `frontend/src/components/UserMenu.test.tsx` |
 | Signing in and out, and who added | U1, U4 to U7, U13 to U15, R6, A7, S2 | `e2e/sign-in.spec.ts`, `e2e/records.spec.ts`, `e2e/activities.spec.ts` |
 | Search | K1 to K8 | `e2e/search.spec.ts`, `backend/tests/test_search.py`, `frontend/src/crm/Search.test.tsx` |
+| Company settings: opening them from the menu, saving, a second teammate seeing the same ones, refused values through the page and the API, who changed them last, seed and empty | B1 to B13, M8 | `e2e/settings.spec.ts`, `backend/tests/test_company.py`, `frontend/src/company/CompanySettings.test.tsx` |
 | Look and brand | Visual design, L5 | By hand, against the design reference and the dark mode screenshots |
 | Layout, console, keyboard, Chrome | N3, Q2, Q3, Q4 | `e2e/quality.spec.ts` |
 | Speed at the limits | Q1 | `e2e/stress.spec.ts` |
@@ -102,4 +106,4 @@ Every test runs as the local copy, on SQLite. The checks never read `.env`, and 
 
 **By hand:** tests can't settle everything. The app is also used in Chrome at 1440 by 900 and 1280 by 720 the way a salesperson would, including with an emptied database, after a restart and with the network off, and each screen is compared with the design reference, in light mode and dark mode. The project owner checks that someone with no instructions can answer the five questions from the dashboard (H9), and has the final say, including on how it looks. Passing tests is necessary, but it isn't enough.
 
-The shared app is checked by hand too, because no test touches Supabase. The project owner runs `npm start` against an empty Supabase database, which proves that every migration runs from empty on Postgres and that the startup check for row-level security passes. Then they sign in as their Supabase user, and go through the change's success criteria: a wrong password, signing out, who added each record, search and the theme. Once `npm start` has built the tables, the coding agent uses the Supabase MCP server to confirm that row-level security is on for every table and to run Supabase's security advisors, reporting only. After the first deploy, the same checks run on the `onrender.com` address.
+The shared app is checked by hand too, because no test touches Supabase. The project owner runs `npm start` against an empty Supabase database, which proves that every migration runs from empty on Postgres and that the startup check for row-level security passes. Then they sign in as their Supabase user, and go through the change's success criteria: a wrong password, signing out, who added each record, search, the theme, and the company settings, saved by one person and seen by another. The first start after this change on a Supabase database that already has the team's records shows B12's settings, with nobody recorded. Once `npm start` has built the tables, the coding agent uses the Supabase MCP server to confirm that row-level security is on for every table and to run Supabase's security advisors, reporting only. After the first deploy, the same checks run on the `onrender.com` address.

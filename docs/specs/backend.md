@@ -82,6 +82,21 @@ A check constraint makes sure exactly one of `contact_id` and `deal_id` is set.
 
 Stage changes get their own table because they aren't activities: they have no type or description, can't be edited, and give the funnel its history.
 
+**company_settings**
+
+| Column | Type | Notes |
+|---|---|---|
+| id | integer | always 1. A check constraint, written with SQLAlchemy, keeps the table to that one row |
+| company_name | text | required |
+| address | text | optional, line breaks kept |
+| email, phone, tax_label | text | optional |
+| tax_rate | integer | thousandths of a percent, 0 to 100,000, so 8.875% is 8875 and every rate is exact |
+| payment_terms_days | integer | 0 to 365 |
+| quote_prefix, invoice_prefix | text | required, 1 to 10 letters, digits or hyphens |
+| updated_by | foreign key to users | who last changed them (B7). Blank until someone does, on a database from before the table existed |
+
+The table holds the team's one set of company settings (B1), and the routes in the API below are the only way to change them. It's needed by every area that will make documents, not only the sales CRM, so it lives in `company.py` at the top level, beside `users.py`. The migration that adds it also adds its one row, with B12's values, so every database has settings from then on and the API never has to answer that there are none. On a new database the sample data then replaces them with B11's. Seeding writes B11's values again, and emptying leaves the row alone. The checks in B3 live in the API, as the other rules on values do.
+
 Notes:
 
 - **Links:** required links are enforced by the API, not the database, because deletes have to be able to blank them. The database columns allow blank.
@@ -118,7 +133,9 @@ Every write takes one lock in `db.py`, because FastAPI runs requests on separate
 
 Last activity in the list replies comes from grouped queries, one for each kind of record, not one query per row, so the lists stay quick at the Q1 limits.
 
-Reset and empty delete rows inside a transaction and leave the file and tables in place. This is why they're safe while the app is running, and why an emptied database isn't treated as new.
+Reset and empty delete rows inside a transaction and leave the file and tables in place. This is why they're safe while the app is running, and why an emptied database isn't treated as new. Reset writes the made-up company's values over the one `company_settings` row in the same transaction, and empty leaves it alone (B13).
+
+A save to the company settings sets `updated_by` from the token and `updated_at` to now, but only if it alters a value once B4 has tidied it, as in U10.
 
 ## API
 
@@ -143,6 +160,8 @@ All routes are under `/api` and use JSON. Every route needs a valid token in the
 | `DELETE /activities/{id}` | Delete |
 | `GET /dashboard` | Everything on the dashboard, in one reply |
 | `GET /search?q=` | Up to 5 organizations, contacts and deals whose names hold `q`, with a count for each kind (K1 to K5). `q` is 1 to 100 characters once the spaces at its ends are gone. |
+| `GET /settings` | The company settings, with who last changed them and when |
+| `PATCH /settings` | Change the fields sent, checked as in B3 to B5. Returns the settings as `GET /settings` does. |
 
 The local copy also has these two, which need no token and which the shared app doesn't have (U16):
 
@@ -154,6 +173,8 @@ The local copy also has these two, which need no token and which the shared app 
 Signing in to the shared app goes from the browser straight to Supabase Auth, so it has no route here.
 
 The single-record replies for organizations, contacts and deals carry `created_by` and `updated_by`, each with the person's id and name, or null for a record from before sign-in, and `created_at` and `updated_at` in UTC. Timeline entries carry `created_by` the same way. Names follow U8. A record counts as changed since it was added when its `updated_at` differs from its `created_at`, so an add sets both from one moment, and the changes the app makes around a save, such as renumbering a column, leave the other records' `updated_at` alone as well as their `updated_by` (U10, R6). Records from before sign-in, with no one recorded, can have their two times a moment apart, so on those the record pages treat a difference under a second as no change.
+
+The settings replies carry `company_name`, `address`, `email`, `phone`, `tax_label`, `tax_rate`, `payment_terms_days`, `quote_prefix` and `invoice_prefix`, with null for a blank optional field, plus `updated_by` and `updated_at` as on records, `updated_by` being null until someone has changed them (B7). `tax_rate` travels as a string, such as `"8.875"`, `"8.5"`, `"20"` or `"0"`, with any zeros at the end of the decimal part dropped, so no rate passes through a floating-point number on either side. `PATCH /settings` takes it as a string the same way. There's no route to add or delete settings. Sending `null` for a required field is a validation error with that field's message.
 
 The list routes return every row, and the table does its searching, sorting and paging in the browser. At these limits that's small and quick, and it makes typing in the search box feel instant.
 

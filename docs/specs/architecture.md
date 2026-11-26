@@ -49,7 +49,8 @@ lefthook.yml                      the git pre-commit hook
 .claude/agents/                   reviewer.md and ui-check.md, the coding agent's two subagents
 .claude/skills/brand/SKILL.md     the brand skill: fonts, colors and tone
 .mcp.json                         the Playwright MCP server, which ui-check uses
-shared/                           expected-revenue-cases.json and website-cases.json, read by both unit test suites
+shared/                           expected-revenue-cases.json, website-cases.json and company-settings-cases.json, read by
+                                  both unit test suites
 scripts/
   setup.mjs                       shared setup, used by the scripts below that start things, Node built-ins only. It also
                                   gives the local commands an environment without the Supabase settings (C9)
@@ -74,6 +75,9 @@ backend/accountable/
   db.py                           engine for SQLite or Postgres, metadata, foreign keys, write lock, migrations on start
   auth.py                         the token check, the signed-in person and GET /me, and the local copy's sign-in routes
   users.py                        the users table, names and initials
+  company.py                      the company_settings table, the checks on its values, and GET and PATCH /api/settings.
+                                  The migration that adds the table holds B12's starting values itself, so it never
+                                  changes when company.py does
   cli.py                          seed and empty commands, for the local copy only
   migrations/                     Alembic, with batch mode on
   crm/
@@ -82,7 +86,8 @@ backend/accountable/
     rules.py                      stage-change rules, usual probabilities, expected revenue
     timeline.py                   merged timelines and last-activity queries
     who.py                        who added and last changed: the values a save writes, and the names in replies (U10)
-    sample_data.py                sample records and the made-up teammates, dated from a given day
+    sample_data.py                sample records, the made-up teammates and the made-up company's settings, dated from a
+                                  given day
     routers/                      meta, organizations, contacts, deals, activities, dashboard, search
 backend/tests/
 frontend/index.html               the page, with a short script that applies the saved theme before anything draws
@@ -92,6 +97,7 @@ frontend/src/
   lib/                            fetch client, session, query defaults, money and date formatting, useToday, validation,
                                   the saved theme
   components/                     Shell, SignIn, UserMenu, DataTable, RecordPicker, ConfirmDelete, LoadFailed, Chip and others
+  company/                        CompanySettings.tsx, the Company settings page, and its form's checks
   crm/
     queries.ts, deals.ts, Timeline.tsx, Search.tsx and others
     forms/                        organization, contact, deal and activity forms
@@ -109,10 +115,10 @@ data/                             the local copy's database and what it needs to
 Accountable will grow from a sales CRM into a Business OS, including ERP, so the layout leaves room for the next business area and adds nothing else. `backend/tests/test_layout.py` and `frontend/src/layout.test.ts` enforce the rules a test can check.
 
 - **`crm/` holds everything specific to the sales CRM, on both sides.** A later business area gets a folder beside it with its own tables, routers and pages.
-- **The top level holds only what every area needs.** Signing in and people are needed by every area, so `auth.py` and `users.py` sit there. `crm/` can import `db.py`, `auth.py` and `users.py`, but they never import `crm/`, so `main.py` passes `db.py` the function that fills a new database. Only `main.py`, `cli.py` and the migrations name `crm/`.
+- **The top level holds only what every area needs.** Signing in and people are needed by every area, so `auth.py` and `users.py` sit there. So do the company settings, in `company.py`, because every area that makes documents will need them. `crm/` can import `db.py`, `auth.py`, `users.py` and `company.py`, but they never import `crm/`, so `main.py` passes `db.py` the function that fills a new database. Only `main.py`, `cli.py` and the migrations name `crm/`.
 - **One database setup.** All tables share one `metadata` and one migration history, and anything specific to SQLite or Postgres stays in `db.py` and the migrations. There's no raw SQL, check constraints included, apart from turning on row-level security in the migrations, which SQLAlchemy can't say.
 - **A router file holds its routes and their queries.** The dashboard's figures and funnel live in its router, and search lives in its own. A module outside `routers/` exists only because several files use it.
-- **`components/` and `lib/` hold only what any area could use.** Anything that knows about deals or contacts goes in `crm/`. The search box knows about records, so it's in `crm/`, and `App.tsx` hands it to the shell.
+- **`components/` and `lib/` hold only what any area could use.** Anything that knows about deals or contacts goes in `crm/`. The Company settings page is in `company/`, beside `crm/`, for the same reason as `company.py`, and it never imports `crm/`. Anything both need, such as turning the API's field messages into form errors, lives in `lib/` or `components/`. The search box knows about records, so it's in `crm/`, and `App.tsx` hands it to the shell.
 - **Only `lib/api.ts` talks to the backend,** so every reply gets the same error handling, **and only `lib/session.ts` talks to Supabase.**
 - **No extra layers.** No service or repository classes, base classes, generic routers that build routes for each record, or a folder per record type. Split a file when it's become hard to work in, not before.
 - **Tests stay flat for now.** Nothing imports them, so moving them later costs nothing.

@@ -39,3 +39,4 @@ Part of the [spec](../spec.md), which has the summary, the terms, the quality ru
 
 - The API accepts only JSON request bodies.
 - Website links must be `http` or `https`, so a saved value can't run a script when clicked.
+- Anyone signed in can change the company settings, as they can every record, because there are no roles yet. The backend takes who changed them from the token (B7), and the `company_settings` table has row-level security on, like every other table. The settings hold the business's own contact details, not secrets, which is why they're in the database and not in `.env` or Render's settings.

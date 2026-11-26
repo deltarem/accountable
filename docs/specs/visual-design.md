@@ -133,7 +133,10 @@ Plain business English, short labels, no exclamation marks.
 |---|---|
 | Buttons | Add deal, Save deal, Delete deal, Log activity |
 | Menu button, for screen readers | Menu for Alex Rivera |
-| Menu | Theme. Light. Dark. System. Sign out. |
+| Menu | Theme. Light. Dark. System. Company settings. Sign out. |
+| Company settings | Company settings. Company. Tax and payment. Document numbers. Save settings. Settings saved. |
+| Company settings, who changed them | Last changed by Dana Whitfield on Nov 20, 2026. Nobody has changed these yet. |
+| Company settings errors | Enter the company name. Enter a percentage from 0 to 100, with up to 3 decimal places. Enter a whole number of days from 0 to 365. Use 1 to 10 letters, digits or hyphens, such as INV-. |
 | Sign-in | Sign in. Email. Password. |
 | Sign-in failed | That email and password don't match. |
 | Sign-in service unreachable | Can't reach the sign-in service. Check your internet connection. |
@@ -166,7 +169,7 @@ Money always carries its currency, as in `$48,000`. Dates read `Oct 31, 2026`, a
 - **Mockup 3, Deal wall:** the style of the pipeline board.
 - **A top-down sales funnel** in place of Mockup 2's funnel bars, in the style common in sales CRMs.
 
-Organizations, Contacts, Deals and the record pages aren't in the mockup, and follow [Screens](records.md#screens) with the same shell, colors and type. Nor are the sign-in screen, the search results and the menu, which follow their own screens in [sign-in.md](sign-in.md#sign-in-screen), [search.md](search.md#search-box-and-results) and [shell.md](shell.md#shell). The mockup's top bar has no search box or menu, and ends with the date. Mockups 1 to 3 stay in `docs/mockups/` as a record of the options, and aren't a reference. The figures in the mockups come from `docs/mockups/shared.js` and are examples. The app's sample data follows M1 to M6.
+Organizations, Contacts, Deals and the record pages aren't in the mockup, and follow [Screens](records.md#screens) with the same shell, colors and type. Nor are the sign-in screen, the search results, the menu and the Company settings page, which follow their own screens in [sign-in.md](sign-in.md#sign-in-screen), [search.md](search.md#search-box-and-results), [shell.md](shell.md#shell) and [company-settings.md](company-settings.md#company-settings-page). The mockup's top bar has no search box or menu, and ends with the date. Mockups 1 to 3 stay in `docs/mockups/` as a record of the options, and aren't a reference. The figures in the mockups come from `docs/mockups/shared.js` and are examples. The app's sample data follows M1 to M8.
 
 The mockups show light mode only. Dark mode follows the dark values in [Color tokens](#color-tokens), and `docs/changes/dark-mode/` holds screenshots of the dashboard and the pipeline in both modes, at 1440 by 900 with the sample data.
 

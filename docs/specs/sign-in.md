@@ -20,7 +20,7 @@ Part of the [spec](../spec.md), which has the summary, the terms, the quality ru
 - **U11.** Stage changes record who made them.
 - **U12.** Records from before sign-in existed, which only a local copy can have, have no one recorded. They show their dates with no name until `npm run seed` replaces them.
 
-Where the names show is in [R6](records.md#record-pages), [A7](activities.md#activities-and-timelines) and [S2](deals.md#stage-changes).
+Where the names show is in [R6](records.md#record-pages), [A7](activities.md#activities-and-timelines) and [S2](deals.md#stage-changes). The company settings record who last changed them in the same way ([B7](company-settings.md#company-settings)).
 
 ## The local copy
 
