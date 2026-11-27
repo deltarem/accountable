@@ -1,7 +1,9 @@
 // Runs the layers behind npm test and npm run check, in three stages, then one summary.
 //
-// 1. The quick layers, side by side: the code checks (npm run check only), the type
-//    checks and the unit tests with their coverage.
+// 1. The quick layers: the code checks (npm run check only) and the type checks side by
+//    side, then the backend and frontend unit tests with their coverage, one after the
+//    other. Each unit test has to take under a second (Q5), which is only a fair test
+//    with nothing else of this run's competing for the cores.
 // 2. The end-to-end tests, on as many workers as this machine can run well. Runs in other
 //    worktrees share those workers, so one run's tests may wait for another's.
 // 3. The speed tests, alone, because their timings need a quiet machine. They also wait
@@ -56,10 +58,13 @@ const codeChecks = [
   },
 ];
 
-function unitLayers(report, text) {
+const typeChecks = [
+  { name: "Frontend types", command: node, args: [tsc, "--noEmit", "-p", "frontend"] },
+  { name: "Backend types", command: "uv", args: ["run", "--no-sync", "ty", "check"] },
+];
+
+function unitTests(report, text) {
   return [
-    { name: "Frontend types", command: node, args: [tsc, "--noEmit", "-p", "frontend"] },
-    { name: "Backend types", command: "uv", args: ["run", "--no-sync", "ty", "check"] },
     {
       name: "Backend",
       command: "uv",
@@ -180,8 +185,9 @@ export async function runChecks({ withCodeChecks, withBrowserTests, failuresOnly
   };
 
   const endBusy = await startBusy(block);
-  const quickLayers = [...(withCodeChecks ? codeChecks : []), ...unitLayers(report, text)];
-  const finished = await Promise.all(quickLayers.map((layer) => run(layer, env, failuresOnly)));
+  const checks = [...(withCodeChecks ? codeChecks : []), ...typeChecks];
+  const finished = await Promise.all(checks.map((layer) => run(layer, env, failuresOnly)));
+  for (const layer of unitTests(report, text)) finished.push(await run(layer, env, failuresOnly));
 
   if (withBrowserTests) {
     console.log(`\nEnd-to-end tests, on ${workers} ${workers === 1 ? "worker" : "workers"}\n`);

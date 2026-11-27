@@ -189,7 +189,8 @@ def test_a_timeline_can_be_read_to_the_end_however_long_it_is(api, make, kind):
     record = {"deals": deal, "contacts": contact, "organizations": organization}[kind]
     seen: list[int] = []
     while True:
-        reply = api.get(f"/api/{kind}/{record}/timeline", params={"limit": 50, "offset": len(seen)}).json()
+        # The most one reply can hold, so the test reads past it in the fewest requests.
+        reply = api.get(f"/api/{kind}/{record}/timeline", params={"limit": 500, "offset": len(seen)}).json()
         if not reply["entries"]:
             break
         seen.extend(entry["id"] for entry in reply["entries"])

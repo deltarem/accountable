@@ -103,6 +103,33 @@ activities = Table(
     **TABLE_OPTIONS,
 )
 
+# $1,000,000.00, the most a unit price can be (G5).
+MAX_PRICE_CENTS = 100_000_000
+
+
+def name_key(name: str) -> str:
+    """What product names are compared by: trimmed, in the case every language agrees on, so
+    "Straße" and "STRASSE" are one name (G7). Set here only, wherever a product is written."""
+    return name.strip().casefold()
+
+
+# Archived rather than deleted (G9), and nothing links to a product yet.
+products = Table(
+    "products",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", Text, nullable=False),
+    # Unique, so two products can't share a name however they're written, even two saves at once.
+    Column("name_key", Text, nullable=False, unique=True, index=True),
+    Column("description", Text),
+    Column("unit_price_cents", Integer, nullable=False),
+    Column("active", Boolean, nullable=False, default=True),
+    *_times(),
+    *_who(),
+    CheckConstraint(column("unit_price_cents").between(0, MAX_PRICE_CENTS), name="price_in_range"),
+    **TABLE_OPTIONS,
+)
+
 stage_changes = Table(
     "stage_changes",
     metadata,

@@ -5,7 +5,7 @@ import { SIGNED_IN, addActivity, addLinkedDeal, card, column, dropAtEnd, isoDay,
 
 test.beforeAll(resetToSampleData);
 
-const SECTIONS = ["/", "/organizations", "/contacts", "/deals", "/pipeline"];
+const SECTIONS = ["/", "/organizations", "/contacts", "/deals", "/pipeline", "/products"];
 const SIZES = [
   { width: 1280, height: 720 },
   { width: 1440, height: 900 },
@@ -17,6 +17,7 @@ async function recordPaths(request: APIRequestContext) {
     `/organizations/${await get("/organizations")}`,
     `/contacts/${await get("/contacts")}`,
     `/deals/${await get("/deals")}`,
+    `/products/${await get("/products")}`,
   ];
 }
 
@@ -88,11 +89,12 @@ async function tabThrough(page: Page, presses: number) {
 test("every control can be reached by Tab and shows a focus ring", async ({ page }) => {
   await page.goto("/organizations");
   await expect(page.locator("tbody tr").first()).toBeVisible();
-  const table = await tabThrough(page, 20);
+  const table = await tabThrough(page, 21);
   for (const name of [
     "A Dashboard",
     "A Deals",
-    "INPUT Search organizations, contacts and deals",
+    "A Products",
+    "INPUT Search organizations, contacts, deals and products",
     `BUTTON Menu for ${SIGNED_IN.name}`,
     "BUTTON Add organization",
     "INPUT Search organizations",
@@ -102,6 +104,20 @@ test("every control can be reached by Tab and shows a focus ring", async ({ page
   }
   expect([...table].some((name) => name.startsWith("BUTTON Edit "))).toBe(true);
   expect([...table].some((name) => name.startsWith("BUTTON Delete "))).toBe(true);
+
+  await page.goto("/products");
+  await expect(page.locator("tbody tr").first()).toBeVisible();
+  const products = await tabThrough(page, 24);
+  for (const name of ["BUTTON Add product", "INPUT Search products", "BUTTON Archived", "BUTTON Unit price"]) {
+    expect([...products], name).toContain(name);
+  }
+  expect([...products].some((name) => name.startsWith("BUTTON Archive "))).toBe(true);
+
+  await page.getByRole("link").filter({ hasText: "Custom report" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Custom report" })).toBeVisible();
+  const product = await tabThrough(page, 12);
+  expect([...product]).toContain("BUTTON Edit");
+  expect([...product]).toContain("BUTTON Archive");
 
   await page.goto("/");
   await expect(page.getByTestId("follow-up").first()).toBeVisible();
@@ -273,4 +289,27 @@ test.describe("a tab left open past midnight", () => {
     await expect(page.getByRole("banner")).toContainText(shownDate(1));
     await expect(card(page, "Due before the laptop slept").getByText("Late")).toBeVisible();
   });
+});
+
+test("at 1280 wide the whole top bar fits on one line, with nothing cut off", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/products");
+  await expect(page.locator("tbody tr").first()).toBeVisible();
+  const bar = await page.getByRole("banner").evaluate((header) => {
+    const box = header.getBoundingClientRect();
+    const parts = [...header.querySelectorAll("nav a, input, span, button")].map((part) =>
+      part.getBoundingClientRect(),
+    );
+    return {
+      overflows: header.scrollWidth > header.clientWidth,
+      tops: [...new Set(parts.map((part) => Math.round(part.top + part.height / 2)))],
+      outside: parts.filter((part) => part.left < box.left || part.right > box.right).length,
+      cut: [...header.querySelectorAll("nav a")].filter((link) => link.scrollWidth > link.clientWidth).length,
+    };
+  });
+  expect(bar.overflows).toBe(false);
+  expect(bar.outside).toBe(0);
+  expect(bar.cut).toBe(0);
+  // Everything in the bar is centered on one line, give or take a pixel.
+  expect(Math.max(...bar.tops) - Math.min(...bar.tops)).toBeLessThanOrEqual(1);
 });

@@ -8,6 +8,8 @@ const TONES = {
   won: "bg-ink text-on-won",
   alert: "bg-chip-alert text-white",
   quiet: "bg-page text-muted",
+  // Not the page color, which a hovered row turns too.
+  archived: "bg-grid text-muted",
 };
 
 export type ChipTone = keyof typeof TONES;

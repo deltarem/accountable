@@ -14,7 +14,7 @@ from sqlalchemy import Connection, insert
 
 from accountable import users
 from accountable.crm import rules, who
-from accountable.crm.tables import activities, contacts, organizations
+from accountable.crm.tables import activities, contacts, name_key, organizations, products
 
 
 @dataclass(frozen=True)
@@ -334,6 +334,47 @@ NOTES = [
     "Wants a phased rollout",
     "Renewal date is in their contract",
 ]
+# name, unit price in cents, description, still sold. What the sample deals sell (M3).
+PRODUCTS = [
+    (
+        "Platform license, per user per year",
+        48000,
+        "One person's use of Accountable for a year, with updates included.",
+        True,
+    ),
+    (
+        "Group-wide license, per site per year",
+        960000,
+        "Every user at one site, for a year. For groups with several sites, such as clinics and hotels.",
+        True,
+    ),
+    (
+        "Standard support plan, per year",
+        360000,
+        "Email and phone support in working hours, with a reply within one working day.",
+        True,
+    ),
+    (
+        "Priority support plan, per year",
+        720000,
+        "Support seven days a week, with a reply within four hours and a named contact.",
+        True,
+    ),
+    ("On-site training day", 145000, "A full day of training at the customer's site.\nUp to 12 people.", True),
+    ("Online training session, half day", 48750, "A live session over video, for up to 20 people.", True),
+    ("Setup and data import", 250000, "Setting up the account and bringing in records from spreadsheets.", True),
+    ("Integration, per connected system", 425000, "Connecting one other system, such as accounts or bookings.", True),
+    ("Custom report", 64950, None, True),
+    ("Tablet kit for taprooms and counters", 38999, "A tablet with a stand and a case, set up and ready to use.", True),
+    (
+        "Basic support plan, per year",
+        240000,
+        "Email support in working hours. Replaced by the Standard support plan.",
+        False,
+    ),
+    ("On-site training day, 2025 rate", 125000, "Last year's price for a day of on-site training.", False),
+]
+
 ACTIVITIES_PER_DEAL = 3
 CONTACTS_WITH_ACTIVITY = 44
 
@@ -412,6 +453,10 @@ def _who(number: int, start: datetime, today: date, every: int) -> dict[str, Any
     """Added by one teammate, and for one record in every few, last changed by the next one since."""
     if number % every != 1:
         return who.added(teammate(number), start)
+    return _changed_by_the_next(number, start, today)
+
+
+def _changed_by_the_next(number: int, start: datetime, today: date) -> dict[str, Any]:
     changed_on = today - timedelta(days=3 + number * 7 % 90)
     return {**who.added(teammate(number), start), **who.changed(teammate(number + 1), moment(changed_on, number))}
 
@@ -517,6 +562,25 @@ def _activity_who(row: dict[str, Any], number: int, today: date) -> dict[str, An
     return {**logged, **who.changed(teammate(number + 1), ticked)}
 
 
+def _add_products(conn: Connection, today: date) -> None:
+    """Each added by a teammate, some since changed by the next one, and each archived one archived by the next one."""
+    start = moment(today - timedelta(days=380), 2)
+    rows = []
+    for number, (name, cents, description, sold) in enumerate(PRODUCTS):
+        authorship = _who(number, start, today, every=4) if sold else _changed_by_the_next(number, start, today)
+        rows.append(
+            {
+                "name": name,
+                "name_key": name_key(name),
+                "description": description,
+                "unit_price_cents": cents,
+                "active": sold,
+                **authorship,
+            }
+        )
+    conn.execute(insert(products), rows)
+
+
 def fill(conn: Connection, today: date) -> None:
     add_missing_teammates(conn)
     org_ids, contact_ids, all_contacts = _add_people(conn, today)
@@ -583,3 +647,4 @@ def fill(conn: Connection, today: date) -> None:
     for number, row in enumerate(rows):
         row.update(_activity_who(row, number, today))
     conn.execute(insert(activities), rows)
+    _add_products(conn, today)

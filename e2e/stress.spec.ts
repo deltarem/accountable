@@ -40,6 +40,7 @@ for (const [name, path] of [
   ["Organizations", "/organizations"],
   ["Contacts", "/contacts"],
   ["Deals", "/deals"],
+  ["Products", "/products"],
 ]) {
   test(`${name} opens in under a second`, async ({ page }) => {
     const readings: number[] = [];
@@ -82,6 +83,15 @@ test("a search keystroke updates within 100ms", async ({ page }) => {
   expect(median(readings)).toBeLessThan(100);
 });
 
+test("a search keystroke in the Products table updates within 100ms", async ({ page }) => {
+  await page.goto("/products?show=all");
+  await expect(page.locator("tbody tr").first()).toBeVisible();
+  const readings: number[] = [];
+  for (const text of ["1", "12", "123", "12", "1"]) readings.push(await keystrokeTime(page, text));
+  console.log(`Products search keystroke: ${median(readings).toFixed(1)}ms`);
+  expect(median(readings)).toBeLessThan(100);
+});
+
 test("typing at full speed loses no characters", async ({ page }) => {
   await page.goto("/contacts");
   await expect(page.locator("tbody tr").first()).toBeVisible();
@@ -115,7 +125,7 @@ async function topBarSearchTime(page: Page, text: string) {
 test("the top bar's search shows its results within 300ms of the last keystroke", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByTestId("revenue-this-month")).toBeVisible();
-  await page.getByRole("combobox", { name: "Search organizations, contacts and deals" }).focus();
+  await page.getByRole("combobox", { name: "Search organizations, contacts, deals and products" }).focus();
   const readings: number[] = [];
   // Each letter is in nearly every name, the most a search can find at these limits.
   for (const text of ["o", "a", "n", "t", "c"]) {

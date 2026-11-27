@@ -1,14 +1,14 @@
 import type { APIRequestContext, Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures";
-import { addContact, addDeal, addOrganization, emptyDatabase } from "./helpers";
+import { API, addContact, addDeal, addOrganization, emptyDatabase } from "./helpers";
 
 // The top bar's search (K1 to K7), on a database holding only what each test adds.
 
 test.beforeEach(emptyDatabase);
 
 function searchBox(page: Page) {
-  return page.getByRole("combobox", { name: "Search organizations, contacts and deals" });
+  return page.getByRole("combobox", { name: "Search organizations, contacts, deals and products" });
 }
 
 function results(page: Page) {
@@ -110,7 +110,7 @@ test("says so when nothing matches", async ({ page, request }) => {
   await addHarbor(request);
   await page.goto("/");
   await searchBox(page).fill("harbour");
-  await expect(page.getByRole("status")).toHaveText('No organizations, contacts or deals match "harbour".');
+  await expect(page.getByRole("status")).toHaveText('No organizations, contacts, deals or products match "harbour".');
 });
 
 test("% and _ match only themselves", async ({ page, request }) => {
@@ -157,4 +157,47 @@ test("Escape closes the list, and a second Escape clears the box", async ({ page
   await page.keyboard.press("Escape");
   await expect(searchBox(page)).toHaveValue("");
   await expect(page).toHaveURL("/");
+});
+
+async function addProduct(request: APIRequestContext, name: string, unit_price_cents: number) {
+  const reply = await request.post(`${API}/products`, { data: { name, unit_price_cents } });
+  expect(reply.ok(), await reply.text()).toBe(true);
+  return (await reply.json()) as { id: number };
+}
+
+test("finds an active product by part of its name in another case, with its price, and opens it by click and by keyboard", async ({
+  page,
+  request,
+}) => {
+  const product = await addProduct(request, "Harbor tour", 4950);
+  await page.goto("/");
+
+  await searchBox(page).fill("TOUR");
+  const products = results(page).getByRole("group", { name: "Products" });
+  await expect(products.getByRole("option")).toHaveText(["Harbor tour$49.50"]);
+  await result(page, "Harbor tour").click();
+  await expect(page).toHaveURL(`/products/${product.id}`);
+  await expect(heading(page, "Harbor tour")).toBeVisible();
+
+  await page.goto("/pipeline");
+  await searchBox(page).focus();
+  await page.keyboard.type("tour");
+  await expect(result(page, "Harbor tour")).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(`/products/${product.id}`);
+});
+
+test("See all for products opens the Products table with the same search", async ({ page, request }) => {
+  for (const name of ["Day pass", "Day rate", "Daytime support", "Day one setup", "Holiday pack", "Daylight kit"]) {
+    await addProduct(request, name, 10000);
+  }
+  await page.goto("/");
+
+  await searchBox(page).fill("day");
+  await expect(results(page).getByRole("group", { name: "Products" }).getByRole("option")).toHaveCount(6);
+  await result(page, "See all 6 products").click();
+
+  await expect(page).toHaveURL("/products?q=day");
+  await expect(page.getByRole("searchbox", { name: "Search products" })).toHaveValue("day");
+  await expect(page.locator("tbody tr")).toHaveCount(6);
 });

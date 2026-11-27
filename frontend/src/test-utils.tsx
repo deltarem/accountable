@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router";
@@ -61,19 +61,48 @@ export function startSignedIn(token = "test-token") {
   window.dispatchEvent(new StorageEvent("storage", { key: SESSION_KEY }));
 }
 
-export function renderApp(ui: ReactNode) {
+/** Renders with its own query cache, in a router opened at the address given. */
+export function renderApp(ui: ReactNode, address = "/") {
   const client = new QueryClient({ defaultOptions: queryDefaults });
   const view = render(
     <QueryClientProvider client={client}>
-      <MemoryRouter>{ui}</MemoryRouter>
+      <MemoryRouter initialEntries={[address]}>{ui}</MemoryRouter>
     </QueryClientProvider>,
   );
   return { ...view, client };
 }
 
+/**
+ * The first cell of each row in the table's body, top to bottom. Read from the table itself,
+ * because finding 50 rows and their cells by role takes most of a second in jsdom (Q5).
+ */
+export function firstColumn(table = screen.getByRole("table")) {
+  return Array.from((table as HTMLTableElement).tBodies[0].rows, (row) => row.cells[0].textContent);
+}
+
+/**
+ * A button found by the words on it. On a page of 50 rows or entries, each with its own buttons,
+ * finding one by role means naming every button first, which takes a tenth of a second in jsdom.
+ */
+export function buttonSaying(text: string) {
+  return screen.getByText(text, { selector: "button" });
+}
+
+/**
+ * Puts text in a box at once, as pasting it would, for tests about what a form does with a
+ * value rather than about typing it. Each key would draw the whole form again (Q5).
+ */
+export async function fill(box: HTMLElement, text: string) {
+  const person = user();
+  await person.clear(box);
+  await person.paste(text);
+}
+
 export function user() {
-  // Radix sets pointer-events on the body while a dialog is open.
-  return userEvent.setup({ pointerEventsCheck: 0 });
+  // Radix sets pointer-events on the body while a dialog is open. Without delay: null,
+  // user-event waits a setTimeout(0) after each key and click, which on Windows is the
+  // system's 15ms timer tick, enough to take a test of some typing past a second (Q5).
+  return userEvent.setup({ pointerEventsCheck: 0, delay: null });
 }
 
 // The board's layout. jsdom lays nothing out, so dnd-kit would find every card and

@@ -2,7 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { useLocation } from "react-router";
 import { describe, expect, it } from "vitest";
 
-import { mockApi, renderApp, user } from "../../test-utils";
+import { firstColumn, mockApi, renderApp, user } from "../../test-utils";
 import type { ContactRow } from "../queries";
 import { Contacts } from "./Contacts";
 
@@ -53,10 +53,7 @@ async function showContacts(rows: ContactRow[] = CONTACTS, routes: Record<string
 }
 
 function names() {
-  return screen
-    .getAllByRole("row")
-    .slice(1)
-    .map((row) => within(row).getAllByRole("cell")[0].textContent);
+  return firstColumn();
 }
 
 async function rowOf(name: string) {

@@ -170,3 +170,9 @@ All run on the local copy, with the existing fixtures, so each one also fails on
 - **The success criteria in the app,** on a temporary database through `ACCOUNTABLE_DB`, never `data/accountable.db`: add, edit, find, archive and restore a product, two names that differ only by case, prices with and without cents, and `npm run empty` then `npm run seed` against the same temporary database.
 - **The top bar** at 1280px and 1440px, in light mode and dark mode, with all six sections, the search box, the date and the menu on one line.
 - **The Archived chip** on a hovered row, where the row takes the page color too. If it disappears, give it a backing that stands out from both the panel and the page, with the spec changed to match and its contrast checked.
+
+## Changed during the build
+
+- **Step 1** found far more slow tests than the two the Mac had shown: on the Windows laptop the build ran on, about 390 unit tests took a second or more with every layer at once. The project owner chose to keep the limit at a second, to run the backend and frontend unit tests one after the other, and to fix the tests over it, mainly through shared helpers and fewer rows where the count doesn't matter. Vitest also runs on a quarter of the threads outside CI. `docs/STATUS.md` has the causes and the numbers.
+- **The Archived chip** is muted ink on the grid color, not the page color, because a hovered row takes the page color and the chip lost its shape there, which the plan's by-hand check was there to catch.
+- **The top bar at 1280px** needed 27px more for the date. Smaller gaps between its groups and inside each section link gave 40px, so the search box keeps its width.

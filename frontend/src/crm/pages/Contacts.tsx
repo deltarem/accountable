@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 
 import { DataTable, type TableColumn } from "../../components/DataTable";
+import { FilterGroup } from "../../components/FilterGroup";
 import { PageHeader } from "../../components/PageHeader";
 import { formatDate } from "../../lib/dates";
 import type { AddressChange } from "../../lib/useAddress";
@@ -75,29 +76,21 @@ export function Contacts() {
   const options: (Status | null)[] = [null, ...STATUS_ORDER];
 
   const filters = (update: (change: AddressChange) => void): ReactNode => (
-    <div role="group" aria-label="Filter by status" className="flex gap-1 rounded-control bg-panel p-1">
-      {options.map((option) => {
-        const on = option === status;
-        return (
-          <button
-            key={option ?? "all"}
-            type="button"
-            aria-pressed={on}
-            onClick={() =>
-              update((address) => {
-                if (option) address.set("status", option);
-                else address.delete("status");
-                address.delete("page");
-              })
-            }
-            className={`flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-semibold ${on ? "bg-sea-green text-midnight" : "hover:bg-page"}`}
-          >
-            {option ? capitalize(option) : "All"}
-            {contacts.data && <span className="num font-normal">{count(option)}</span>}
-          </button>
-        );
-      })}
-    </div>
+    <FilterGroup
+      label="Filter by status"
+      options={options.map((option) => ({
+        key: option ?? "all",
+        label: option ? capitalize(option) : "All",
+        count: contacts.data ? count(option) : undefined,
+        on: option === status,
+        choose: () =>
+          update((address) => {
+            if (option) address.set("status", option);
+            else address.delete("status");
+            address.delete("page");
+          }),
+      }))}
+    />
   );
 
   return (

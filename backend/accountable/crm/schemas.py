@@ -20,6 +20,7 @@ from pydantic import (
 )
 
 from accountable import db
+from accountable.crm.tables import MAX_PRICE_CENTS
 from accountable.users import Person
 
 Stage = Literal["new", "qualified", "proposal", "negotiation", "won", "lost"]
@@ -44,6 +45,8 @@ FIELD_MESSAGES = {
     "description": "Enter a description",
     "occurred_at": "Choose when it happened",
     "follow_up_date": "Enter a valid date",
+    "unit_price_cents": "Enter a price in dollars and cents, from $0.00 to $1,000,000.00",
+    "active": "Choose whether the product is active",
 }
 
 
@@ -150,6 +153,8 @@ PageOffset = Annotated[int, Query(ge=0, le=MAX_ID)]
 Today = Annotated[date, Depends(db.local_today)]
 Now = Annotated[datetime, Depends(db.utc_now)]
 Dollars = Annotated[StrictInt, Field(ge=0, le=MAX_VALUE)]
+# Whole cents, strictly, so 49.5 and "4950" are refused rather than read as something else.
+Cents = Annotated[StrictInt, Field(ge=0, le=MAX_PRICE_CENTS)]
 Probability = Annotated[StrictInt, Field(ge=0, le=100)]
 IncomingTime = Annotated[datetime, AfterValidator(_to_utc)]
 UtcTime = Annotated[datetime, PlainSerializer(_with_z, return_type=str)]
@@ -359,6 +364,37 @@ class DealImpact(BaseModel):
     stage_changes: int
     won: bool
     value: int
+
+
+# Products
+
+
+class ProductCreate(Request):
+    """A new product is active. Archive and Restore change that, not the form (G4)."""
+
+    name: Name
+    description: OptionalText = None
+    unit_price_cents: Cents
+
+
+class ProductUpdate(Request):
+    name: Name | MISSING = MISSING
+    description: OptionalText = None
+    unit_price_cents: Cents | MISSING = MISSING
+    # False archives the product and True restores it (G8).
+    active: StrictBool | MISSING = MISSING
+
+
+class Product(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    unit_price_cents: int
+    active: bool
+
+
+class ProductDetail(Product, Authorship):
+    pass
 
 
 # Activities and timelines

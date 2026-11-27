@@ -21,7 +21,7 @@ import {
 const ONE_START_MS = 120_000;
 test.describe.configure({ mode: "serial", timeout: ONE_START_MS });
 
-const SCREENS = ["/", "/organizations", "/contacts", "/deals", "/pipeline"];
+const SCREENS = ["/", "/organizations", "/contacts", "/deals", "/pipeline", "/products"];
 const TEAMMATES = ["Alex Rivera", "Dana Whitfield", "Theo Brandt", "robin@accountable.example"];
 
 let folder: ReturnType<typeof makeCopyFolder>;
@@ -135,6 +135,8 @@ test("npm run seed with the app running brings back the sample data and keeps th
 
   await goto(page, "/organizations");
   await expect(page.locator("tbody tr")).toHaveCount(24);
+  await goto(page, "/products?show=all");
+  await expect(page.locator("tbody tr")).toHaveCount(12);
 
   await expectAllTeammatesToChooseFrom(browser);
 });
@@ -155,6 +157,8 @@ test("npm run empty with the app running keeps the teammates and leaves every sc
   await expect(page.getByText("No organizations yet. Add the first one.")).toBeVisible();
   await goto(page, "/contacts");
   await expect(page.getByText("No contacts yet. Add the first one.")).toBeVisible();
+  await goto(page, "/products");
+  await expect(page.getByText("No products yet. Add the first one.")).toBeVisible();
   await goto(page, "/");
   await expect(page.getByText("No follow-ups due.")).toBeVisible();
   await goto(page, "/pipeline");

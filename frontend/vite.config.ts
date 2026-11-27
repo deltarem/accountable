@@ -1,3 +1,5 @@
+import { availableParallelism } from "node:os";
+
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
@@ -49,9 +51,12 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}", "../scripts/*.test.mjs"],
     setupFiles: ["src/test-setup.ts"],
     restoreMocks: true,
-    // The checks run these beside the backend's tests, which share the cores. On
-    // a machine with fewer cores a table test can pass 5s, Vitest's default.
+    // A test that hangs still ends. On a machine with fewer cores a table test can pass 5s, Vitest's default.
     testTimeout: 15_000,
+    // On a 4-core laptop with two threads a core, Vitest's usual worker a thread made each test
+    // three to five times slower, past the one-second limit (Q5). A quarter of the threads kept
+    // them under it. CI only lists slow tests, so there Vitest takes its usual number.
+    maxWorkers: process.env.CI ? undefined : Math.max(1, Math.floor(availableParallelism() / 4)),
     // A leftover .only would skip the rest of its file and still pass.
     allowOnly: false,
     // On when npm test asks for it, so a run while working stays quick.

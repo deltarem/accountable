@@ -6,29 +6,34 @@ import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from
 import { useNavigate } from "react-router";
 
 import { ApiError, api } from "../lib/api";
-import type { RecordKind, Stage } from "./queries";
+import { cents } from "../lib/money";
+import type { Stage } from "./queries";
 import { StageChip } from "./StageChip";
 
 /** How long typing has to pause before the search is sent (K3). */
 export const PAUSE_MS = 150;
 const SHOWN = 5;
 const LONGEST = 100;
-const LABEL = "Search organizations, contacts and deals";
+const LABEL = "Search organizations, contacts, deals and products";
 
 type Group<T> = { count: number; results: T[] };
 export type SearchResults = {
   organizations: Group<{ id: number; name: string; industry: string | null }>;
   contacts: Group<{ id: number; name: string; organization_name: string | null }>;
   deals: Group<{ id: number; name: string; stage: Stage; organization_name: string | null }>;
+  products: Group<{ id: number; name: string; unit_price_cents: number }>;
 };
+
+type Kind = keyof SearchResults;
 
 /** A reply with the text it answers, which may be an earlier one than the box now holds. */
 type Found = { text: string; results: SearchResults };
 
-type Result = { id: number; name: string; detail: string | null; stage?: Stage };
-type ShownGroup = { kind: RecordKind; heading: string; count: number; results: Result[] };
+/** A price is a detail in JetBrains Mono, like prices everywhere (G6). */
+type Result = { id: number; name: string; detail: string | null; stage?: Stage; price?: boolean };
+type ShownGroup = { kind: Kind; heading: string; count: number; results: Result[] };
 
-function groupsOf({ organizations, contacts, deals }: SearchResults): ShownGroup[] {
+function groupsOf({ organizations, contacts, deals, products }: SearchResults): ShownGroup[] {
   const groups: ShownGroup[] = [
     {
       kind: "organizations",
@@ -51,6 +56,17 @@ function groupsOf({ organizations, contacts, deals }: SearchResults): ShownGroup
         name,
         stage,
         detail: organization_name,
+      })),
+    },
+    {
+      kind: "products",
+      heading: "Products",
+      count: products.count,
+      results: products.results.map(({ id, name, unit_price_cents }) => ({
+        id,
+        name,
+        detail: cents(unit_price_cents),
+        price: true,
       })),
     },
   ];
@@ -108,7 +124,11 @@ function ResultGroup({ group, text, onOpen }: { group: ShownGroup; text: string;
           </span>
           {result.stage && <StageChip stage={result.stage} />}
           {result.detail && (
-            <span className="ml-auto max-w-[40%] flex-none truncate pl-2 text-[13px] text-muted">{result.detail}</span>
+            <span
+              className={`ml-auto max-w-[40%] flex-none truncate pl-2 text-[13px] text-muted ${result.price ? "num" : ""}`}
+            >
+              {result.detail}
+            </span>
           )}
         </Command.Item>
       ))}
@@ -138,7 +158,7 @@ function Results({ found, failed, onOpen }: { found?: Found; failed: boolean; on
   if (!found) return null;
   const groups = groupsOf(found.results);
   if (groups.length === 0) {
-    return <Message>{`No organizations, contacts or deals match "${found.text}".`}</Message>;
+    return <Message>{`No organizations, contacts, deals or products match "${found.text}".`}</Message>;
   }
   return (
     <Command.List

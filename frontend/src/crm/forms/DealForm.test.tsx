@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { describe, expect, it, vi } from "vitest";
 
 import { todayIso } from "../../lib/dates";
-import { META, mockApi, renderApp, user } from "../../test-utils";
+import { META, fill, mockApi, renderApp, user } from "../../test-utils";
 import type { Deal } from "../queries";
 import { DealForm } from "./DealForm";
 
@@ -118,11 +118,11 @@ describe("adding a deal", () => {
     const onClose = vi.fn();
     renderApp(<DealForm onClose={onClose} />);
     await ready();
-    await user().type(field("Name"), "New deal");
+    await fill(field("Name"), "New deal");
     await choose("Organization", "Harbor & Pine");
     await choose("Main contact", /Sam Carter/);
-    await user().type(field("Value"), "$48,000");
-    await user().type(field("Close date"), "2026-12-01");
+    await fill(field("Value"), "$48,000");
+    await fill(field("Close date"), "2026-12-01");
     await user().click(screen.getByRole("button", { name: "Save deal" }));
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -242,7 +242,7 @@ describe("a contact added from the picker", () => {
     expect(screen.getByText("Choose an organization", { selector: "p" })).toBeTruthy();
 
     await user().click(picker("Main contact"));
-    await user().type(await screen.findByPlaceholderText("Search contacts"), "Brand new");
+    await fill(await screen.findByPlaceholderText("Search contacts"), "Brand new");
     await user().click(await screen.findByRole("option", { name: /Add "Brand new"/ }));
     const form = await screen.findByRole("dialog", { name: "Add contact" });
     await user().click(within(form).getByRole("combobox", { name: "Organization" }));
@@ -462,7 +462,7 @@ describe("what else has been typed", () => {
     await ready();
     await typeTheBasics();
     await user().click(picker("Organization"));
-    await user().type(await screen.findByPlaceholderText("Search organizations"), "Brand new");
+    await fill(await screen.findByPlaceholderText("Search organizations"), "Brand new");
     await user().click(await screen.findByRole("option", { name: /Add "Brand new"/ }));
     await user().click(await screen.findByRole("button", { name: "Save organization" }));
     await waitFor(() => expect(screen.queryByRole("button", { name: "Save organization" })).toBeNull());

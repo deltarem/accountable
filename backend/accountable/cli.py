@@ -19,7 +19,7 @@ from sqlalchemy import Connection, delete, func, select
 
 from accountable import db
 from accountable.crm import sample_data
-from accountable.crm.tables import activities, contacts, deals, organizations, stage_changes
+from accountable.crm.tables import activities, contacts, deals, organizations, products, stage_changes
 
 
 def fill_sample(conn: Connection) -> None:
@@ -30,7 +30,7 @@ def fill_sample(conn: Connection) -> None:
 def _counts(conn: Connection) -> dict[str, int]:
     return {
         table.name: conn.execute(select(func.count()).select_from(table)).scalar_one()
-        for table in (organizations, contacts, deals, activities)
+        for table in (organizations, contacts, deals, activities, products)
     }
 
 
@@ -45,7 +45,7 @@ def _reaches_the_shared_app() -> bool:
 
 
 def _wipe(conn: Connection) -> None:
-    for table in (activities, stage_changes, deals, contacts, organizations):
+    for table in (activities, stage_changes, deals, contacts, organizations, products):
         conn.execute(delete(table))
 
 

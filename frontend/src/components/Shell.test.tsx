@@ -7,7 +7,7 @@ import { queryDefaults } from "../lib/queryDefaults";
 import { mockApi, user } from "../test-utils";
 import { Shell } from "./Shell";
 
-const SECTIONS = ["Dashboard", "Organizations", "Contacts", "Deals", "Pipeline"];
+const SECTIONS = ["Dashboard", "Organizations", "Contacts", "Deals", "Pipeline", "Products"];
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 9, 31, 12, 0) });
@@ -31,6 +31,7 @@ function openAt(path: string) {
             <Route path="/deals" element={<p>The deals page</p>} />
             <Route path="/deals/:id" element={<p>One deal's page</p>} />
             <Route path="/pipeline" element={<p>The pipeline page</p>} />
+            <Route path="/products" element={<p>The products page</p>} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -59,7 +60,7 @@ function currentSections() {
 }
 
 describe("the top bar", () => {
-  it("links to the five sections, in order", () => {
+  it("links to the six sections, in order, ending with Products", () => {
     openAt("/");
     const links = sections().getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual(SECTIONS);
@@ -69,6 +70,7 @@ describe("the top bar", () => {
       "/contacts",
       "/deals",
       "/pipeline",
+      "/products",
     ]);
   });
 
@@ -89,7 +91,7 @@ describe("the top bar", () => {
     expect(screen.getByRole("main").textContent).toBe("One deal's page");
   });
 
-  it.each(["/", "/organizations", "/contacts", "/deals", "/pipeline", "/deals/7"])(
+  it.each(["/", "/organizations", "/contacts", "/deals", "/pipeline", "/products", "/deals/7"])(
     "has the search box after the sections, then the date and the menu button, at %s",
     async (path) => {
       openAt(path);

@@ -1,4 +1,4 @@
-"""Fills a database to the Q1 limits: 1,000 contacts, 500 deals, 5,000 activities.
+"""Fills a database to the Q1 limits: 1,000 contacts, 500 deals, 5,000 activities, 200 products.
 
 Run on its own, it replaces everything in the ACCOUNTABLE_DB database, for the
 end-to-end stress tests. It refuses to touch the real data folder.
@@ -15,6 +15,7 @@ ORGANIZATIONS = 120
 CONTACTS = 1000
 DEALS = 500
 ACTIVITIES = 5000
+PRODUCTS = 200
 
 # Won and Lost get long columns, the worst case for dragging.
 STAGE_SHARE = (
@@ -25,7 +26,7 @@ STAGE_SHARE = (
 def fill(conn: Connection, today: date) -> None:
     """Every record is put down to one of the made-up teammates, as in the sample data."""
     from accountable.crm import rules, sample_data, who
-    from accountable.crm.tables import activities, contacts, organizations
+    from accountable.crm.tables import activities, contacts, name_key, organizations, products
 
     now = sample_data.moment(today - timedelta(days=1), 3)
     sample_data.add_missing_teammates(conn)
@@ -115,6 +116,22 @@ def fill(conn: Connection, today: date) -> None:
             }
         )
     conn.execute(insert(activities), rows)
+
+    conn.execute(
+        insert(products),
+        [
+            {
+                "name": f"Product {number:03d} for a long stretch of work",
+                "name_key": name_key(f"Product {number:03d} for a long stretch of work"),
+                "description": f"What product {number} is, at some length, so the table has text to search.",
+                "unit_price_cents": 1000 + number * 4937 % 900_000,
+                # One in ten archived, so every view of the table has rows.
+                "active": number % 10 != 0,
+                **who.added(sample_data.teammate(number), now),
+            }
+            for number in range(PRODUCTS)
+        ],
+    )
 
 
 def main() -> int:

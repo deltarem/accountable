@@ -24,7 +24,7 @@ Products are the team's price list: what the business sells and what it charges 
 
 Follows the [table screen](records.md#tables-1): the page title with Add product beside it, then the search box and the Active, Archived and All filter on one line, built like the Contacts status filter, then the table on a panel. Description is in muted ink. Unit price is the last data column before the row's buttons, right-aligned. Edit and Archive, or Restore, are icon buttons at the end of each row, always visible, with labels for screen readers such as "Archive Training day". Archive uses lucide-react's `Archive` icon and Restore its `ArchiveRestore` icon, both in ink. Neither is red, because neither loses anything.
 
-The Archived chip is a small chip in the page color with muted ink text, in the label style. It reads as quieter than the stage and status chips, because an archived product is out of use rather than in a state of its own.
+The Archived chip is a small chip in the grid color with muted ink text, in the label style, so it keeps its shape on a hovered row, which takes the page color. It reads as quieter than the stage and status chips, because an archived product is out of use rather than in a state of its own.
 
 ### Product page
 

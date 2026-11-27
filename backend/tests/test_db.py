@@ -21,7 +21,7 @@ def add_one(conn) -> None:
 
 
 @pytest.fixture
-def no_database(tmp_path, monkeypatch) -> Iterator[Path]:
+def no_database(tmp_path, monkeypatch, quick_migrations) -> Iterator[Path]:
     path = tmp_path / "nested" / "folder" / "accountable.db"
     monkeypatch.setenv("ACCOUNTABLE_DB", str(path))
     db.dispose()
@@ -236,7 +236,7 @@ class PostgresStandIn:
 
 
 @pytest.fixture
-def shared_app(tmp_path, monkeypatch) -> Iterator[PostgresStandIn]:
+def shared_app(tmp_path, monkeypatch, quick_migrations) -> Iterator[PostgresStandIn]:
     for name, value in SHARED.items():
         monkeypatch.setenv(name, value)
     stand_in = PostgresStandIn(tmp_path / "shared.db")

@@ -1,9 +1,9 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation } from "react-router";
 
 import { ApiError } from "../lib/api";
-import { user } from "../test-utils";
+import { buttonSaying, firstColumn, user } from "../test-utils";
 import { DataTable, type TableColumn } from "./DataTable";
 
 type Row = { id: number; name: string; city: string | null; stage: string; amount: number | null };
@@ -66,10 +66,7 @@ function show(rows: Row[] | undefined, address = "/", extra = {}) {
 }
 
 function names() {
-  return screen
-    .getAllByRole("row")
-    .slice(1)
-    .map((row) => within(row).getAllByRole("cell")[0].textContent);
+  return firstColumn();
 }
 
 function address() {
@@ -178,10 +175,10 @@ describe("paging", () => {
 
   it("moves between pages", async () => {
     show(many(120));
-    await user().click(screen.getByRole("button", { name: "Next" }));
+    await user().click(buttonSaying("Next"));
     expect(names()[0]).toBe("Row 051");
     expect(address()).toBe("?page=2");
-    await user().click(screen.getByRole("button", { name: "Previous" }));
+    await user().click(buttonSaying("Previous"));
     expect(names()[0]).toBe("Row 001");
     expect(address()).toBe("");
   });
@@ -194,7 +191,7 @@ describe("paging", () => {
   it("stops at the last page", () => {
     show(many(120), "/?page=3");
     expect(names()).toHaveLength(20);
-    expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((buttonSaying("Next") as HTMLButtonElement).disabled).toBe(true);
   });
 });
 
@@ -373,7 +370,7 @@ describe("changes that land before the table has redrawn", () => {
 
   it("counts two clicks on Next", () => {
     show(many(120));
-    const next = screen.getByRole("button", { name: "Next" });
+    const next = buttonSaying("Next");
     act(() => {
       next.click();
       next.click();
@@ -385,7 +382,7 @@ describe("changes that land before the table has redrawn", () => {
     show(many(120));
     act(() => {
       fireEvent.change(screen.getByRole("searchbox"), { target: { value: "Row" } });
-      screen.getByRole("button", { name: "Next" }).click();
+      buttonSaying("Next").click();
     });
     expect(address()).toContain("q=Row");
     expect(address()).toContain("page=2");
@@ -423,5 +420,42 @@ describe("rows", () => {
   it("links each row to its record", () => {
     show(ROWS);
     expect(screen.getByRole("link", { name: "Bravo" }).getAttribute("href")).toBe("/things/1");
+  });
+});
+
+describe("a row action in place of Delete", () => {
+  const archive = (onClick: (row: Row) => void) => ({
+    rowAction: { label: (row: Row) => `Archive ${row.name}`, icon: () => <span>A</span>, onClick },
+    onDelete: undefined,
+  });
+
+  it("shows that button on each row, named for screen readers, and calls it with the row", async () => {
+    const onClick = vi.fn();
+    show(ROWS, "/", archive(onClick));
+    expect(screen.queryByRole("button", { name: /^Delete / })).toBeNull();
+    await user().click(screen.getByRole("button", { name: "Archive Bravo" }));
+    expect(onClick).toHaveBeenCalledWith(ROWS[0]);
+    expect(address()).toBe("");
+  });
+});
+
+describe("a filter with nothing in it", () => {
+  it("says what the table gives it to say, with no search", () => {
+    show([], "/", { filtered: true, emptyFilterMessage: "No archived things." });
+    expect(screen.getByText("No archived things.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Clear search" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Add thing" })).toBeNull();
+  });
+
+  it("says nothing matches, with Clear search, while there's a search", () => {
+    show([], "/?q=zzz", { filtered: true, emptyFilterMessage: "No archived things." });
+    expect(screen.getByText("No things match.")).toBeTruthy();
+    expect(screen.queryByText("No archived things.")).toBeNull();
+    expect(screen.getByRole("button", { name: "Clear search" })).toBeTruthy();
+  });
+
+  it("shows nothing extra once the filter has rows", () => {
+    show(ROWS, "/", { filtered: true, emptyFilterMessage: "No archived things." });
+    expect(screen.queryByText("No archived things.")).toBeNull();
   });
 });

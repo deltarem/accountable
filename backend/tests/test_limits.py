@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 from accountable import db
-from accountable.crm.tables import activities, contacts, deals
-from conftest import TODAY, using_database
+from accountable.crm.tables import activities, contacts, deals, products
+from conftest import TODAY, copy_of_migrated, prebuilt, using_database
 from limits_data import fill
 from sqlalchemy import event, func, select
 
@@ -14,14 +14,19 @@ DASHBOARD_LIMIT_MS = 200
 LIST_LIMIT_MS = 400
 
 
-@pytest.fixture(scope="module")
-def full_file(migrated_file, tmp_path_factory) -> Path:
-    """Filling a database takes about 400ms, so it's done once and each test copies it."""
-    path = tmp_path_factory.mktemp("full") / "full.db"
-    shutil.copyfile(migrated_file, path)
+def _fill_to_the_limits(path: Path) -> None:
+    copy_of_migrated(path)
     with using_database(path), db.writing() as conn:
         fill(conn, TODAY)
-    return path
+
+
+prebuilt.register("full", _fill_to_the_limits, used_by="full_file")
+
+
+@pytest.fixture(scope="module")
+def full_file() -> Path:
+    """Filling a database to the limits takes seconds, so it's done once and each test copies it."""
+    return prebuilt.path("full")
 
 
 @pytest.fixture
@@ -46,6 +51,7 @@ def test_the_data_really_is_at_the_limits(full):
         assert conn.scalar(select(func.count()).select_from(contacts)) == 1000
         assert conn.scalar(select(func.count()).select_from(deals)) == 500
         assert conn.scalar(select(func.count()).select_from(activities)) == 5000
+        assert conn.scalar(select(func.count()).select_from(products)) == 200
 
 
 def test_the_dashboard_is_quick(full):
@@ -54,7 +60,7 @@ def test_the_dashboard_is_quick(full):
     assert elapsed < DASHBOARD_LIMIT_MS
 
 
-@pytest.mark.parametrize("path", ["/api/organizations", "/api/contacts", "/api/deals"])
+@pytest.mark.parametrize("path", ["/api/organizations", "/api/contacts", "/api/deals", "/api/products"])
 def test_lists_are_quick(full, path):
     elapsed = median_ms(full, path)
     print(f"{path}: {elapsed:.1f}ms")
@@ -81,6 +87,8 @@ QUERIES = {
     "/api/organizations/{organization}/timeline": 1,
     "/api/contacts/{contact}/timeline": 1,
     "/api/deals/{deal}/timeline": 1,
+    "/api/products": 1,
+    "/api/search?q=a": 1,
 }
 
 

@@ -1,4 +1,4 @@
-"""The top bar's search: organizations, contacts and deals whose names hold the text (K1 to K5)."""
+"""The top bar's search: organizations, contacts, deals and active products by name (K1 to K5, G11)."""
 
 import unicodedata
 from collections.abc import Callable
@@ -6,16 +6,17 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
 from pydantic import AfterValidator, BaseModel
-from sqlalchemy import ColumnElement, Connection, Row, Text, cast, func, literal, null, select, union_all
+from sqlalchemy import ColumnElement, CompoundSelect, Integer, Row, Text, cast, func, literal, null, select, union_all
 
 from accountable import db
-from accountable.crm.tables import contacts, deals, organizations
+from accountable.crm.tables import contacts, deals, organizations, products
 
 router = APIRouter()
 
 SHOWN = 5
 LONGEST = 100
 LIKE_ESCAPE = "/"
+KINDS = ("organizations", "contacts", "deals", "products")
 
 
 def _search_text(value: str) -> str:
@@ -50,6 +51,12 @@ class DealResult(BaseModel):
     organization_name: str | None
 
 
+class ProductResult(BaseModel):
+    id: int
+    name: str
+    unit_price_cents: int
+
+
 class Group[Result: BaseModel](BaseModel):
     """How many of one kind match, and the first few in order."""
 
@@ -61,6 +68,7 @@ class SearchResults(BaseModel):
     organizations: Group[OrganizationResult]
     contacts: Group[ContactResult]
     deals: Group[DealResult]
+    products: Group[ProductResult]
 
 
 def _holding(name: ColumnElement[str], text: str) -> ColumnElement[bool]:
@@ -78,14 +86,19 @@ def _blank_text() -> ColumnElement[Any]:
     return cast(null(), Text)
 
 
-def _matching(conn: Connection, text: str) -> list[Row]:
-    """Every match of every kind, in one query, because each one crosses the internet in the shared app."""
+def _blank_price() -> ColumnElement[Any]:
+    return cast(null(), Integer)
+
+
+def matching(text: str) -> CompoundSelect:
+    """Every match of every kind, as one query, because each query crosses the internet in the shared app."""
     found_organizations = select(
         literal("organizations").label("kind"),
         organizations.c.id,
         organizations.c.name,
         organizations.c.industry.label("detail"),
         _blank_text().label("stage"),
+        _blank_price().label("price"),
     ).where(_holding(organizations.c.name, text))
     found_contacts = (
         select(
@@ -94,6 +107,7 @@ def _matching(conn: Connection, text: str) -> list[Row]:
             contacts.c.name,
             organizations.c.name.label("detail"),
             _blank_text().label("stage"),
+            _blank_price().label("price"),
         )
         .select_from(contacts.outerjoin(organizations, contacts.c.organization_id == organizations.c.id))
         .where(_holding(contacts.c.name, text))
@@ -105,11 +119,21 @@ def _matching(conn: Connection, text: str) -> list[Row]:
             deals.c.name,
             organizations.c.name.label("detail"),
             deals.c.stage,
+            _blank_price().label("price"),
         )
         .select_from(deals.outerjoin(organizations, deals.c.organization_id == organizations.c.id))
         .where(_holding(deals.c.name, text))
     )
-    return list(conn.execute(union_all(found_organizations, found_contacts, found_deals)).all())
+    # Archived products are found from the Products table instead (G11).
+    found_products = select(
+        literal("products").label("kind"),
+        products.c.id,
+        products.c.name,
+        _blank_text().label("detail"),
+        _blank_text().label("stage"),
+        products.c.unit_price_cents.label("price"),
+    ).where(_holding(products.c.name, text), products.c.active)
+    return union_all(found_organizations, found_contacts, found_deals, found_products)
 
 
 def _alphabetical(name: str) -> tuple[str, str]:
@@ -132,8 +156,8 @@ def _group[Result: BaseModel](rows: list[Row], result: Callable[[Row], Result]) 
 @router.get("/search")
 def search(q: SearchText) -> SearchResults:
     with db.reading() as conn:
-        rows = _in_order(_matching(conn, q), q)
-    of_kind = {kind: [row for row in rows if row.kind == kind] for kind in ("organizations", "contacts", "deals")}
+        rows = _in_order(list(conn.execute(matching(q)).all()), q)
+    of_kind = {kind: [row for row in rows if row.kind == kind] for kind in KINDS}
     return SearchResults(
         organizations=_group(
             of_kind["organizations"], lambda row: OrganizationResult(id=row.id, name=row.name, industry=row.detail)
@@ -144,5 +168,8 @@ def search(q: SearchText) -> SearchResults:
         deals=_group(
             of_kind["deals"],
             lambda row: DealResult(id=row.id, name=row.name, stage=row.stage, organization_name=row.detail),
+        ),
+        products=_group(
+            of_kind["products"], lambda row: ProductResult(id=row.id, name=row.name, unit_price_cents=row.price)
         ),
     )

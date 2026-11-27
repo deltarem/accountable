@@ -57,7 +57,8 @@ scripts/
   start.mjs                       npm start: reads .env, builds the frontend, runs the shared app on this computer
   test.mjs                        npm test
   check.mjs                       npm run check and npm run check:quick
-  checks.mjs                      runs the layers behind both, side by side where it can, and prints one summary
+  checks.mjs                      runs the layers behind both, side by side where it can and the unit tests one layer
+                                  at a time, and prints one summary
   data.mjs                        npm run seed and npm run empty
   test-plan.mjs                   how npm test shares out the machine, and where each worker's servers are, in each run's block of ports
   test-sharing.mjs                lets worktrees run the checks at once: a block of ports each, shared end-to-end workers, and quiet for the speed tests
@@ -78,7 +79,7 @@ backend/accountable/
   cli.py                          seed and empty commands, for the local copy only
   migrations/                     Alembic, with batch mode on
   crm/
-    tables.py                     SQLAlchemy Core tables
+    tables.py                     SQLAlchemy Core tables, and the key product names are compared by (G7)
     schemas.py                    Pydantic request and reply models
     rules.py                      stage-change rules, usual probabilities, expected revenue
     timeline.py                   merged timelines and last-activity queries

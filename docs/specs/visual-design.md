@@ -14,7 +14,7 @@ Dark mode keeps the brand skill's page and Sea Mist ink, but not its black panel
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| Page | `#F0F4F5` | `#04232E` | Page background, row hover, inputs including the search box, secondary buttons, percentage pills, the highlighted menu item and search result, the Archived chip |
+| Page | `#F0F4F5` | `#04232E` | Page background, row hover, inputs including the search box, secondary buttons, percentage pills, the highlighted menu item and search result |
 | Panel | `#FFFFFF` | `#0B3240` | Panels, cards, the top bar, the sign-in panel, the revenue figure's backing |
 | Raised | `#FFFFFF` | `#12404F` | Dialogs, the menu, search results, picker lists, chart tooltips and messages, which float over the rest |
 | Ink | `#073B4C` Midnight | `#CDD8DB` Sea Mist | Body text and headings, the revenue line, the deals-won bars, the Won fill |
@@ -22,7 +22,7 @@ Dark mode keeps the brand skill's page and Sea Mist ink, but not its black panel
 | Midnight | `#073B4C` | `#073B4C` | Text on Sea Green, Marigold and Coral, including on the revenue chart's fill |
 | Muted ink | `#4A6B76` | `#9AB1B8` | Secondary text, the Archived chip's text |
 | Line | `#CDD8DB` Sea Mist | `#45646E` | Link underlines, funnel leader lines, scrollbars, and at half strength the slot where a dragged card will land |
-| Grid | `#E4ECEE` | `#1E4350` | Chart grid lines |
+| Grid | `#E4ECEE` | `#1E4350` | Chart grid lines, the Archived chip |
 | Soft bar | `#839DA5` | `#6C858E` | The current month's bar, halfway between ink and the panel |
 | Focus ring | `#118AB2` Cerulean | `#4CB3D6` | Focus rings, a lighter Cerulean in dark mode so it shows on every layer |
 | Primary | `#06D6A0` Sea Green, Midnight text | Same | Main buttons, including Sign in, current section |
@@ -43,7 +43,8 @@ Small text meets 4.5:1 in both modes, and anything that isn't text, such as the 
 | Pair | Light | Dark |
 |---|---|---|
 | Ink on page, panel, raised | 10.91:1, 12.08:1, 12.08:1 | 11.24:1, 9.35:1, 7.71:1 |
-| Muted ink on page, panel, raised, including the Archived chip | 5.19:1, 5.74:1, 5.74:1 | 7.28:1, 6.06:1, 5.00:1 |
+| Muted ink on page, panel, raised | 5.19:1, 5.74:1, 5.74:1 | 7.28:1, 6.06:1, 5.00:1 |
+| Muted ink on grid, the Archived chip | 4.80:1 | 4.74:1 |
 | Ink and muted ink on the late tint | 10.61:1, 5.05:1 | 9.00:1, 5.83:1 |
 | Sea Green text on page, panel | 4.81:1, 5.33:1 | 10.08:1, 8.39:1 |
 | Marigold text on page, panel | 4.86:1, 5.39:1 | 11.65:1, 9.69:1 |
@@ -78,7 +79,7 @@ Within a mode, a stage keeps its color everywhere. Negotiation and Lost chips us
 | Contact status | Customer | Qualified | Lead |
 | Activity type | Call | Email | Note |
 
-Stage-change entries use Cerulean, which marks them as information. The Archived chip takes no brand color, because an archived product is out of use: muted ink on the page color, which stands out from a panel without competing with the stage and status chips.
+Stage-change entries use Cerulean, which marks them as information. The Archived chip takes no brand color, because an archived product is out of use: muted ink on the grid color, which stands out from a panel without competing with the stage and status chips. It isn't the page color, which a hovered row turns too, and the chip would lose its shape there.
 
 ### Type
 

@@ -7,9 +7,15 @@ import { PageHeader } from "../components/PageHeader";
 import { formatDate } from "../lib/dates";
 import type { Authorship, Person } from "./queries";
 
-type HeaderProps = { title: string; chips?: ReactNode; onEdit: () => void; onDelete: () => void };
+/** A button after Edit in place of Delete, such as Archive or Restore. */
+type HeaderAction = { label: string; icon: ReactNode; onClick: () => void };
 
-export function RecordHeader({ title, chips, onEdit, onDelete }: HeaderProps) {
+type HeaderProps = { title: string; chips?: ReactNode; onEdit: () => void } & (
+  { onDelete: () => void; action?: never } | { action: HeaderAction; onDelete?: never }
+);
+
+export function RecordHeader({ title, chips, onEdit, onDelete, action }: HeaderProps) {
+  const second = action ?? { label: "Delete", icon: <Trash2 size={15} aria-hidden="true" />, onClick: onDelete };
   return (
     <PageHeader title={title}>
       {chips}
@@ -18,9 +24,9 @@ export function RecordHeader({ title, chips, onEdit, onDelete }: HeaderProps) {
           <Pencil size={15} aria-hidden="true" />
           Edit
         </button>
-        <button type="button" className="btn btn-secondary bg-panel" onClick={onDelete}>
-          <Trash2 size={15} aria-hidden="true" />
-          Delete
+        <button type="button" className="btn btn-secondary bg-panel" onClick={second.onClick}>
+          {second.icon}
+          {second.label}
         </button>
       </div>
     </PageHeader>

@@ -5,15 +5,46 @@ from itertools import pairwise
 import pytest
 from accountable import db
 from accountable.crm import rules, sample_data
-from accountable.crm.tables import activities, contacts, deals, organizations, stage_changes
+from accountable.crm.tables import activities, contacts, deals, name_key, organizations, products, stage_changes
 from accountable.users import users
+from conftest import copy_of_migrated, prebuilt, using_database
 from sqlalchemy import select
 
 DAYS = [date(2027, 1, 1), date(2027, 3, 1), date(2028, 2, 29), date(2027, 1, 31), date(2026, 10, 31), date(2026, 7, 14)]
+SAME_DAY = date(2026, 10, 31)
+TABLES = {
+    "organizations": organizations,
+    "contacts": contacts,
+    "deals": deals,
+    "activities": activities,
+    "stage_changes": stage_changes,
+    "products": products,
+    "users": users,
+}
 
 
 def rows_of(conn, table):
     return conn.execute(select(table)).all()
+
+
+def seeding_on(day: date):
+    def make(path) -> None:
+        copy_of_migrated(path)
+        with using_database(path), db.writing() as conn:
+            sample_data.fill(conn, day)
+
+    return make
+
+
+# Seeding takes about a second, so each day is seeded once, before the tests, and the tests only read it.
+for day in DAYS:
+    prebuilt.register(f"sample-{day}", seeding_on(day), used_by="seeded")
+prebuilt.register(f"sample-{SAME_DAY}-again", seeding_on(SAME_DAY), used_by="seeded_twice")
+
+
+def rows_in(name: str) -> dict:
+    with using_database(prebuilt.path(name)), db.reading() as conn:
+        return {kind: rows_of(conn, table) for kind, table in TABLES.items()}
 
 
 @pytest.fixture(scope="module")
@@ -22,23 +53,18 @@ def rows_by_day() -> dict:
 
 
 @pytest.fixture(params=DAYS, ids=str)
-def seeded(request, rows_by_day, database):
-    """The rows for one seeding day. The tests only read them, so each day is seeded once."""
+def seeded(request, rows_by_day):
+    """The rows for one seeding day."""
     today = request.param
     if today not in rows_by_day:
-        with db.writing() as conn:
-            sample_data.fill(conn, today)
-        with db.reading() as conn:
-            rows_by_day[today] = {
-                "today": today,
-                "organizations": rows_of(conn, organizations),
-                "contacts": rows_of(conn, contacts),
-                "deals": rows_of(conn, deals),
-                "activities": rows_of(conn, activities),
-                "stage_changes": rows_of(conn, stage_changes),
-                "users": rows_of(conn, users),
-            }
+        rows_by_day[today] = {"today": today, **rows_in(f"sample-{today}")}
     return rows_by_day[today]
+
+
+@pytest.fixture
+def seeded_twice() -> tuple[dict, dict]:
+    """The same day seeded twice, in two databases."""
+    return rows_in(f"sample-{SAME_DAY}"), rows_in(f"sample-{SAME_DAY}-again")
 
 
 def months_back(today: date, count: int) -> list[tuple[int, int]]:
@@ -140,20 +166,10 @@ def test_nothing_logged_is_in_the_future(seeded):
     assert all(row.occurred_at < limit for row in seeded["activities"])
 
 
-def test_dates_follow_the_seeding_day(database):
-    first = date(2026, 10, 31)
-    later = date(2027, 2, 14)
-    with db.writing() as conn:
-        sample_data.fill(conn, first)
-    with db.reading() as conn:
-        early = max(row.close_date for row in rows_of(conn, deals))
-    with db.writing() as conn:
-        for table in (activities, stage_changes, deals, contacts, organizations):
-            conn.execute(table.delete())
-        sample_data.fill(conn, later)
-    with db.reading() as conn:
-        late = max(row.close_date for row in rows_of(conn, deals))
-    assert late > early
+def test_dates_follow_the_seeding_day(seeded_twice):
+    first, _again = seeded_twice
+    later = rows_in(f"sample-{date(2027, 3, 1)}")
+    assert max(row.close_date for row in later["deals"]) > max(row.close_date for row in first["deals"])
 
 
 def test_every_deal_has_a_full_stage_history(seeded):
@@ -181,25 +197,17 @@ def test_only_example_addresses(seeded):
         assert row.website.endswith(".example")
 
 
-def test_the_same_content_each_time(database):
-    def snapshot(conn):
+def test_the_same_content_each_time(seeded_twice):
+    def snapshot(rows):
         return (
-            [
-                tuple(row)
-                for row in conn.execute(select(deals.c.name, deals.c.stage, deals.c.value, deals.c.close_date))
-            ],
-            [tuple(row) for row in conn.execute(select(contacts.c.name, contacts.c.email))],
-            [tuple(row) for row in conn.execute(select(activities.c.type, activities.c.description))],
+            [(row.name, row.stage, row.value, row.close_date) for row in rows["deals"]],
+            [(row.name, row.email) for row in rows["contacts"]],
+            [(row.type, row.description) for row in rows["activities"]],
         )
 
-    day = date(2026, 10, 31)
-    with db.writing() as conn:
-        sample_data.fill(conn, day)
-        first = snapshot(conn)
-        for table in (activities, stage_changes, deals, contacts, organizations):
-            conn.execute(table.delete())
-        sample_data.fill(conn, day)
-        assert snapshot(conn) == first
+    first, again = seeded_twice
+    assert snapshot(first)[0]
+    assert snapshot(again) == snapshot(first)
 
 
 def test_won_and_lost_columns_start_newest_first(seeded):
@@ -210,7 +218,7 @@ def test_won_and_lost_columns_start_newest_first(seeded):
 
 
 TEAMMATE_IDS = {teammate.id for teammate in sample_data.TEAMMATES}
-RECORDS = ("organizations", "contacts", "deals", "activities")
+RECORDS = ("organizations", "contacts", "deals", "activities", "products")
 
 
 def test_the_four_made_up_teammates_with_robin_having_no_name(seeded):
@@ -242,7 +250,7 @@ def test_each_teammate_added_some_of_each_kind(seeded):
         assert {row.created_by for row in seeded[kind]} == TEAMMATE_IDS, kind
 
 
-@pytest.mark.parametrize("kind", ["organizations", "contacts", "deals"])
+@pytest.mark.parametrize("kind", ["organizations", "contacts", "deals", "products"])
 def test_some_records_were_last_changed_by_another_teammate_since(seeded, kind):
     changed = [row for row in seeded[kind] if row.updated_by != row.created_by]
     assert len(changed) >= 5
@@ -256,8 +264,31 @@ def test_nothing_was_changed_before_it_was_added_or_after_today(seeded, kind):
         assert row.created_at <= row.updated_at < limit
 
 
-@pytest.mark.parametrize("kind", ["organizations", "contacts", "deals"])
+@pytest.mark.parametrize("kind", ["organizations", "contacts", "deals", "products"])
 def test_records_nobody_changed_have_one_moment_for_both_times(seeded, kind):
     unchanged = [row for row in seeded[kind] if row.updated_at == row.created_at]
     assert unchanged
     assert all(row.updated_by == row.created_by for row in unchanged)
+
+
+def test_twelve_products_each_with_a_name_of_its_own(seeded):
+    names = [row.name for row in seeded["products"]]
+    assert len(names) == 12
+    assert len({name_key(name) for name in names}) == 12
+    assert all(row.name_key == name_key(row.name) for row in seeded["products"])
+
+
+def test_product_prices_are_realistic_and_some_have_cents(seeded):
+    prices = [row.unit_price_cents for row in seeded["products"]]
+    assert all(100_00 <= price <= 10_000_00 for price in prices)
+    assert sum(price % 100 != 0 for price in prices) >= 3
+
+
+def test_two_products_are_archived_each_by_a_teammate_other_than_who_added_it(seeded):
+    archived = [row for row in seeded["products"] if not row.active]
+    assert len(archived) == 2
+    assert all(row.updated_by != row.created_by and row.updated_at > row.created_at for row in archived)
+
+
+def test_a_product_without_a_description_shows_none(seeded):
+    assert [row.name for row in seeded["products"] if row.description is None] == ["Custom report"]

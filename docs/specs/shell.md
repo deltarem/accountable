@@ -24,7 +24,7 @@ Part of the [spec](../spec.md), which has the summary, the terms, the quality ru
 
 ### Shell
 
-A rounded bar in the panel color across the top holds the Accountable wordmark, set in Instrument Sans, then the six sections with icons and labels. Products uses lucide-react's `Package` icon. All six, the search box, the date and the menu button fit on one line at 1280px, with nothing cut off or wrapped. At the right, in this order, come the search box, today's date and the menu button. The current section is a Sea Green pill with Midnight text, in both modes.
+A rounded bar in the panel color across the top holds the Accountable wordmark, set in Instrument Sans, then the six sections with icons and labels. Products uses lucide-react's `Package` icon. All six, the search box, the date and the menu button fit on one line at 1280px, with nothing cut off or wrapped. To make room, the bar's groups are 20px apart, each section link has 10px either side, and the date never wraps. At the right, in this order, come the search box, today's date and the menu button. The current section is a Sea Green pill with Midnight text, in both modes.
 
 The menu button is a 32px circle in Marigold with the initials in Midnight, in the label style, in both modes. Marigold keeps it apart from the Sea Green pill of the current section. Its label for screen readers is "Menu for Alex Rivera", with the person's name. Until the app has read who's signed in, or if it can't, such as while the message in N5 shows, the button shows a person icon in place of initials and is labeled "Menu", and the menu holds the themes and Sign out without a name, so the theme can still be changed.
 

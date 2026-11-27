@@ -269,6 +269,40 @@ A third review of the `mvp` branch against `main` using `docs/REVIEW.md` found t
 
 On the `products` branch, `docs/spec.md` and the area files now describe Accountable with a Products section in it, as it will be once the branch merges. One area file is new: `products.md`, with G1 to G11. The spec also gains Q5, which makes `npm test` fail any unit test that takes more than a second. The build plan is in `docs/changes/products/plan.md`, in six steps for one agent, starting with the time limit so every new test is held to it. While planning, the limit in the spec changed from cutting each test off at a second to failing the run from the timings the runners already write, with CI naming slow tests without failing. Nothing is built yet.
 
+## Products: build
+
+Following `docs/changes/products/plan.md`, on a Surface Book 3 running Windows 11: an i7-1065G7, a 15W laptop chip with 4 cores and 8 threads, on the Balanced power plan. It's much slower than the 10-core Mac the earlier timings came from, and its speed swings by two to three times as it heats up under a long run, so the same tests could take 106s one run and 343s the next.
+
+### Step 1: the one-second limit
+
+- **Before any change,** `npm run check` took 30m 38s and didn't pass. With every layer running at once, 203 backend and 183 frontend unit tests took a second or more, against two on the Mac, and 7 end-to-end and 3 speed tests failed, all timeouts or timings: `dashboard.spec.ts:58`, `data.spec.ts:84`, `menu.spec.ts:234`, four copy tests in `start.spec.ts`, and three in `stress.spec.ts`. Another worktree's checks ran beside it part of the time. Alone, the backend had 45 tests over a second and the frontend 52.
+- **The limit:** `scripts/test-report.mjs` now fails a layer with any unit test of a second or more, and says how many on its line, apart from in CI, where it only names them. The project owner chose, given the numbers above, to keep the limit at a second and to run the unit layers one after the other rather than at once: `npm test` runs the code and type checks side by side, then the backend's unit tests, then the frontend's.
+- **What made the backend slow,** found by timing each part of a test: a test client started a thread with an event loop of its own for every request, 30 to 75ms here, and every write made and deleted a journal file, 7.8ms a commit against 0.66ms with the journal in memory. `conftest.py` now shares one event loop and keeps the journal in memory. The rest were one-off costs charged to whichever test came first: building a database from the migrations (0.6s to 1.2s), filling the sample data (1.1s), filling to the limits (5s), and describing the shared app (0.5s). Those are built once before the first test now, through `Prebuilt`. Tests of starting the app build their tables from `tables.py` rather than replaying the migrations, the seed command's tests copy rows seeded once, the long-timeline test reads 500 entries a page rather than 50, and the two "stops partway" migration tests are each split in two, so no test runs more than one upgrade.
+- **What made the frontend slow:** on Windows a `setTimeout(0)` waits 15.3ms, for the system's timer tick, against 0.03ms for `setImmediate`. user-event waited one after every key and click, and React Query waited one for every change it passed on, so `user()` now has `delay: null` and React Query uses `setImmediate`. Each file's first test took 3 to 10 times as long as the others, while the engine warmed up, so `test-setup.ts` warms each file up first. Finding 50 table rows and their cells by role took 721ms, against 27ms reading them from the table, and finding one button by role on a page of 50 rows took 100 to 185ms, so `firstColumn()` and `buttonSaying()` do those. Vitest's 7 workers on 4 cores slowed every test three to five times, so outside CI it now runs on a quarter of the logical cores, 2 here: with 3 the frontend layer had 3 to 9 tests over a second from run to run, and with 2 it had 1. A test about what the deal form saves pastes its values with `fill()` rather than typing them. The 501-entry timeline test now reads 151, since the test before it checks the timeline asks a page at a time, which is what keeps any length within the API's limit.
+- **Also found:** on Windows, the end-to-end tests' servers outlive the run. After the baseline, four backends and four Vite servers were still holding ports 8900 to 8903 and 5300 to 5303. The summary named Vitest's files by their full path on Windows, because Vitest writes them with forward slashes and the project's folder has backslashes; fixed, with a test.
+- **Where it ended:** of the last two `npm run check:quick` runs, one passed with no unit test over a second, all 2,636 tests in 8m 14s, and one, in a slow phase where even the type check took three times as long, had 7 tests at 1.0 to 1.4s, five of them timeline tests that show a second page of 50 entries. The project owner chose to go on with the build and come back to tests near the line at step 6. Windows' Best performance power mode may cut the slow phases.
+
+### Step 2: backend
+
+Done. The `products` table and migration `0004`, which adds no rows and turns on row-level security on Postgres; the products routes, with no delete route; products in search, after deals, active ones only; the twelve sample products; `seed` and `empty` counting and clearing them; and 200 products in the stress data. 2,021 backend tests pass, none over a second and 4 over 300ms, with 99% coverage.
+
+- **Breaking it on purpose:** with the database's refusal of a repeated name no longer turned into a 422, the two tests that skip the routes' own check fail. With the name key no longer casefolded, ten tests fail. With one of search's blank columns left without a type, the Postgres test fails.
+- **Search on Postgres:** `matching()` in `search.py` now builds the query, and a test writes it out for Postgres and checks that every blank in the union has a type, since the tests only run on SQLite. It's still one query, and `test_limits.py` now caps `/api/search` and `/api/products` at one.
+- **Who:** sample products follow M7 and U14: each is put down to a teammate, three were since changed by the next one, and both archived ones were archived by a teammate other than the one who added them.
+
+### Steps 3 and 4: frontend
+
+Done, and `npm run check:quick` passed after each: 2,889 tests after step 3, and 2,933, none over a second, after step 4.
+
+- **Building blocks:** `lib/money.ts` has `cents()`, which shows whole cents as `$1,200.00` with whole-number arithmetic, `priceText()`, which gives a saved price as `49.50` for the form, and `readPrice()`, which reads what was typed as digits. With `readPrice()` swapped for one that multiplies by 100, the `0.29` test fails. `DataTable` takes a `rowAction` in place of Delete and an `emptyFilterMessage`. `FilterGroup` is the filter Contacts drew itself, and Contacts now uses it, its tests unchanged. `RecordHeader` takes an `action` in place of Delete.
+- **Products:** the table, its Active, Archived and All filter, the product page, the form, the routes, the sixth section with lucide-react's `Package` icon, and the Products group in the search box. A product's archive and restore happen once however quickly they're pressed: without that guard, the two "sends once" tests fail.
+- **Changed from the plan:** the plan said to add an `archived` chip tone of muted ink on the page color. On a hovered row, which takes the page color, that chip lost its shape, as the plan had warned it might, so the Archived chip is muted ink on the grid color instead: 4.80:1 in light mode and 4.74:1 in dark, and it stands out from both the panel and the page. `products.md` and `visual-design.md` say so. A product's description sits under its label on the page rather than beside it, because it can run to several lines.
+
+### Step 5: end to end
+
+- **The top bar at 1280px (plan risk 3):** with six sections the date wrapped onto two lines, 27px short. The gaps between the bar's groups went from 28px to 20px and each section link's padding from 12px to 10px a side, which frees 40px, and the date can no longer wrap, so a bar that's too full now spills over the edge, where `quality.spec.ts` sees it. The search box keeps its 240px. Checked at 1280 by 720 and 1440 by 900, light and dark. `shell.md` says so.
+- **New and changed specs:** `products.spec.ts` is new. `search.spec.ts`, `data.spec.ts`, `start.spec.ts`, `menu.spec.ts`, `quality.spec.ts` and `stress.spec.ts` now include Products.
+
 ## Running Accountable
 
 Accountable runs two ways:
@@ -303,7 +337,7 @@ It opens on a sign-in screen listing four made-up teammates: Alex Rivera, Dana W
 
 If it says a port is in use, Accountable is probably already running in another window.
 
-The search box in the top bar finds organizations, contacts and deals by any part of their name. The round button at the top right, with your initials, opens a menu with your name, the theme and Sign out. The theme can be Light, Dark, or System, which follows your computer's own setting as it changes. This browser remembers your choice.
+The search box in the top bar finds organizations, contacts, deals and active products by any part of their name. Products, the sixth section, is the price list: archive a product to take it out of use, and Restore brings it back. The round button at the top right, with your initials, opens a menu with your name, the theme and Sign out. The theme can be Light, Dark, or System, which follows your computer's own setting as it changes. This browser remembers your choice.
 
 ### Stop it
 
@@ -372,10 +406,10 @@ The first start against an empty Supabase project builds the tables and fills th
 
 #### Clear the sample data
 
-When the team is ready to type in its own records, run this in Supabase's SQL Editor. It removes every organization, contact, deal, activity and stage change, and leaves the people and the tables in place:
+When the team is ready to type in its own records, run this in Supabase's SQL Editor. It removes every organization, contact, deal, activity, stage change and product, and leaves the people and the tables in place:
 
 ```sql
-truncate table activities, stage_changes, deals, contacts, organizations;
+truncate table activities, stage_changes, deals, contacts, organizations, products;
 ```
 
 New records carry on from the next id, so an old address never opens a different record. There's no undo.

@@ -1,17 +1,52 @@
 import io
+from typing import cast
 
 import pytest
 from accountable import cli, db, users
 from accountable.crm import sample_data
-from accountable.crm.tables import activities, contacts, deals, organizations, stage_changes
-from sqlalchemy import func, select
+from accountable.crm.tables import activities, contacts, deals, name_key, organizations, products, stage_changes
+from conftest import TODAY, copy_of_migrated, insert_row, prebuilt, using_database
+from sqlalchemy import Connection, func, insert, select
+
+RECORDS = [table for table in db.metadata.sorted_tables if table.name != "users"]
+# Taken before quick_seeding stands in for it, so a test can still check what it does.
+REAL_FILL_SAMPLE = cli.fill_sample
+
+
+def _seed(path) -> None:
+    copy_of_migrated(path)
+    with using_database(path), db.writing() as conn:
+        sample_data.fill(conn, TODAY)
+
+
+prebuilt.register("seeded-for-cli", _seed, used_by="quick_seeding")
+
+
+@pytest.fixture(scope="module")
+def seeded() -> dict[str, list[dict]]:
+    with using_database(prebuilt.path("seeded-for-cli")), db.reading() as source:
+        return {table.name: [row._asdict() for row in source.execute(select(table))] for table in RECORDS}
+
+
+@pytest.fixture(autouse=True)
+def quick_seeding(seeded, monkeypatch) -> None:
+    """Seeding copies rows seeded once before the tests, as seeding takes about a second.
+    These tests are about the commands, and test_sample_data.py tests what seeding puts in."""
+
+    def copy_seeded(conn: Connection) -> None:
+        sample_data.add_missing_teammates(conn)
+        for table in RECORDS:
+            if seeded[table.name]:
+                conn.execute(insert(table), seeded[table.name])
+
+    monkeypatch.setattr(cli, "fill_sample", copy_seeded)
 
 
 def counts() -> dict[str, int]:
     with db.reading() as conn:
         return {
             table.name: conn.execute(select(func.count()).select_from(table)).scalar_one()
-            for table in (organizations, contacts, deals, activities, stage_changes)
+            for table in (organizations, contacts, deals, activities, stage_changes, products)
         }
 
 
@@ -25,9 +60,11 @@ def with_records(make):
     contact = make.contact(organization_id=organization)
     deal = make.deal(organization_id=organization, main_contact_id=contact)
     make.activity(deal_id=deal)
+    with db.writing() as conn:
+        insert_row(conn, products, name="Training day", name_key=name_key("Training day"), unit_price_cents=145000)
 
 
-EMPTY = {"organizations": 0, "contacts": 0, "deals": 0, "activities": 0, "stage_changes": 0}
+EMPTY = {"organizations": 0, "contacts": 0, "deals": 0, "activities": 0, "stage_changes": 0, "products": 0}
 
 
 @pytest.mark.parametrize("command", ["seed", "empty"])
@@ -35,7 +72,7 @@ def test_shows_what_will_be_lost_and_needs_yes(with_records, monkeypatch, capsys
     answer(monkeypatch, "yes\n")
     assert cli.main([command]) == 0
     output = capsys.readouterr().out
-    assert "1 organization, 1 contact, 1 deal, 1 activity" in output
+    assert "1 organization, 1 contact, 1 deal, 1 activity, 1 product" in output
     assert "can't be undone" in output
 
 
@@ -44,7 +81,7 @@ def test_counts_read_naturally_when_there_are_several(make, monkeypatch, capsys)
     make.organization()
     answer(monkeypatch, "no\n")
     cli.main(["empty"])
-    assert "2 organizations, 0 contacts, 0 deals, 0 activities" in capsys.readouterr().out
+    assert "2 organizations, 0 contacts, 0 deals, 0 activities, 0 products" in capsys.readouterr().out
 
 
 def test_seed_replaces_everything_with_the_sample_data(with_records, monkeypatch):
@@ -52,6 +89,7 @@ def test_seed_replaces_everything_with_the_sample_data(with_records, monkeypatch
     cli.main(["seed"])
     after = counts()
     assert (after["organizations"], after["contacts"], after["deals"], after["activities"]) == (24, 75, 80, 300)
+    assert after["products"] == 12
 
 
 def test_empty_removes_every_record(with_records, monkeypatch):
@@ -131,7 +169,7 @@ def test_refuses_with_the_shared_apps_database_set(with_records, monkeypatch, ca
     assert "nothing was changed" in capsys.readouterr().err.lower()
 
 
-def test_seed_before_the_first_start_builds_the_database(tmp_path, monkeypatch, capsys):
+def test_seed_before_the_first_start_builds_the_database(tmp_path, monkeypatch, capsys, quick_migrations):
     path = tmp_path / "first.db"
     monkeypatch.setenv("ACCOUNTABLE_DB", str(path))
     db.dispose()
@@ -142,7 +180,7 @@ def test_seed_before_the_first_start_builds_the_database(tmp_path, monkeypatch, 
     db.dispose()
 
 
-def test_empty_before_the_first_start_leaves_an_empty_database(tmp_path, monkeypatch):
+def test_empty_before_the_first_start_leaves_an_empty_database(tmp_path, monkeypatch, quick_migrations):
     path = tmp_path / "first.db"
     monkeypatch.setenv("ACCOUNTABLE_DB", str(path))
     db.dispose()
@@ -151,3 +189,11 @@ def test_empty_before_the_first_start_leaves_an_empty_database(tmp_path, monkeyp
     assert counts() == EMPTY
     assert everyone() == {teammate.id for teammate in sample_data.TEAMMATES}
     db.dispose()
+
+
+def test_seeding_fills_the_sample_data_dated_today_in_the_teams_zone(monkeypatch):
+    filled = []
+    monkeypatch.setattr(sample_data, "fill", lambda conn, today: filled.append((conn, today)))
+    connection = cast(Connection, object())
+    REAL_FILL_SAMPLE(connection)
+    assert filled == [(connection, db.local_today())]
