@@ -37,7 +37,9 @@ function slowest(timings) {
 
 export function readVitest(json, root) {
   const report = JSON.parse(json);
-  const relative = (file) => (file.startsWith(`${root}/`) ? file.slice(root.length + 1) : file);
+  // Vitest names files with forward slashes, even on Windows, where the root has backslashes.
+  const folder = `${root.replaceAll("\\", "/")}/`;
+  const relative = (file) => (file.startsWith(folder) ? file.slice(folder.length) : file);
 
   const failures = report.testResults.flatMap((file) => {
     const failedTests = file.assertionResults.filter((test) => test.status === "failed");
@@ -89,11 +91,17 @@ function duration(ms) {
   return total < 60 ? `${total}s` : `${Math.floor(total / 60)}m ${String(total % 60).padStart(2, "0")}s`;
 }
 
-/** A layer passes only if it exited cleanly, reported no failures and, if it runs tests, ran some. */
-function didPass({ code, results, runsTests }) {
+const slowCount = (results) => results?.slow?.length ?? 0;
+
+/**
+ * A layer passes only if it exited cleanly, reported no failures and, if it runs tests, ran some.
+ * Outside CI, a unit test that took a second or more fails its layer too (Q5).
+ */
+function didPass({ code, results, runsTests }, slowFails) {
   if (code !== 0) return false;
   if (!runsTests) return true;
-  return results !== null && results.failed === 0 && results.passed > 0;
+  if (results === null || results.failed > 0 || results.passed === 0) return false;
+  return !(slowFails && slowCount(results) > 0);
 }
 
 function resultText(layer, passed) {
@@ -103,25 +111,33 @@ function resultText(layer, passed) {
 
   const parts = [`${results.passed} passed`];
   if (results.failed > 0) parts.push(`${results.failed} FAILED`);
+  if (slowCount(results) > 0) parts.push(`${slowCount(results)} over a second`);
   if (results.skipped > 0) parts.push(`${results.skipped} skipped`);
   if (results.failed === 0 && !passed) parts.push(results.passed === 0 ? "FAILED, ran no tests" : "FAILED");
   return parts.join(", ");
 }
 
-/** Information only: a slow test doesn't fail the run. */
-function slowLines(counted) {
+/** Every unit test that took a second or more, slowest first. In CI, whose machine is the slow one, only a list. */
+function slowLines(counted, slowFails) {
   const slow = counted
     .flatMap((row) => (row.results.slow ?? []).map((test) => ({ ...test, layer: row.name })))
     .sort((a, b) => b.ms - a.ms);
   if (slow.length === 0) return [];
   const listed = slow.map((test) => `  ${seconds(test.ms).padStart(5)}  ${test.layer}: ${test.name}`);
-  return ["Unit tests that took a second or more", ...listed, ""];
+  const heading = slowFails
+    ? "Unit tests that took a second or more, which fails the run"
+    : "Unit tests that took a second or more, listed only, because CI runs on a slower machine";
+  return [heading, ...listed, ""];
 }
 
-/** Layers are { name, code, ms, runsTests, results }, where results is null if none were written. */
-export function summarize(layers, elapsedMs) {
+/**
+ * Layers are { name, code, ms, runsTests, results }, where results is null if none were written.
+ * inCi stops slow unit tests failing the run, and is read from CI unless given.
+ */
+export function summarize(layers, elapsedMs, { inCi = Boolean(process.env.CI) } = {}) {
+  const slowFails = !inCi;
   const rows = layers.map((layer) => {
-    const passed = didPass(layer);
+    const passed = didPass(layer, slowFails);
     return { ...layer, passed, text: resultText(layer, passed) };
   });
 
@@ -133,7 +149,7 @@ export function summarize(layers, elapsedMs) {
 
   const counted = rows.filter((row) => row.results !== null && row.results !== undefined);
   const count = (field) => counted.reduce((sum, row) => sum + row.results[field], 0);
-  const lines = ["", "Summary", ...table, "", ...slowLines(counted)];
+  const lines = ["", "Summary", ...table, "", ...slowLines(counted, slowFails)];
 
   const failing = rows.filter((row) => !row.passed);
   if (failing.length === 0) {
@@ -147,8 +163,12 @@ export function summarize(layers, elapsedMs) {
     if (names.length > MOST_NAMES_SHOWN) lines.push(`  and ${names.length - MOST_NAMES_SHOWN} more`);
     lines.push("");
   }
-  lines.push(
-    `Failed: ${failing.map((row) => row.name).join(", ")}. ${count("failed")} failed, ${count("passed")} passed in ${duration(elapsedMs)}.`,
-  );
+  const slow = slowFails ? counted.reduce((sum, row) => sum + slowCount(row.results), 0) : 0;
+  const tallies = [
+    `${count("failed")} failed`,
+    ...(slow > 0 ? [`${slow} over a second`] : []),
+    `${count("passed")} passed`,
+  ];
+  lines.push(`Failed: ${failing.map((row) => row.name).join(", ")}. ${tallies.join(", ")} in ${duration(elapsedMs)}.`);
   return { passed: false, text: lines.join("\n") };
 }

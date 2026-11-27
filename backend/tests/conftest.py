@@ -5,12 +5,15 @@ a test can touch real data.
 """
 
 import base64
+import functools
 import hashlib
 import hmac
 import json
 import os
 import secrets
 import shutil
+import sqlite3
+import tempfile
 import time
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
@@ -19,14 +22,17 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
+import anyio.from_thread
 import jwt
 import pytest
+from alembic import command
+from alembic.config import Config
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from jwt.algorithms import ECAlgorithm, RSAAlgorithm
-from sqlalchemy import Connection, Table, insert, make_url, select
+from sqlalchemy import Connection, Engine, Table, event, insert, make_url, select
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 REAL_DATA_FOLDER = PROJECT_ROOT / "data"
@@ -56,6 +62,28 @@ def _check_database_path() -> None:
 
 
 _check_database_path()
+
+
+@event.listens_for(Engine, "connect")
+def _journal_in_memory(connection: object, _record: object) -> None:
+    """Every test database keeps its rollback journal in memory, where a file would be made and
+    deleted for each write. On Windows that made a commit about ten times slower (Q5).
+    Rollback works the same. Only surviving a crash of the computer differs, which no test covers."""
+    if isinstance(connection, sqlite3.Connection) and not connection.in_transaction:
+        connection.execute("PRAGMA journal_mode = MEMORY")
+        connection.execute("PRAGMA synchronous = OFF")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _one_event_loop_for_every_client() -> Iterator[None]:
+    """Every TestClient sends its requests through this one event loop. Without it, each client
+    starts a thread with a loop of its own for every request, which on Windows cost more than
+    the request itself (Q5). A client used with `with`, to run the app's startup, still gets its own."""
+    with anyio.from_thread.start_blocking_portal() as portal:
+        TestClient.portal = portal
+        yield
+        TestClient.portal = None
+
 
 from accountable import auth, db, settings
 from accountable.crm import rules, sample_data
@@ -87,13 +115,109 @@ def using_database(path: Path) -> Generator[None]:
         db.dispose()
 
 
-@pytest.fixture(scope="session")
-def migrated_file(tmp_path_factory) -> Path:
-    """One database built from the migrations, which takes about 50ms. Tests copy it."""
-    path = tmp_path_factory.mktemp("migrated") / "migrated.db"
+@dataclass
+class _Build:
+    make: Callable[[Path], None]
+    used_by: str
+    path: Path | None = None
+
+
+class Prebuilt:
+    """Databases many tests start from, each built once a run and copied by the tests.
+
+    A shared database built by whichever test needed it first would charge that one test
+    for everyone's, and on a slow machine take it past the one-second limit (Q5). So the
+    ones the collected tests use are built before the first test runs.
+    """
+
+    def __init__(self) -> None:
+        self._builds: dict[str, _Build] = {}
+        self._warm_ups: list[tuple[Callable[[], object], str]] = []
+        self._folder: Path | None = None
+
+    def register(self, name: str, make: Callable[[Path], None], *, used_by: str) -> None:
+        """make fills the file it's given. used_by is the fixture whose tests need it."""
+        self._builds[name] = _Build(make, used_by)
+
+    def warm(self, make: Callable[[], object], *, used_by: str) -> None:
+        """Something other than a file that's made once and kept, such as an app's description."""
+        self._warm_ups.append((make, used_by))
+
+    def path(self, name: str) -> Path:
+        build = self._builds[name]
+        if build.path is None:
+            path = self.folder() / f"{name}.db"
+            build.make(path)
+            build.path = path
+        return build.path
+
+    def folder(self) -> Path:
+        if self._folder is None:
+            # Beside the run's database, which npm test puts in a temporary folder of its own.
+            parent = Path(os.environ["ACCOUNTABLE_DB"]).resolve().parent
+            parent.mkdir(parents=True, exist_ok=True)
+            self._folder = Path(tempfile.mkdtemp(prefix="prebuilt-", dir=parent))
+        return self._folder
+
+    def build_for(self, items: list[pytest.Item]) -> None:
+        used = {name for item in items for name in getattr(item, "fixturenames", ())}
+        for name, build in self._builds.items():
+            if build.used_by in used:
+                self.path(name)
+        for make, used_by in self._warm_ups:
+            if used_by in used:
+                make()
+
+    def remove(self) -> None:
+        if self._folder is not None:
+            db.dispose()
+            shutil.rmtree(self._folder, ignore_errors=True)
+
+
+prebuilt = Prebuilt()
+
+
+def pytest_collection_finish(session: pytest.Session) -> None:
+    prebuilt.build_for(session.items)
+
+
+def pytest_sessionfinish(session: pytest.Session) -> None:
+    prebuilt.remove()
+
+
+def _migrate(path: Path) -> None:
     with using_database(path):
         db.prepare_database(lambda _conn: None)
-    return path
+
+
+def copy_of_migrated(path: Path) -> None:
+    shutil.copyfile(prebuilt.path("migrated"), path)
+
+
+prebuilt.register("migrated", _migrate, used_by="migrated_file")
+
+
+def _build_from_tables(connection: Connection, revision: str = "head") -> None:
+    """What the migrations build, made straight from tables.py and marked as up to date,
+    in the caller's transaction. test_migrations.py shows the two are the same."""
+    db.metadata.create_all(connection)
+    config = Config()
+    config.set_main_option("script_location", str(db.MIGRATIONS).replace("%", "%%"))
+    config.attributes["connection"] = connection
+    command.stamp(config, revision)
+
+
+@pytest.fixture
+def quick_migrations(monkeypatch) -> None:
+    """For tests of starting the app, rather than of the migrations, which take about a second
+    on a slow machine to build a database from nothing."""
+    monkeypatch.setattr(db, "_migrate", _build_from_tables)
+
+
+@pytest.fixture(scope="session")
+def migrated_file() -> Path:
+    """One database built from the migrations. Tests copy it."""
+    return prebuilt.path("migrated")
 
 
 @pytest.fixture
@@ -295,31 +419,52 @@ def hand_made_token(header: dict[str, Any], claims: dict[str, Any], secret: byte
     return f"{signing_input}.{part(signature)}"
 
 
-@pytest.fixture(scope="session")
-def supabase() -> StandInSupabase:
-    """Made once a run, because making the keys takes a moment."""
+@functools.cache
+def _stand_in_supabase() -> StandInSupabase:
     return StandInSupabase()
 
 
-@pytest.fixture(scope="session")
-def built_frontend(tmp_path_factory) -> Path:
-    """A stand-in for frontend/dist, which the tests never build."""
-    folder = tmp_path_factory.mktemp("dist")
+@functools.cache
+def _stand_in_frontend() -> Path:
+    folder = prebuilt.folder() / "dist"
+    (folder / "assets").mkdir(parents=True)
     (folder / "index.html").write_text("<!doctype html><title>Accountable</title>")
-    (folder / "assets").mkdir()
     (folder / "assets" / "app.js").write_text("console.log('Accountable');")
     return folder
 
 
-@pytest.fixture(scope="session")
-def shared_app(supabase, built_frontend) -> FastAPI:
-    """The shared app's routes, with Supabase's keys stood in for and today and now fixed.
-    Built once a run: its database is whichever one the test points at."""
+@functools.cache
+def _shared_app() -> FastAPI:
     from accountable.main import make_app
 
-    app = make_app(PROJECT, keys=supabase.key_set(), frontend=built_frontend)
+    app = make_app(PROJECT, keys=_stand_in_supabase().key_set(), frontend=_stand_in_frontend())
     fixed_time(app)
     return app
+
+
+# Made before the first test: the stand-in keys, and the shared app's description, which the
+# route tests read and which takes most of a second on a slow machine.
+prebuilt.warm(_stand_in_supabase, used_by="supabase")
+prebuilt.warm(lambda: _shared_app().openapi(), used_by="shared_app")
+
+
+@pytest.fixture(scope="session")
+def supabase() -> StandInSupabase:
+    """Made once a run, because making the keys takes a moment."""
+    return _stand_in_supabase()
+
+
+@pytest.fixture(scope="session")
+def built_frontend() -> Path:
+    """A stand-in for frontend/dist, which the tests never build."""
+    return _stand_in_frontend()
+
+
+@pytest.fixture(scope="session")
+def shared_app() -> FastAPI:
+    """The shared app's routes, with Supabase's keys stood in for and today and now fixed.
+    Built once a run: its database is whichever one the test points at."""
+    return _shared_app()
 
 
 @pytest.fixture

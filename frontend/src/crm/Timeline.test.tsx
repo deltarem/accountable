@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { mockApi, renderApp, user } from "../test-utils";
+import { buttonSaying, mockApi, renderApp, user } from "../test-utils";
 import type { Timeline as TimelineReply, TimelineEntry } from "./queries";
 import { Timeline } from "./Timeline";
 
@@ -149,11 +149,12 @@ describe("the timeline", () => {
       "GET /deals/7/timeline?limit=50&offset=50": reply(entriesFrom(51, 5), 55),
     });
     await entryNamed("Activity 50");
-    await user().click(screen.getByRole("button", { name: "Show more" }));
+    await user().click(buttonSaying("Show more"));
 
     await entryNamed("Activity 55");
     expect(screen.getAllByTestId("timeline-entry")).toHaveLength(55);
-    expect(screen.queryByRole("button", { name: "Show more" })).toBeNull();
+    // By text, because naming every button among 55 entries to find it by role takes a while in jsdom.
+    expect(screen.queryByText("Show more", { selector: "button" })).toBeNull();
     expect(calls.map((call) => call.path)).toContain("/deals/7/timeline?limit=50&offset=50");
   });
 
@@ -163,15 +164,16 @@ describe("the timeline", () => {
       "GET /deals/7/timeline?limit=50&offset=50": reply(entriesFrom(51, 25), 75),
     });
     await entryNamed("Activity 50");
-    await user().click(screen.getByRole("button", { name: "Show more" }));
+    await user().click(buttonSaying("Show more"));
     await entryNamed("Activity 75");
     const limits = calls.map((call) => Number(new URLSearchParams(call.path.split("?")[1]).get("limit")));
     expect(Math.max(...limits)).toBe(50);
   });
 
   it("can be read to the end however long it is", async () => {
-    // One more than the most the API gives in a reply.
-    const total = 501;
+    // Several pages, the last one part full. Asking a page at a time, which the test above
+    // checks, is what keeps a timeline longer than the API's 500 within what it allows.
+    const total = 151;
     const routes: Record<string, TimelineReply> = {};
     for (let offset = 0; offset < total; offset += 50) {
       routes[`GET /deals/7/timeline?limit=50&offset=${offset}`] = reply(
@@ -181,9 +183,9 @@ describe("the timeline", () => {
     }
     show(routes);
     await entryNamed("Moved 50");
-    // Found once, because finding it by role among hundreds of entries takes a tenth of a second each time.
-    // Pressed with fireEvent, because userEvent's fuller click, ten times over, would take longer than the rest.
-    const showMore = screen.getByRole("button", { name: "Show more" });
+    // Found once, because finding it among a page of entries takes a while each time.
+    // Pressed with fireEvent, because userEvent's fuller click, page after page, would take longer than the rest.
+    const showMore = buttonSaying("Show more");
     for (let shown = 50; shown < total; shown += 50) {
       fireEvent.click(showMore);
       await waitFor(() => expect(screen.getAllByTestId("timeline-entry").length).toBeGreaterThan(shown));
@@ -200,13 +202,13 @@ describe("the timeline", () => {
         broken ? { status: 500, body: { detail: "Something went wrong." } } : { body: reply(entriesFrom(51, 5), 55) },
     });
     await entryNamed("Activity 50");
-    await user().click(screen.getByRole("button", { name: "Show more" }));
+    await user().click(buttonSaying("Show more"));
 
     expect(await screen.findByText("Couldn't load more.")).toBeTruthy();
     expect(screen.getAllByTestId("timeline-entry")).toHaveLength(50);
 
     broken = false;
-    await user().click(screen.getByRole("button", { name: "Show more" }));
+    await user().click(buttonSaying("Show more"));
     await entryNamed("Activity 55");
     expect(screen.queryByText("Couldn't load more.")).toBeNull();
   });
@@ -270,7 +272,7 @@ describe("the timeline", () => {
       "PATCH /activities/51": later,
     });
     await entryNamed("Activity 50");
-    await user().click(screen.getByRole("button", { name: "Show more" }));
+    await user().click(buttonSaying("Show more"));
     const entry = within(await entryNamed("Activity 51"));
     await user().click(entry.getByRole("checkbox"));
     await waitFor(() => expect(calls.some((call) => call.method === "PATCH")).toBe(true));
@@ -327,7 +329,7 @@ describe("a change made in another window while a timeline is open", () => {
     await screen.findByText("Activity 1");
 
     added = true;
-    await user().click(screen.getByRole("button", { name: "Show more" }));
+    await user().click(buttonSaying("Show more"));
 
     await screen.findByText("Activity 0");
     await screen.findByText("Activity 60");
@@ -346,7 +348,7 @@ describe("a change made in another window while a timeline is open", () => {
     await screen.findByText("Activity 1");
 
     removed = true;
-    await user().click(screen.getByRole("button", { name: "Show more" }));
+    await user().click(buttonSaying("Show more"));
 
     await waitFor(() => expect(screen.queryByText("Activity 1")).toBeNull());
     expect(screen.getByText("Activity 51")).toBeTruthy();

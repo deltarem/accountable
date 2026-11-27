@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { readPlaywright, readPytest, readVitest, summarize } from "./test-report.mjs";
 
@@ -104,6 +104,14 @@ describe("readVitest", () => {
       { name: "frontend/src/b.test.ts > b times out", ms: 5000.4 },
       { name: "frontend/src/a.test.ts > a waits", ms: 1000 },
     ]);
+  });
+
+  it("names files from the project's folder on Windows too, where the folder has backslashes and Vitest's names don't", () => {
+    const windows = {
+      ...report,
+      testResults: [{ ...report.testResults[0], name: "C:/project/frontend/src/a.test.ts" }],
+    };
+    expect(readVitest(JSON.stringify(windows), "C:\\project").failures).toEqual(["frontend/src/a.test.ts > a breaks"]);
   });
 
   it("counts a file that couldn't load, which has no tests of its own to fail", () => {
@@ -237,29 +245,81 @@ describe("summarize", () => {
       browser,
     ];
 
-    it("lists every one under the table, slowest first, by layer, file and name", () => {
-      const lines = summarize(layers, 72_000).text.split("\n");
-      const heading = lines.indexOf("Unit tests that took a second or more");
-      expect(heading).toBeGreaterThan(lines.indexOf("Summary"));
-      expect(lines.slice(heading + 1, heading + 4)).toEqual([
-        "   2.3s  Frontend: frontend/src/crm/Search.test.tsx > waits for the pause",
-        "   1.5s  Backend: backend.tests.test_auth::test_keys",
-        "   1.0s  Frontend: frontend/src/App.test.tsx > opens the page",
-      ]);
+    const listed = [
+      "   2.3s  Frontend: frontend/src/crm/Search.test.tsx > waits for the pause",
+      "   1.5s  Backend: backend.tests.test_auth::test_keys",
+      "   1.0s  Frontend: frontend/src/App.test.tsx > opens the page",
+    ];
+
+    function listUnder(text, heading) {
+      const lines = text.split("\n");
+      const at = lines.indexOf(heading);
+      expect(at).toBeGreaterThan(lines.indexOf("Summary"));
+      return lines.slice(at + 1, at + 4);
+    }
+
+    describe("on this computer", () => {
+      const inCi = false;
+
+      it("fails each layer that has one, and the run", () => {
+        const { passed, text } = summarize(layers, 72_000, { inCi });
+        expect(passed).toBe(false);
+        expect(text).toMatch(/Backend\s+331 passed, 1 over a second, FAILED/);
+        expect(text).toMatch(/Frontend\s+757 passed, 2 over a second, FAILED/);
+        expect(text).toMatch(/Type check\s+passed/);
+        expect(text).toMatch(/End-to-end\s+106 passed\s/);
+        expect(text.trimEnd().split("\n").at(-1)).toBe(
+          "Failed: Backend, Frontend. 0 failed, 3 over a second, 1194 passed in 1m 12s.",
+        );
+      });
+
+      it("names every one under the table, slowest first, by layer, file and name", () => {
+        const { text } = summarize(layers, 72_000, { inCi });
+        expect(listUnder(text, "Unit tests that took a second or more, which fails the run")).toEqual(listed);
+      });
+
+      it("passes a layer whose tests were all quick", () => {
+        const { passed, text } = summarize([typeCheck, slow(backend, []), browser], 5000, { inCi });
+        expect(passed).toBe(true);
+        expect(text).not.toContain("a second or more");
+      });
+
+      it("counts failures and slow tests apart", () => {
+        const { text } = summarize([failing(layers[1], ["test_x"]), layers[2]], 72_000, { inCi });
+        expect(text.trimEnd().split("\n").at(-1)).toBe(
+          "Failed: Backend, Frontend. 1 failed, 3 over a second, 1087 passed in 1m 12s.",
+        );
+      });
     });
 
-    it("doesn't change whether the run passes, or its last line", () => {
-      const { passed, text } = summarize(layers, 72_000);
-      expect(passed).toBe(true);
-      expect(text.trimEnd().split("\n").at(-1)).toBe("All 1194 tests passed in 1m 12s.");
+    describe("in CI, whose machine is the slow one", () => {
+      const inCi = true;
 
-      const failed = summarize([layers[0], failing(layers[1], ["test_x"]), layers[2]], 72_000);
-      expect(failed.passed).toBe(false);
-      expect(failed.text).toContain("Unit tests that took a second or more");
+      it("lists them without failing the run", () => {
+        const { passed, text } = summarize(layers, 72_000, { inCi });
+        expect(passed).toBe(true);
+        expect(text).toMatch(/Frontend\s+757 passed, 2 over a second\s/);
+        expect(text.trimEnd().split("\n").at(-1)).toBe("All 1194 tests passed in 1m 12s.");
+        const heading = "Unit tests that took a second or more, listed only, because CI runs on a slower machine";
+        expect(listUnder(text, heading)).toEqual(listed);
+      });
+
+      it("still fails a run for a test that failed", () => {
+        const failed = summarize([layers[0], failing(layers[1], ["test_x"]), layers[2]], 72_000, { inCi });
+        expect(failed.passed).toBe(false);
+        expect(failed.text.trimEnd().split("\n").at(-1)).toBe("Failed: Backend. 1 failed, 1087 passed in 1m 12s.");
+      });
     });
 
-    it("leaves the list out when every unit test was quick", () => {
-      expect(summarize([typeCheck, slow(backend, []), browser], 5000).text).not.toContain("a second or more");
+    it("reads CI from the environment when not told", () => {
+      try {
+        vi.stubEnv("CI", "true");
+        expect(summarize(layers, 72_000).passed).toBe(true);
+        vi.stubEnv("CI", "");
+        expect(summarize(layers, 72_000).passed).toBe(false);
+      } finally {
+        vi.unstubAllEnvs();
+      }
     });
   });
 

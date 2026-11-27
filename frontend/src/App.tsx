@@ -13,6 +13,8 @@ import { Deals } from "./crm/pages/Deals";
 import { Organization } from "./crm/pages/Organization";
 import { Organizations } from "./crm/pages/Organizations";
 import { Pipeline } from "./crm/pages/Pipeline";
+import { Product } from "./crm/pages/Product";
+import { Products } from "./crm/pages/Products";
 import { useMeta } from "./crm/queries";
 import { Search } from "./crm/Search";
 import { applyTheme, savedTheme } from "./lib/theme";
@@ -34,6 +36,8 @@ const router = createBrowserRouter([
       { path: "/deals", element: <Deals /> },
       { path: "/deals/:id", element: <Deal /> },
       { path: "/pipeline", element: <Pipeline /> },
+      { path: "/products", element: <Products /> },
+      { path: "/products/:id", element: <Product /> },
       { path: "*", element: <MissingRecord word="page" to="/" section="Dashboard" /> },
     ],
   },

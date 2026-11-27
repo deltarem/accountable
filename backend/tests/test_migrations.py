@@ -1,16 +1,19 @@
 import io
+import shutil
+from collections.abc import Generator
+from contextlib import contextmanager
 from datetime import date, datetime
 
 import pytest
 from accountable import db
-from accountable.crm.tables import activities, contacts, deals, organizations, stage_changes
+from accountable.crm.tables import activities, contacts, deals, organizations, products, stage_changes
 from accountable.users import users
 from alembic import command, op
 from alembic.autogenerate import compare_metadata
 from alembic.config import Config
 from alembic.migration import MigrationContext
-from conftest import insert_row
-from sqlalchemy import column, delete, func, insert, inspect, select, table
+from conftest import insert_row, prebuilt, using_database
+from sqlalchemy import CheckConstraint, column, delete, func, insert, inspect, select, table
 
 
 def live() -> dict:
@@ -95,7 +98,7 @@ def test_users_and_who_added_each_record_are_built(database):
     built = live()
     assert built["users"]["columns"]["id"] == ("TEXT", False)
     assert built["users"]["columns"]["email"] == ("TEXT", False)
-    for record in ("organizations", "contacts", "deals", "activities"):
+    for record in ("organizations", "contacts", "deals", "activities", "products"):
         assert (("created_by",), "users", None) in built[record]["foreign_keys"], record
         assert (("updated_by",), "users", None) in built[record]["foreign_keys"], record
     assert (("created_by",), "users", None) in built["stage_changes"]["foreign_keys"]
@@ -106,6 +109,16 @@ def test_the_check_constraint_matches(database):
     actual, expected = live(), declared()
     assert actual["activities"]["checks"] == {"ck_activities_one_parent": "(contact_id IS NULL) != (deal_id IS NULL)"}
     assert list(actual["activities"]["checks"].values()) == list(expected["activities"]["checks"].values())
+
+
+def test_a_price_is_held_to_its_range_and_a_name_to_one_product(database):
+    assert live()["products"]["checks"] == {"ck_products_price_in_range": "unit_price_cents BETWEEN 0 AND 100000000"}
+    (declared_check,) = [check for check in products.constraints if isinstance(check, CheckConstraint)]
+    assert str(declared_check.sqltext.compile(compile_kwargs={"literal_binds": True})) == (
+        "unit_price_cents BETWEEN 0 AND 100000000"
+    )
+    unique = [index for index in inspect(db.engine()).get_indexes("products") if index["unique"]]
+    assert [index["column_names"] for index in unique] == [["name_key"]]
 
 
 def test_foreign_keys_and_their_delete_rules_match(database):
@@ -204,41 +217,123 @@ def fill_at(path, revision: str) -> None:
     db.dispose()
 
 
+def filled_at(revision: str):
+    def make(path) -> None:
+        with using_database(path):
+            fill_at(path, revision)
+
+    return make
+
+
+prebuilt.register("at-0001", filled_at("0001"), used_by="older_database")
+prebuilt.register("at-0002", filled_at("0002"), used_by="database_from_before_sign_in")
+prebuilt.register("at-0003", filled_at("0003"), used_by="database_from_before_products")
+
+
+def copy_of(name: str, tmp_path, monkeypatch):
+    path = tmp_path / f"{name}.db"
+    shutil.copyfile(prebuilt.path(name), path)
+    monkeypatch.setenv("ACCOUNTABLE_DB", str(path))
+    db.dispose()
+    return path
+
+
+def upgraded_from(name: str):
+    def make(path) -> None:
+        shutil.copyfile(prebuilt.path(name), path)
+        with using_database(path):
+            assert db.prepare_database(nothing) is False
+
+    return make
+
+
+# Several tests check what one upgrade left, so it's run once and they each copy the result.
+prebuilt.register("upgraded-from-0001", upgraded_from("at-0001"), used_by="upgraded_older_database")
+prebuilt.register("upgraded-from-0002", upgraded_from("at-0002"), used_by="upgraded_from_before_sign_in")
+
+
+def rows_in(name: str) -> dict[str, list[tuple]]:
+    with using_database(prebuilt.path(name)):
+        return everything()
+
+
+@contextmanager
+def stopping_at_the_third_table() -> Generator[list[str]]:
+    """Makes the migrations fail as they reach their third table change, giving the tables reached."""
+    real = op.batch_alter_table
+    reached: list[str] = []
+
+    def stops(*args, **kwargs):
+        reached.append(args[0])
+        if len(reached) == 3:
+            raise RuntimeError("stopped partway")
+        return real(*args, **kwargs)
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(op, "batch_alter_table", stops)
+        yield reached
+
+
+def stopped_partway_from(name: str):
+    def make(path) -> None:
+        shutil.copyfile(prebuilt.path(name), path)
+        with using_database(path), stopping_at_the_third_table(), pytest.raises(RuntimeError):
+            db.prepare_database(nothing)
+
+    return make
+
+
+prebuilt.register("stopped-from-0001", stopped_partway_from("at-0001"), used_by="older_database_stopped_partway")
+prebuilt.register("stopped-from-0002", stopped_partway_from("at-0002"), used_by="before_sign_in_stopped_partway")
+
+
+@pytest.fixture
+def older_database_stopped_partway(tmp_path, monkeypatch):
+    yield copy_of("stopped-from-0001", tmp_path, monkeypatch)
+    db.dispose()
+
+
+@pytest.fixture
+def before_sign_in_stopped_partway(tmp_path, monkeypatch):
+    yield copy_of("stopped-from-0002", tmp_path, monkeypatch)
+    db.dispose()
+
+
+@pytest.fixture
+def upgraded_older_database(tmp_path, monkeypatch):
+    """A database from before ids were kept, once the migrations have brought it up to date."""
+    yield copy_of("upgraded-from-0001", tmp_path, monkeypatch)
+    db.dispose()
+
+
+@pytest.fixture
+def upgraded_from_before_sign_in(tmp_path, monkeypatch):
+    yield copy_of("upgraded-from-0002", tmp_path, monkeypatch)
+    db.dispose()
+
+
 @pytest.fixture
 def older_database(tmp_path, monkeypatch):
     """A database from before ids were kept."""
-    path = tmp_path / "older.db"
-    monkeypatch.setenv("ACCOUNTABLE_DB", str(path))
-    db.dispose()
-    fill_at(path, "0001")
-    yield path
+    yield copy_of("at-0001", tmp_path, monkeypatch)
     db.dispose()
 
 
 @pytest.fixture
 def database_from_before_sign_in(tmp_path, monkeypatch):
-    path = tmp_path / "before-sign-in.db"
-    monkeypatch.setenv("ACCOUNTABLE_DB", str(path))
-    db.dispose()
-    fill_at(path, "0002")
-    yield path
+    yield copy_of("at-0002", tmp_path, monkeypatch)
     db.dispose()
 
 
-def test_upgrading_an_older_database_keeps_every_row_and_link(older_database):
-    before = everything()
-    db.dispose()
-
-    assert db.prepare_database(nothing) is False
-
+def test_upgrading_an_older_database_keeps_every_row_and_link(upgraded_older_database):
+    before = rows_in("at-0001")
     assert all(before.values())
     assert everything() == before
     with db.reading() as conn:
         assert conn.exec_driver_sql("PRAGMA foreign_key_check").all() == []
 
 
-def test_an_upgraded_database_never_reuses_an_id(older_database):
-    db.prepare_database(nothing)
+def test_an_upgraded_database_never_reuses_an_id(upgraded_older_database):
     built = built_tables()
     assert all("AUTOINCREMENT" in built[record.name] for record in RECORDS)
 
@@ -251,9 +346,7 @@ def test_an_upgraded_database_never_reuses_an_id(older_database):
     assert added > newest
 
 
-def test_the_delete_rules_still_work_after_an_upgrade(older_database):
-    db.prepare_database(nothing)
-
+def test_the_delete_rules_still_work_after_an_upgrade(upgraded_older_database):
     with db.writing() as conn:
         conn.execute(delete(organizations))
     assert everything()["contacts"][0][5] is None  # organization_id
@@ -271,40 +364,45 @@ def test_the_delete_rules_still_work_after_an_upgrade(older_database):
     assert after["activities"] == [] and after["stage_changes"] == []
 
 
-def test_an_upgrade_that_stops_partway_changes_nothing(older_database, monkeypatch):
+def test_an_upgrade_that_stops_partway_changes_nothing(older_database):
     before = everything()
     db.dispose()
-    real = op.batch_alter_table
-    tables_reached = []
+    with stopping_at_the_third_table() as reached, pytest.raises(RuntimeError):
+        db.prepare_database(nothing)
 
-    def stops_at_the_third_table(*args, **kwargs):
-        tables_reached.append(args[0])
-        if len(tables_reached) == 3:
-            raise RuntimeError("stopped partway")
-        return real(*args, **kwargs)
-
-    with monkeypatch.context() as patch:
-        patch.setattr(op, "batch_alter_table", stops_at_the_third_table)
-        with pytest.raises(RuntimeError):
-            db.prepare_database(nothing)
-
-    assert len(tables_reached) == 3
+    assert len(reached) == 3
     assert everything() == before
     assert not [name for name in inspect(db.engine()).get_table_names() if name.startswith("_alembic")]
     assert "AUTOINCREMENT" not in built_tables()["organizations"]
 
-    # Nothing is left in the way of the next start.
-    db.dispose()
+
+def test_nothing_is_left_in_the_way_of_the_next_start(older_database_stopped_partway):
     db.prepare_database(nothing)
-    assert everything() == before
+    assert everything() == rows_in("at-0001")
     assert "AUTOINCREMENT" in built_tables()["stage_changes"]
 
 
-def test_upgrading_from_before_sign_in_keeps_every_row_with_no_one_recorded(database_from_before_sign_in):
+@pytest.fixture
+def database_from_before_products(tmp_path, monkeypatch):
+    yield copy_of("at-0003", tmp_path, monkeypatch)
+    db.dispose()
+
+
+def test_upgrading_from_before_products_keeps_every_row_and_adds_no_products(database_from_before_products):
+    """Made-up products would land among the team's real records, so the upgrade adds none (M8)."""
     before = everything()
 
     assert db.prepare_database(nothing) is False
 
+    assert all(before.values())
+    assert everything() == before
+    with db.reading() as conn:
+        assert conn.execute(select(func.count()).select_from(products)).scalar_one() == 0
+        assert conn.exec_driver_sql("PRAGMA foreign_key_check").all() == []
+
+
+def test_upgrading_from_before_sign_in_keeps_every_row_with_no_one_recorded(upgraded_from_before_sign_in):
+    before = rows_in("at-0002")
     assert all(before.values())
     assert everything() == before
     assert who_added_and_changed() and set(who_added_and_changed()) == {None}
@@ -314,31 +412,21 @@ def test_upgrading_from_before_sign_in_keeps_every_row_with_no_one_recorded(data
     assert "AUTOINCREMENT" in built_tables()["deals"]
 
 
-def test_an_upgrade_to_sign_in_that_stops_partway_changes_nothing(database_from_before_sign_in, monkeypatch):
+def test_an_upgrade_to_sign_in_that_stops_partway_changes_nothing(database_from_before_sign_in):
     before = everything()
     db.dispose()
-    real = op.batch_alter_table
-    tables_reached = []
+    with stopping_at_the_third_table() as reached, pytest.raises(RuntimeError):
+        db.prepare_database(nothing)
 
-    def stops_at_the_third_table(*args, **kwargs):
-        tables_reached.append(args[0])
-        if len(tables_reached) == 3:
-            raise RuntimeError("stopped partway")
-        return real(*args, **kwargs)
-
-    with monkeypatch.context() as patch:
-        patch.setattr(op, "batch_alter_table", stops_at_the_third_table)
-        with pytest.raises(RuntimeError):
-            db.prepare_database(nothing)
-
-    assert tables_reached == ["organizations", "contacts", "deals"]
+    assert reached == ["organizations", "contacts", "deals"]
     assert "users" not in inspect(db.engine()).get_table_names()
     assert "created_by" not in [c["name"] for c in inspect(db.engine()).get_columns("organizations")]
     assert everything() == before
 
-    db.dispose()
+
+def test_the_next_start_finishes_an_upgrade_to_sign_in_that_stopped_partway(before_sign_in_stopped_partway):
     db.prepare_database(nothing)
-    assert everything() == before
+    assert everything() == rows_in("at-0002")
 
 
 @pytest.fixture(scope="module")
@@ -365,3 +453,8 @@ def test_on_postgres_deal_values_are_64_bit(postgres_sql):
 def test_on_postgres_every_table_gets_row_level_security(postgres_sql):
     for name in ["alembic_version", *db.metadata.tables]:
         assert f"ALTER TABLE {name} ENABLE ROW LEVEL SECURITY" in postgres_sql, name
+
+
+def test_on_postgres_product_names_are_unique_and_prices_in_range(postgres_sql):
+    assert "CREATE UNIQUE INDEX ix_products_name_key ON products (name_key)" in postgres_sql
+    assert "CONSTRAINT ck_products_price_in_range CHECK (unit_price_cents BETWEEN 0 AND 100000000)" in postgres_sql

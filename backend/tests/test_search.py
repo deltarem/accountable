@@ -1,6 +1,10 @@
-"""The top bar's search (K1, K2, K4, K5)."""
+"""The top bar's search (K1, K2, K4, K5, G11)."""
+
+import re
 
 import pytest
+from accountable.crm.routers import search as search_router
+from sqlalchemy.dialects import postgresql
 
 SEARCH = "/api/search"
 
@@ -33,13 +37,14 @@ def test_each_kind_is_found_by_part_of_its_name_in_any_case(api, make):
                 {"id": deal, "name": "Harbor refit", "stage": "proposal", "organization_name": "Harbor & Pine"}
             ],
         },
+        "products": {"count": 0, "results": []},
     }
 
 
 def test_no_match_gives_empty_groups(api, make):
     make.organization("Harbor & Pine")
     empty = {"count": 0, "results": []}
-    assert search(api, "harbour") == {"organizations": empty, "contacts": empty, "deals": empty}
+    assert search(api, "harbour") == {"organizations": empty, "contacts": empty, "deals": empty, "products": empty}
 
 
 def test_only_names_are_searched_and_never_activities(api, make):
@@ -139,3 +144,57 @@ def test_a_search_holding_a_nul_character_is_refused(api, query):
 
 def test_text_with_no_valid_encoding_finds_nothing_rather_than_failing(api):
     assert api.get(f"{SEARCH}?q=%FF%FE").status_code == 200
+
+
+def add_product(api, name: str, unit_price_cents: int = 145000, *, archived: bool = False) -> int:
+    reply = api.post("/api/products", json={"name": name, "unit_price_cents": unit_price_cents})
+    assert reply.status_code == 201, reply.text
+    product = reply.json()["id"]
+    if archived:
+        assert api.patch(f"/api/products/{product}", json={"active": False}).status_code == 200
+    return product
+
+
+def test_products_are_found_by_part_of_a_name_in_any_case_with_their_price(api, make):
+    training = add_product(api, "On-site training day", 145000)
+    add_product(api, "Setup and data import", 250000)
+    assert search(api, "TRAIN")["products"] == {
+        "count": 1,
+        "results": [{"id": training, "name": "On-site training day", "unit_price_cents": 145000}],
+    }
+
+
+def test_products_come_after_the_other_three_groups(api, make):
+    make.organization("Harbor & Pine")
+    add_product(api, "Harbor tour")
+    assert list(search(api, "harbor")) == ["organizations", "contacts", "deals", "products"]
+
+
+def test_archived_products_arent_found(api):
+    add_product(api, "Training day")
+    add_product(api, "Training day, 2025 rate", archived=True)
+    assert names(api, "training", "products") == ["Training day"]
+    assert search(api, "training")["products"]["count"] == 1
+
+
+def test_products_show_five_with_the_count_of_all_in_order(api):
+    for letter in "GFEDCBA":
+        add_product(api, f"{letter} license")
+    add_product(api, "License, per user")
+    found = search(api, "license")["products"]
+    assert found["count"] == 8
+    assert [result["name"] for result in found["results"]] == [
+        "License, per user",
+        "A license",
+        "B license",
+        "C license",
+        "D license",
+    ]
+
+
+def test_on_postgres_every_blank_in_the_one_query_has_a_type():
+    """Postgres won't guess a blank's type in a union the way SQLite does, and the tests only run on SQLite."""
+    sql = str(search_router.matching("harbor").compile(dialect=postgresql.dialect()))
+    assert sql.count("UNION ALL") == 3
+    assert re.findall(r"\bNULL\b", sql)
+    assert not re.findall(r"(?<!CAST\()\bNULL\b", sql)

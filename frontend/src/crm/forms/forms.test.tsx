@@ -3,13 +3,14 @@ import type { ReactElement } from "react";
 import { toast } from "sonner";
 import { describe, expect, it, vi } from "vitest";
 
-import { META, mockApi, renderApp, user } from "../../test-utils";
-import type { ContactDetail, Deal, OrganizationDetail, TimelineEntry } from "../queries";
+import { META, fill, mockApi, renderApp, user } from "../../test-utils";
+import type { ContactDetail, Deal, OrganizationDetail, ProductDetail, TimelineEntry } from "../queries";
 import { EditActivity, LogActivity } from "./ActivityForm";
 import { ContactForm } from "./ContactForm";
 import { DealForm } from "./DealForm";
 import { DeleteActivity, DeleteContact, DeleteDeal, DeleteOrganization } from "./DeleteDialogs";
 import { OrganizationForm } from "./OrganizationForm";
+import { ProductForm } from "./ProductForm";
 
 const ORGANIZATIONS = [{ id: 1, name: "Harbor & Pine" }];
 const CONTACTS = [{ id: 11, name: "Sam Carter", organization_id: 1, organization_name: "Harbor & Pine" }];
@@ -69,6 +70,18 @@ const ENTRY: TimelineEntry = {
   created_by: null,
 };
 
+const PRODUCT: ProductDetail = {
+  id: 7,
+  name: "Training day",
+  description: null,
+  unit_price_cents: 4950,
+  active: true,
+  created_at: "2026-10-12T12:00:00Z",
+  created_by: null,
+  updated_at: "2026-10-12T12:00:00Z",
+  updated_by: null,
+};
+
 type Case = {
   name: string;
   form: (onClose: () => void) => ReactElement;
@@ -110,6 +123,14 @@ const FORMS: Case[] = [
     save: "Save activity",
     route: "PATCH /activities/9",
     reply: { id: 9 },
+  },
+  {
+    name: "product",
+    form: (onClose) => <ProductForm record={PRODUCT} onClose={onClose} />,
+    field: "Name",
+    save: "Save product",
+    route: "PATCH /products/7",
+    reply: PRODUCT,
   },
 ];
 
@@ -187,6 +208,75 @@ describe.each(FORMS)("the $name form", ({ form, field, save, route, reply }) => 
     await retype(field, "Still typing");
     await act(() => client.invalidateQueries());
     expect(box(field).value).toBe("Still typing");
+  });
+});
+
+describe("the product form", () => {
+  async function openNew(routes: Record<string, unknown> = {}) {
+    const calls = mockApi(routes);
+    const onClose = vi.fn();
+    renderApp(<ProductForm onClose={onClose} />);
+    await screen.findByLabelText("Unit price");
+    return { calls, onClose };
+  }
+
+  async function savePriced(price: string) {
+    await fill(box("Name"), "Training day");
+    await fill(box("Unit price"), price);
+    await user().click(screen.getByRole("button", { name: "Save product" }));
+  }
+
+  it("needs a name and a price", async () => {
+    const { calls } = await openNew();
+    await user().click(screen.getByRole("button", { name: "Save product" }));
+    expect(await screen.findByText("Enter a name")).toBeTruthy();
+    expect(screen.getByText("Enter a price")).toBeTruthy();
+    expect(calls.filter((call) => call.method === "POST")).toEqual([]);
+  });
+
+  it.each([
+    ["1.005", "Enter a price in dollars and cents, such as 49.50"],
+    ["-1", "Enter a price in dollars and cents, such as 49.50"],
+    ["lots", "Enter a price in dollars and cents, such as 49.50"],
+    ["1,000,000.01", "Enter a price of $1,000,000.00 or less"],
+  ])("refuses a price of %j with %j", async (price, message) => {
+    const { calls } = await openNew();
+    await savePriced(price);
+    expect(await screen.findByText(message)).toBeTruthy();
+    expect(calls.filter((call) => call.method === "POST")).toEqual([]);
+  });
+
+  it("sends the price in whole cents, read as digits, with the description", async () => {
+    const success = vi.spyOn(toast, "success");
+    const { calls, onClose } = await openNew({ "POST /products": () => ({ status: 201, body: PRODUCT }) });
+    await fill(box("Description"), "  A full day on site.  ");
+    await savePriced("$0.29");
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(calls.find((call) => call.method === "POST")?.body).toEqual({
+      name: "Training day",
+      unit_price_cents: 29,
+      description: "A full day on site.",
+    });
+    expect(success).toHaveBeenCalledWith("Product saved.");
+  });
+
+  it("shows a saved price as dollars and cents to edit", async () => {
+    mockApi({});
+    renderApp(<ProductForm record={PRODUCT} onClose={vi.fn()} />);
+    expect(((await screen.findByLabelText("Unit price")) as HTMLInputElement).value).toBe("49.50");
+    expect(screen.getByText("$")).toBeTruthy();
+  });
+
+  it("shows a name another product has beside the name, and stays open with what was typed", async () => {
+    const message = "There's already a product called Training day.";
+    const { onClose } = await openNew({
+      "POST /products": () => ({ status: 422, body: { detail: "Check the form.", fields: { name: message } } }),
+    });
+    await savePriced("49.50");
+    expect(await screen.findByText(message)).toBeTruthy();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(box("Name").value).toBe("Training day");
+    expect(box("Unit price").value).toBe("49.50");
   });
 });
 

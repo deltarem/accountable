@@ -7,7 +7,7 @@ import {
   type Query,
   type QueryClient,
 } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { api } from "../lib/api";
@@ -84,6 +84,17 @@ export type Deal = {
 };
 export type DealDetail = Deal & Authorship;
 export type MoveResult = { deal: Deal; changes: { close_date: string | null; new_customer: string | null } };
+
+export type Product = {
+  id: number;
+  name: string;
+  description: string | null;
+  /** Whole US cents, as the API sends it (G5). */
+  unit_price_cents: number;
+  active: boolean;
+};
+export type ProductRow = Product;
+export type ProductDetail = Product & Authorship;
 
 export type About = { kind: "contact" | "deal"; id: number; name: string };
 export type TimelineEntry = {
@@ -169,6 +180,14 @@ export function useDeal(id: number) {
   return useQuery({ queryKey: ["deals", id], queryFn: () => api<DealDetail>(`/deals/${id}`) });
 }
 
+export function useProducts() {
+  return useQuery({ queryKey: ["products"], queryFn: () => api<ProductRow[]>("/products") });
+}
+
+export function useProduct(id: number) {
+  return useQuery({ queryKey: ["products", id], queryFn: () => api<ProductDetail>(`/products/${id}`) });
+}
+
 export function useDashboard() {
   const dashboard = useQuery({ queryKey: ["dashboard"], queryFn: () => api<Dashboard>("/dashboard") });
 
@@ -229,6 +248,7 @@ export type DealValues = Pick<
   Deal,
   "name" | "organization_id" | "main_contact_id" | "stage" | "value" | "probability" | "close_date"
 >;
+export type ProductValues = Pick<Product, "name" | "description" | "unit_price_cents">;
 export type ActivityValues = {
   type: ActivityType;
   description: string;
@@ -259,6 +279,48 @@ export function useSaveDeal(id?: number) {
       ? api<Deal>("/deals", { method: "POST", body: values })
       : api<Deal>(`/deals/${id}`, { method: "PATCH", body: values }),
   );
+}
+
+export function useSaveProduct(id?: number) {
+  return useWrite((values: ProductValues) =>
+    id === undefined
+      ? api<ProductDetail>("/products", { method: "POST", body: values })
+      : api<ProductDetail>(`/products/${id}`, { method: "PATCH", body: values }),
+  );
+}
+
+type ActiveChange = { product: Pick<Product, "id" | "name">; active: boolean };
+
+/**
+ * Archives or restores a product, with its message (G8). A press while that product's
+ * change is still on its way sends nothing, so a quick second press can't undo the first.
+ */
+export function useSetProductActive() {
+  const client = useQueryClient();
+  const sending = useRef(new Set<number>());
+  const change = useMutation({
+    mutationFn: ({ product, active }: ActiveChange) =>
+      api<ProductDetail>(`/products/${product.id}`, { method: "PATCH", body: { active } }),
+    onSuccess: (_saved, { product, active }) => {
+      toast.success(`${product.name} ${active ? "restored" : "archived"}.`);
+      return client.invalidateQueries();
+    },
+    onError: (_error, { product, active }) => {
+      toast.error(
+        active
+          ? `Couldn't restore ${product.name}, so it's still archived.`
+          : `Couldn't archive ${product.name}, so it's still active.`,
+      );
+    },
+    onSettled: (_saved, _error, { product }) => {
+      sending.current.delete(product.id);
+    },
+  });
+  return (product: ActiveChange["product"], active: boolean) => {
+    if (sending.current.has(product.id)) return;
+    sending.current.add(product.id);
+    change.mutate({ product, active });
+  };
 }
 
 export function useAddActivity(link: { contact_id: number } | { deal_id: number }) {

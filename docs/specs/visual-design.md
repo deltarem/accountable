@@ -20,9 +20,9 @@ Dark mode keeps the brand skill's page and Sea Mist ink, but not its black panel
 | Ink | `#073B4C` Midnight | `#CDD8DB` Sea Mist | Body text and headings, the revenue line, the deals-won bars, the Won fill |
 | Ink on Won | `#CDD8DB` Sea Mist | `#073B4C` Midnight | Text on the Won fill |
 | Midnight | `#073B4C` | `#073B4C` | Text on Sea Green, Marigold and Coral, including on the revenue chart's fill |
-| Muted ink | `#4A6B76` | `#9AB1B8` | Secondary text |
+| Muted ink | `#4A6B76` | `#9AB1B8` | Secondary text, the Archived chip's text |
 | Line | `#CDD8DB` Sea Mist | `#45646E` | Link underlines, funnel leader lines, scrollbars, and at half strength the slot where a dragged card will land |
-| Grid | `#E4ECEE` | `#1E4350` | Chart grid lines |
+| Grid | `#E4ECEE` | `#1E4350` | Chart grid lines, the Archived chip |
 | Soft bar | `#839DA5` | `#6C858E` | The current month's bar, halfway between ink and the panel |
 | Focus ring | `#118AB2` Cerulean | `#4CB3D6` | Focus rings, a lighter Cerulean in dark mode so it shows on every layer |
 | Primary | `#06D6A0` Sea Green, Midnight text | Same | Main buttons, including Sign in, current section |
@@ -44,6 +44,7 @@ Small text meets 4.5:1 in both modes, and anything that isn't text, such as the 
 |---|---|---|
 | Ink on page, panel, raised | 10.91:1, 12.08:1, 12.08:1 | 11.24:1, 9.35:1, 7.71:1 |
 | Muted ink on page, panel, raised | 5.19:1, 5.74:1, 5.74:1 | 7.28:1, 6.06:1, 5.00:1 |
+| Muted ink on grid, the Archived chip | 4.80:1 | 4.74:1 |
 | Ink and muted ink on the late tint | 10.61:1, 5.05:1 | 9.00:1, 5.83:1 |
 | Sea Green text on page, panel | 4.81:1, 5.33:1 | 10.08:1, 8.39:1 |
 | Marigold text on page, panel | 4.86:1, 5.39:1 | 11.65:1, 9.69:1 |
@@ -78,7 +79,7 @@ Within a mode, a stage keeps its color everywhere. Negotiation and Lost chips us
 | Contact status | Customer | Qualified | Lead |
 | Activity type | Call | Email | Note |
 
-Stage-change entries use Cerulean, which marks them as information.
+Stage-change entries use Cerulean, which marks them as information. The Archived chip takes no brand color, because an archived product is out of use: muted ink on the grid color, which stands out from a panel without competing with the stage and status chips. It isn't the page color, which a hovered row turns too, and the chip would lose its shape there.
 
 ### Type
 
@@ -95,7 +96,7 @@ The fonts are bundled through Fontsource, so nothing loads from outside the app'
 | Other headline figures, column totals | JetBrains Mono | 24/30 | 500 |
 | Board totals | JetBrains Mono | 20/26 | 500 |
 | Card value | JetBrains Mono | 19/26 | 500 |
-| Money, counts, dates in tables | JetBrains Mono | 13/20 | 400 |
+| Money, counts, dates in tables, unit prices | JetBrains Mono | 13/20 | 400 |
 | Probability and date on cards | JetBrains Mono | 12/18 | 400 |
 | Chart axis | JetBrains Mono | 12/16 | 400 |
 
@@ -131,7 +132,7 @@ Plain business English, short labels, no exclamation marks.
 
 | Where | Text |
 |---|---|
-| Buttons | Add deal, Save deal, Delete deal, Log activity |
+| Buttons | Add deal, Save deal, Delete deal, Log activity, Add product, Save product, Archive, Restore |
 | Menu button, for screen readers | Menu for Alex Rivera |
 | Menu | Theme. Light. Dark. System. Sign out. |
 | Sign-in | Sign in. Email. Password. |
@@ -141,13 +142,19 @@ Plain business English, short labels, no exclamation marks.
 | Session ended | Your session has ended. Sign in again. |
 | Local copy's sign-in | This is a local copy with made-up data. Choose who to sign in as. |
 | Who added and changed | Added by Alex Rivera on Oct 12, 2026. Last changed by Dana Whitfield on Oct 30, 2026. |
-| Search, for screen readers | Search organizations, contacts and deals |
-| No search matches | No organizations, contacts or deals match "harbour". |
+| Search, for screen readers | Search organizations, contacts, deals and products |
+| No search matches | No organizations, contacts, deals or products match "harbour". |
 | Search failed | Couldn't search. Try again. |
 | More search results | See all 12 contacts |
-| Messages | Deal saved. Deal deleted. |
+| Messages | Deal saved. Deal deleted. Training day archived. Training day restored. |
+| Products filter | Active. Archived. All. |
+| Archived product | Archived, as a chip |
+| Product name taken | There's already a product called Training day. |
+| Product name taken by an archived one | An archived product is already called Training day. Restore it or choose another name. |
+| Price errors | Enter a price. Enter a price in dollars and cents, such as 49.50. Enter a price of $1,000,000.00 or less. |
 | Errors | Enter a name. Choose an organization. Enter your email. |
 | Empty table | No deals yet. Add the first one. |
+| Empty product views | No archived products. No active products. |
 | Empty funnel | Deals will show here once you've added some. |
 | Empty follow-ups | No follow-ups due. |
 | Connection lost, local copy | Can't reach Accountable. Check that it's still running. |
@@ -156,7 +163,7 @@ Plain business English, short labels, no exclamation marks.
 | Failed read, with something already showing | Couldn't refresh this, so it may be out of date. |
 | Delete dialog | Delete Harbor & Pine? Its 4 contacts and 3 deals will stay, with no organization. This can't be undone. |
 
-Money always carries its currency, as in `$48,000`. Dates read `Oct 31, 2026`, and times read `Oct 31, 3:20 PM`.
+Money always carries its currency, as in `$48,000`. Deal values and the figures built from them are whole dollars. Unit prices always show their cents, as in `$49.50` and `$1,200.00` (G6). Dates read `Oct 31, 2026`, and times read `Oct 31, 3:20 PM`.
 
 ## Design reference
 
@@ -166,7 +173,7 @@ Money always carries its currency, as in `$48,000`. Dates read `Oct 31, 2026`, a
 - **Mockup 3, Deal wall:** the style of the pipeline board.
 - **A top-down sales funnel** in place of Mockup 2's funnel bars, in the style common in sales CRMs.
 
-Organizations, Contacts, Deals and the record pages aren't in the mockup, and follow [Screens](records.md#screens) with the same shell, colors and type. Nor are the sign-in screen, the search results and the menu, which follow their own screens in [sign-in.md](sign-in.md#sign-in-screen), [search.md](search.md#search-box-and-results) and [shell.md](shell.md#shell). The mockup's top bar has no search box or menu, and ends with the date. Mockups 1 to 3 stay in `docs/mockups/` as a record of the options, and aren't a reference. The figures in the mockups come from `docs/mockups/shared.js` and are examples. The app's sample data follows M1 to M6.
+Organizations, Contacts, Deals, Products and the record pages aren't in the mockup, and follow [Screens](records.md#screens) and [the products screens](products.md#screens) with the same shell, colors and type. Nor are the sign-in screen, the search results and the menu, which follow their own screens in [sign-in.md](sign-in.md#sign-in-screen), [search.md](search.md#search-box-and-results) and [shell.md](shell.md#shell). The mockup's top bar has no search box or menu, and ends with the date. Mockups 1 to 3 stay in `docs/mockups/` as a record of the options, and aren't a reference. The figures in the mockups come from `docs/mockups/shared.js` and are examples. The app's sample data follows M1 to M6.
 
 The mockups show light mode only. Dark mode follows the dark values in [Color tokens](#color-tokens), and `docs/changes/dark-mode/` holds screenshots of the dashboard and the pipeline in both modes, at 1440 by 900 with the sample data.
 

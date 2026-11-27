@@ -4,7 +4,7 @@ import { MemoryRouter, useLocation } from "react-router";
 import { describe, expect, it } from "vitest";
 
 import { queryDefaults } from "../../lib/queryDefaults";
-import { META, mockApi, user } from "../../test-utils";
+import { META, firstColumn, mockApi, user } from "../../test-utils";
 import type { Deal } from "../queries";
 import { Deals } from "./Deals";
 
@@ -86,10 +86,7 @@ async function showDeals(address = "/deals", routes: Record<string, unknown> = {
 
 async function names() {
   await screen.findByRole("table");
-  return screen
-    .getAllByRole("row")
-    .slice(1)
-    .map((row) => within(row).getAllByRole("cell")[0].textContent);
+  return firstColumn();
 }
 
 async function rowOf(name: string) {

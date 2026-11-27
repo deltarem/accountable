@@ -19,10 +19,20 @@ const HARB: SearchResults = {
     })),
   },
   deals: { count: 1, results: [{ id: 7, name: "Harbor refit", stage: "proposal", organization_name: null }] },
+  products: {
+    count: 12,
+    results: ["Harbor tour", "Harbor tour, half day", "Harbor map", "Harbor kit", "Harbor guide"].map(
+      (name, index) => ({
+        id: index + 30,
+        name,
+        unit_price_cents: 4950 + index * 100_000,
+      }),
+    ),
+  },
 };
 
-const ONLY_DEALS: SearchResults = { ...HARB, organizations: NONE, contacts: NONE };
-const NOTHING: SearchResults = { organizations: NONE, contacts: NONE, deals: NONE };
+const ONLY_DEALS: SearchResults = { ...HARB, organizations: NONE, contacts: NONE, products: NONE };
+const NOTHING: SearchResults = { organizations: NONE, contacts: NONE, deals: NONE, products: NONE };
 
 function ShowAddress() {
   const { pathname, search } = useLocation();
@@ -36,7 +46,7 @@ function openSearch() {
       <ShowAddress />
     </>,
   );
-  return screen.getByRole<HTMLInputElement>("combobox", { name: "Search organizations, contacts and deals" });
+  return screen.getByRole<HTMLInputElement>("combobox", { name: "Search organizations, contacts, deals and products" });
 }
 
 function typist() {
@@ -147,12 +157,27 @@ describe("the results", () => {
     return box;
   }
 
-  it("come in three groups, in order, each showing up to 5", async () => {
+  it("come in four groups, in order, each showing up to 5", async () => {
     await searchFor("harb");
     const groups = screen.getAllByRole("group");
-    expect(groups).toEqual(["Organizations", "Contacts", "Deals"].map((name) => screen.getByRole("group", { name })));
-    // The contacts' sixth is See all.
-    expect(groups.map((group) => within(group).getAllByRole("option").length)).toEqual([1, 6, 1]);
+    expect(groups).toEqual(
+      ["Organizations", "Contacts", "Deals", "Products"].map((name) => screen.getByRole("group", { name })),
+    );
+    // The contacts' and the products' sixth is See all.
+    expect(groups.map((group) => within(group).getAllByRole("option").length)).toEqual([1, 6, 1, 6]);
+  });
+
+  it("show a product's price in dollars and cents, in the figures' type", async () => {
+    await searchFor("harb");
+    const price = within(screen.getByRole("option", { name: /^Harbor tour, half day/ })).getByText("$1,049.50");
+    expect(price.className).toContain("num");
+    within(screen.getByRole("option", { name: "Harbor tour$49.50" })).getByText("$49.50");
+  });
+
+  it("end the products with See all, which opens the Products table with the same search", async () => {
+    await searchFor("harb");
+    await typist().click(screen.getByRole("option", { name: "See all 12 products" }));
+    expect(address()).toBe("/products?q=harb");
   });
 
   it("leave out a group with no matches", async () => {
@@ -187,7 +212,9 @@ describe("the results", () => {
 
   it("say so when nothing matches", async () => {
     await searchFor("harbour", NOTHING);
-    expect(screen.getByRole("status").textContent).toBe('No organizations, contacts or deals match "harbour".');
+    expect(screen.getByRole("status").textContent).toBe(
+      'No organizations, contacts, deals or products match "harbour".',
+    );
   });
 });
 

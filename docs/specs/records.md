@@ -4,7 +4,7 @@ Part of the [spec](../spec.md), which has the summary, the terms, the quality ru
 
 ## Tables
 
-- **T1.** Organizations, Contacts and Deals each have a search box, sortable column headings, an Add button, and Edit and Delete on every row. Clicking a row opens the record.
+- **T1.** Organizations, Contacts and Deals each have a search box, sortable column headings, an Add button, and Edit and Delete on every row. Clicking a row opens the record. The Products table follows these rules too, with Archive or Restore in place of Delete ([G2](products.md#products)).
 - **T2.** Search updates as you type, ignores case, and matches any text column.
 - **T3.** Clicking a heading sorts ascending, then descending, and a further click never clears the sort. Blank values sort last either way. The Stage column sorts in pipeline order, and the Status column sorts Lead, Qualified, Customer.
 - **T4.** Search, sort and page stay in the address, so coming back from a record returns to the same view.
@@ -32,6 +32,7 @@ Part of the [spec](../spec.md), which has the summary, the terms, the quality ru
 | Contact | Name, Organization | Email, Phone, Job title, Status | Status: Lead |
 | Deal | Name, Organization, Main contact, Stage, Value, Close date | Probability | Stage: New, or the column's stage. Probability: the stage's usual one. Close date: today, if added at Won or Lost. |
 | Activity | Type, Description, When, and the contact or deal it relates to | Follow-up date, Done | Type: Note. When: now. |
+| Product | Name, Unit price | Description | Active. Archive and Restore change it, not the form (G4). |
 
 So a contact can't be added before their organization exists, and a deal can't be added before its organization and main contact exist. F3 lets the form add them on the spot.
 
@@ -41,7 +42,7 @@ So a contact can't be added before their organization exists, and a deal can't b
 - **F6.** Email must look like an email address if given. Website must be an `http` or `https` address, and `https://` is added if it's left off. Value must be a whole number of dollars, zero or more, which keeps every total exact. Probability must be a whole number from 0 to 100.
 - **F7.** The close date of a won or lost deal can't be in the future, because its revenue would then be missing from the dashboard. An open deal's close date can be any date.
 - **F8.** Changing the stage in the deal form shows the new probability, and the new close date for Won or Lost, straight away. Both can be overtyped before saving, and what's shown is what's saved. Moving between open stages leaves the close date alone, including one that's just been typed. A trip through Won or Lost and back restores it.
-- **F9.** Two records can share a name.
+- **F9.** Two organizations, contacts or deals can share a name. Two products can't, whatever the case (G7).
 - **F10.** A save or delete happens once, however quickly its button is pressed. If it fails, the dialog stays open with what was typed, and says so.
 - **F11.** A form that can't read the lists it needs closes and says so, rather than opening with an empty picker.
 - **F12.** The activity form's When box holds minutes. Leaving it untouched keeps the activity's exact time.
@@ -67,7 +68,7 @@ So a contact can't be added before their organization exists, and a deal can't b
 - **R3.** A deal's page shows its details, stage, value, probability, expected revenue, close date, organization and main contact, a Late chip if late, and its timeline.
 - **R4.** Each page has Edit and Delete. After a delete, the app returns to the section's table.
 - **R5.** The contacts and deals listed on these pages are short linked lists, not tables, so T1 doesn't apply to them.
-- **R6.** Each page shows who added the record and when, such as "Added by Alex Rivera on Oct 12, 2026", and who last changed it and when, such as "Last changed by Dana Whitfield on Oct 30, 2026", following U8 to U12. The second line is left out if nobody has changed the record since it was added. A record with no one recorded shows the dates alone, such as "Added Oct 12, 2026". Nobody chooses these in a form: the backend sets them from the token of whoever saves.
+- **R6.** Each page, the product page included (G10), shows who added the record and when, such as "Added by Alex Rivera on Oct 12, 2026", and who last changed it and when, such as "Last changed by Dana Whitfield on Oct 30, 2026", following U8 to U12. The second line is left out if nobody has changed the record since it was added. A record with no one recorded shows the dates alone, such as "Added Oct 12, 2026". Nobody chooses these in a form: the backend sets them from the token of whoever saves.
 
 ## Screens
 

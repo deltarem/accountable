@@ -265,21 +265,6 @@ A third review of the `mvp` branch against `main` using `docs/REVIEW.md` found t
 
 `npm test` now runs 1,368 tests.
 
-## Worktrees running the checks at once
-
-Every run of the end-to-end tests used the same ports, so two worktrees running `npm run check` at once stopped each other's servers. `scripts/test-sharing.mjs` now has each run take a block of ports of its own, out of ten, with nothing to set by hand. `docs/specs/testing.md` has the details. Block 0 has the ports every run used before.
-
-The first run in two worktrees at once found two more things, both now fixed:
-
-- **End-to-end workers:** each run chose 4 workers on this 8-core computer, so 8 ran at once, and tests took 20 to 30 seconds each, some past the 30-second limit. The runs now share the computer's workers, so one run's end-to-end tests wait for another's. The code checks and unit tests still run side by side.
-- **Unit tests that raced a clock:** the board test that keeps the drop gap open raced the board's own 200ms limit, and failed once the machine was busy enough. It now drops and checks with no pause in between, and passes with the limit cut to 0ms. The original test fails that way. Tests waiting for something to show now give it 5 seconds, not Testing Library's 1. A first try at the board test with Vitest's fake timers hung, because Testing Library only moves Jest's fake timers forward, and that broke CI.
-
-The speed tests wait until no other run is busy, and new runs wait while they go. The second run in two worktrees at once showed the ports, the shared workers and the waits working. But neither run passed. The failures came while the other run was only waiting, so they would fail a run on its own too:
-
-- **App copies on Windows:** the tests that stop and restart the app stop their copy with `child.kill("SIGINT")`. On Windows that ends only `node`, and the backend and Vite under it keep running. The next copy on that worker finds its port in use, and the copy's folder can't be removed. Shown outside the tests by starting `scripts/dev.mjs` and stopping it the same way. Not fixed yet.
-- **Speed limits:** the top bar's search, the drag, the search keystroke and opening Deals went over their limits while each run had the computer to itself. Not changed, since the limits are the project owner's.
-- **Secrets in a report:** a failed end-to-end test's notes in `playwright-report/` can hold a test token, and the next run's gitleaks scan of the files finds it. Not changed.
-
 ## Running Accountable
 
 Accountable runs two ways:
@@ -314,7 +299,7 @@ It opens on a sign-in screen listing four made-up teammates: Alex Rivera, Dana W
 
 If it says a port is in use, Accountable is probably already running in another window.
 
-The search box in the top bar finds organizations, contacts and deals by any part of their name. The round button at the top right, with your initials, opens a menu with your name, the theme and Sign out. The theme can be Light, Dark, or System, which follows your computer's own setting as it changes. This browser remembers your choice.
+The search box in the top bar finds organizations, contacts, deals and active products by any part of their name. Products, the sixth section, is the price list: archive a product to take it out of use, and Restore brings it back. The round button at the top right, with your initials, opens a menu with your name, the theme and Sign out. The theme can be Light, Dark, or System, which follows your computer's own setting as it changes. This browser remembers your choice.
 
 ### Stop it
 
@@ -383,10 +368,10 @@ The first start against an empty Supabase project builds the tables and fills th
 
 #### Clear the sample data
 
-When the team is ready to type in its own records, run this in Supabase's SQL Editor. It removes every organization, contact, deal, activity and stage change, and leaves the people and the tables in place:
+When the team is ready to type in its own records, run this in Supabase's SQL Editor. It removes every organization, contact, deal, activity, stage change and product, and leaves the people and the tables in place:
 
 ```sql
-truncate table activities, stage_changes, deals, contacts, organizations;
+truncate table activities, stage_changes, deals, contacts, organizations, products;
 ```
 
 New records carry on from the next id, so an old address never opens a different record. There's no undo.

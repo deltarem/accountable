@@ -48,7 +48,17 @@ export type TableColumn<T> = {
   width?: string;
 };
 
-type Props<T extends RowData> = {
+/** A button on each row in place of Delete, such as Archive or Restore. */
+export type RowAction<T> = {
+  /** For screen readers, naming the row, such as "Archive Training day". */
+  label: (row: T) => string;
+  icon: (row: T) => ReactNode;
+  onClick: (row: T) => void;
+};
+
+type RowEnd<T> = { onDelete: (row: T) => void; rowAction?: never } | { rowAction: RowAction<T>; onDelete?: never };
+
+type Props<T extends RowData> = RowEnd<T> & {
   /** Singular and plural words for the messages, such as "organization". */
   noun: string;
   rows: T[] | undefined;
@@ -62,11 +72,12 @@ type Props<T extends RowData> = {
   rowHref: (row: T) => string;
   onAdd: () => void;
   onEdit: (row: T) => void;
-  onDelete: (row: T) => void;
   /** Filters that sit beside the search box, already applied to rows. */
   filters?: (update: (change: AddressChange) => void) => ReactNode;
   /** True when rows is narrowed by those filters. */
   filtered?: boolean;
+  /** What a filter with nothing in it says, with no search, in place of the no-match message. */
+  emptyFilterMessage?: string;
   /** Address settings to clear along with the search. */
   clearParams?: string[];
 };
@@ -120,16 +131,20 @@ type NoRowsProps = {
   rows: unknown[] | undefined;
   error: unknown;
   matching: number;
-  /** True when a search or filter is narrowing the rows. */
-  narrowed: boolean;
+  searching: boolean;
+  filtered: boolean;
+  emptyFilterMessage?: string;
   onAdd: () => void;
   onClear: () => void;
 };
 
 /** What shows in place of rows: a space while loading, an invitation, or that nothing matches. */
-function NoRows({ noun, rows, error, matching, narrowed, onAdd, onClear }: NoRowsProps) {
+function NoRows({ noun, rows, error, matching, searching, filtered, emptyFilterMessage, onAdd, onClear }: NoRowsProps) {
   if (rows === undefined) return error ? null : <div className="h-40" aria-busy="true" />;
-  if (narrowed) {
+  if (filtered && !searching && emptyFilterMessage) {
+    return matching === 0 ? <EmptyState message={emptyFilterMessage} /> : null;
+  }
+  if (searching || filtered) {
     return matching === 0 ? (
       <EmptyState message={`No ${noun}s match.`}>
         <button type="button" className="btn btn-secondary" onClick={onClear}>
@@ -185,8 +200,10 @@ export function DataTable<T extends RowData>({
   onAdd,
   onEdit,
   onDelete,
+  rowAction,
   filters,
   filtered = false,
+  emptyFilterMessage,
   clearParams = [],
 }: Props<T>) {
   const navigate = useNavigate();
@@ -295,6 +312,11 @@ export function DataTable<T extends RowData>({
   });
 
   const cells = new Map(columns.map((column) => [column.id, column]));
+  const action: RowAction<T> = rowAction ?? {
+    label: (row) => `Delete ${rowName(row)}`,
+    icon: () => <Trash2 size={16} aria-hidden="true" />,
+    onClick: (row) => onDelete?.(row),
+  };
 
   return (
     <div className="flex flex-col gap-2.5 px-5 pb-4">
@@ -310,7 +332,9 @@ export function DataTable<T extends RowData>({
           rows={rows}
           error={error}
           matching={matching}
-          narrowed={search !== "" || filtered}
+          searching={search !== ""}
+          filtered={filtered}
+          emptyFilterMessage={emptyFilterMessage}
           onAdd={onAdd}
           onClear={clearSearch}
         />
@@ -389,14 +413,14 @@ export function DataTable<T extends RowData>({
                     </button>
                     <button
                       type="button"
-                      aria-label={`Delete ${rowName(row.original)}`}
+                      aria-label={action.label(row.original)}
                       className="icon-btn"
                       onClick={(event) => {
                         event.stopPropagation();
-                        onDelete(row.original);
+                        action.onClick(row.original);
                       }}
                     >
-                      <Trash2 size={16} aria-hidden="true" />
+                      {action.icon(row.original)}
                     </button>
                   </td>
                 </tr>
