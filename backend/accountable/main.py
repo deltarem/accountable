@@ -20,7 +20,7 @@ from starlette.exceptions import HTTPException
 from starlette.responses import Response
 from starlette.types import Scope
 
-from accountable import auth, cli, db, settings
+from accountable import auth, cli, company, db, settings
 from accountable.crm import sample_data, schemas
 from accountable.crm.routers import activities, contacts, dashboard, deals, meta, organizations, search
 
@@ -66,7 +66,7 @@ def _local_sign_in_paths() -> list[str]:
 def _signed_in_routes() -> APIRouter:
     api = APIRouter(prefix="/api", dependencies=[Depends(auth.current_user)])
     api.include_router(auth.router)
-    for module in (meta, organizations, contacts, deals, activities, dashboard, search):
+    for module in (company, meta, organizations, contacts, deals, activities, dashboard, search):
         api.include_router(module.router)
     return api
 

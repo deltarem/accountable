@@ -12,7 +12,7 @@ from typing import Any
 
 from sqlalchemy import Connection, insert
 
-from accountable import users
+from accountable import company, users
 from accountable.crm import rules, who
 from accountable.crm.tables import activities, contacts, organizations
 
@@ -349,6 +349,22 @@ class Walk:
     last_step: date
 
 
+# The made-up company's settings (B11): a small software and services firm, which fits
+# the sample deals. Its phone number is in the range set aside for fiction.
+FIELDSTONE = {
+    "company_name": "Fieldstone Digital",
+    "address": "48 Larkspur Avenue, Suite 210\nBrooklyn, NY 11201",
+    "email": "hello@fieldstone.example",
+    "phone": "(718) 555-0134",
+    "tax_label": "Sales tax",
+    "tax_rate": 8875,
+    "payment_terms_days": 30,
+    "quote_prefix": "QT-",
+    "invoice_prefix": "INV-",
+}
+SETTINGS_CHANGED_DAYS_AGO = 3
+
+
 def add_months(day: date, months: int, day_of_month: int | None = None) -> date:
     index = day.year * 12 + day.month - 1 + months
     year, month = index // 12, index % 12 + 1
@@ -583,3 +599,6 @@ def fill(conn: Connection, today: date) -> None:
     for number, row in enumerate(rows):
         row.update(_activity_who(row, number, today))
     conn.execute(insert(activities), rows)
+
+    changed = today - timedelta(days=SETTINGS_CHANGED_DAYS_AGO)
+    company.replace(conn, FIELDSTONE, teammate(1), moment(changed, 1))

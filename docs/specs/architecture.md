@@ -75,6 +75,8 @@ backend/accountable/
   db.py                           engine for SQLite or Postgres, metadata, foreign keys, write lock, migrations on start
   auth.py                         the token check, the signed-in person and GET /me, and the local copy's sign-in routes
   users.py                        the users table, names and initials
+  fields.py                       what every area's requests and replies share: the base for what a form sends, text a
+                                  database can store, blank text, email addresses, times in UTC and Now
   company.py                      the company_settings table, the checks on its values, and GET and PATCH /api/settings.
                                   The migration that adds the table holds B12's starting values itself, so it never
                                   changes when company.py does
@@ -95,9 +97,10 @@ frontend/src/
   main.tsx, App.tsx, styles.css   styles.css holds every color, as light and dark tokens
   test-utils.tsx, test-setup.ts   the unit tests' helpers, and test-supabase.ts, which stands in for Supabase's client
   lib/                            fetch client, session, query defaults, money and date formatting, useToday, validation,
-                                  the saved theme
+                                  the saved theme, and server-errors.ts, which puts the API's field messages beside a
+                                  form's fields
   components/                     Shell, SignIn, UserMenu, DataTable, RecordPicker, ConfirmDelete, LoadFailed, Chip and others
-  company/                        CompanySettings.tsx, the Company settings page, and its form's checks
+  company/                        CompanySettings.tsx, the Company settings page, and settings.ts, its rules and queries
   crm/
     queries.ts, deals.ts, Timeline.tsx, Search.tsx and others
     forms/                        organization, contact, deal and activity forms

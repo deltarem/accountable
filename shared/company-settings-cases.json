@@ -1,0 +1,92 @@
+{
+  "messages": {
+    "company_name": "Enter the company name",
+    "email": "Enter a valid email address",
+    "tax_rate": "Enter a percentage from 0 to 100, with up to 3 decimal places",
+    "payment_terms_days": "Enter a whole number of days from 0 to 365",
+    "quote_prefix": "Use 1 to 10 letters, digits or hyphens, such as QT-",
+    "invoice_prefix": "Use 1 to 10 letters, digits or hyphens, such as INV-"
+  },
+  "fields": {
+    "company_name": {
+      "accepted": [
+        { "typed": "Fieldstone Digital", "saved": "Fieldstone Digital" },
+        { "typed": "  Harbor Works  ", "saved": "Harbor Works" }
+      ],
+      "refused": [{ "typed": "" }, { "typed": "   " }]
+    },
+    "email": {
+      "accepted": [
+        { "typed": "hello@fieldstone.example", "saved": "hello@fieldstone.example" },
+        { "typed": " sam@example.com ", "saved": "sam@example.com" },
+        { "typed": "", "saved": null }
+      ],
+      "refused": [{ "typed": "hello" }, { "typed": "hello@example" }, { "typed": "two words@example.com" }]
+    },
+    "tax_rate": {
+      "accepted": [
+        { "typed": "8.875", "saved": "8.875", "stored": 8875 },
+        { "typed": " 8.5 ", "saved": "8.5", "stored": 8500 },
+        { "typed": "8.50", "saved": "8.5", "stored": 8500 },
+        { "typed": "0", "saved": "0", "stored": 0 },
+        { "typed": "0.001", "saved": "0.001", "stored": 1 },
+        { "typed": "99.999", "saved": "99.999", "stored": 99999 },
+        { "typed": "20", "saved": "20", "stored": 20000 },
+        { "typed": "100", "saved": "100", "stored": 100000 },
+        { "typed": "100.000", "saved": "100", "stored": 100000 },
+        { "typed": ".5", "saved": "0.5", "stored": 500 }
+      ],
+      "refused": [
+        { "typed": "150" },
+        { "typed": "100.001" },
+        { "typed": "8.8751" },
+        { "typed": "-1" },
+        { "typed": "1e2" },
+        { "typed": "8,875" },
+        { "typed": "8.875%" },
+        { "typed": "" },
+        { "typed": "." },
+        { "typed": "abc" }
+      ]
+    },
+    "payment_terms_days": {
+      "accepted": [
+        { "typed": "0", "sent": 0, "saved": 0 },
+        { "typed": "30", "sent": 30, "saved": 30 },
+        { "typed": " 45 ", "sent": 45, "saved": 45 },
+        { "typed": "365", "sent": 365, "saved": 365 }
+      ],
+      "refused": [
+        { "typed": "400", "sent": 400 },
+        { "typed": "366", "sent": 366 },
+        { "typed": "-1", "sent": -1 },
+        { "typed": "30.5", "sent": 30.5 },
+        { "typed": "", "sent": null },
+        { "typed": "thirty", "sent": "thirty" }
+      ]
+    },
+    "quote_prefix": {
+      "accepted": [
+        { "typed": "QT-", "saved": "QT-" },
+        { "typed": " Q- ", "saved": "Q-" },
+        { "typed": "inv-2026", "saved": "inv-2026" },
+        { "typed": "ABCDEFGHIJ", "saved": "ABCDEFGHIJ" }
+      ],
+      "refused": [
+        { "typed": "" },
+        { "typed": "ABCDEFGHIJK" },
+        { "typed": "Q T" },
+        { "typed": "QT_" },
+        { "typed": "QÉ-" },
+        { "typed": "QT/" }
+      ]
+    },
+    "invoice_prefix": {
+      "accepted": [
+        { "typed": "INV-", "saved": "INV-" },
+        { "typed": "2026-", "saved": "2026-" }
+      ],
+      "refused": [{ "typed": "" }, { "typed": "IN V" }, { "typed": "INVOICE-2026" }]
+    }
+  }
+}

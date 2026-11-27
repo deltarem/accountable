@@ -23,7 +23,7 @@ import {
 import { ContactForm } from "./ContactForm";
 import { OrganizationForm } from "./OrganizationForm";
 import { link } from "./links";
-import { showSaveError } from "./server-errors";
+import { showSaveError } from "../../lib/server-errors";
 import { useCloseIfUnreadable } from "./useCloseIfUnreadable";
 
 const VALUE_MESSAGE = "Enter a whole number of dollars, zero or more";

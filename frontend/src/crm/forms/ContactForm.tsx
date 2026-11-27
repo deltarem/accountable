@@ -12,7 +12,7 @@ import { capitalize } from "../../lib/words";
 import { useOrganizations, useSaveContact, type Contact, type ContactDetail, type Status } from "../queries";
 import { link } from "./links";
 import { OrganizationForm } from "./OrganizationForm";
-import { showSaveError } from "./server-errors";
+import { showSaveError } from "../../lib/server-errors";
 import { useCloseIfUnreadable } from "./useCloseIfUnreadable";
 
 const STATUSES: Status[] = ["lead", "qualified", "customer"];

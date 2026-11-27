@@ -160,6 +160,9 @@ test("npm run empty with the app running keeps the teammates and leaves every sc
   await goto(page, "/pipeline");
   await expect(page.getByText("No deals yet. Add the first one.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Add deal to New" })).toBeVisible();
+  // The company settings aren't records, so emptying leaves them (B13).
+  await goto(page, "/settings");
+  await expect(page.getByLabel("Company name")).toHaveValue("Fieldstone Digital");
   for (const path of SCREENS) {
     await goto(page, path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

@@ -5,6 +5,7 @@ from accountable import db
 from accountable.auth import CurrentUser
 from accountable.crm import schemas, who
 from accountable.crm.tables import activities, contacts, deals
+from accountable.fields import Now
 
 router = APIRouter(prefix="/activities")
 
@@ -17,7 +18,7 @@ def _get(conn, activity_id: int):
 
 
 @router.post("", status_code=201)
-def add_activity(body: schemas.ActivityCreate, user: CurrentUser, now: schemas.Now) -> schemas.Activity:
+def add_activity(body: schemas.ActivityCreate, user: CurrentUser, now: Now) -> schemas.Activity:
     values = body.model_dump()
     if (values["contact_id"] is None) == (values["deal_id"] is None):
         raise schemas.FieldError({"contact_id": "Choose a contact or a deal, not both"})
@@ -35,7 +36,7 @@ def add_activity(body: schemas.ActivityCreate, user: CurrentUser, now: schemas.N
 
 @router.patch("/{activity_id}")
 def edit_activity(
-    activity_id: schemas.PathId, body: schemas.ActivityUpdate, user: CurrentUser, now: schemas.Now
+    activity_id: schemas.PathId, body: schemas.ActivityUpdate, user: CurrentUser, now: Now
 ) -> schemas.Activity:
     fields = body.model_dump(exclude_unset=True)
     with db.writing() as conn:

@@ -49,9 +49,9 @@ There's no new dependency. The tax rate's exact arithmetic uses Python's own `de
 
 | File | What it holds |
 |---|---|
-| `frontend/src/company/companySettings.ts` | The settings type as the API sends it, the Zod schema with B3's rules and messages, turning the reply into form values and the changed fields into a `PATCH` body, and `useCompanySettings` and `useSaveCompanySettings` on TanStack Query. A save invalidates everything, as every write does |
+| `frontend/src/company/settings.ts` | Named so, not `companySettings.ts`, because Windows doesn't tell file names apart by case and it would clash with `CompanySettings.tsx`. The settings type as the API sends it, the Zod schema with B3's rules and messages, turning the reply into form values and the changed fields into a `PATCH` body, and `useCompanySettings` and `useSaveCompanySettings` on TanStack Query. A save invalidates everything, as every write does |
 | `frontend/src/company/CompanySettings.tsx` | The page in [the spec's screen](../../specs/company-settings.md#company-settings-page): the three groups, Save settings, the B7 line, "Settings saved.", `LoadFailed` in place of the form when the read fails (B10) |
-| `frontend/src/company/companySettings.test.ts`, `CompanySettings.test.tsx` | See [Proof](#proof) |
+| `frontend/src/company/settings.test.ts`, `CompanySettings.test.tsx` | See [Proof](#proof) |
 
 ### End-to-end tests
 
@@ -101,7 +101,7 @@ Done when the pytest suite passes, with every new test under a second.
 
 ### Phase 3: the page
 
-1. Write `companySettings.ts` and `companySettings.test.ts` against the shared cases.
+1. Write `settings.ts` and `settings.test.ts` against the shared cases.
 2. Write `CompanySettings.tsx` and add the route in `App.tsx`.
 3. Add Company settings to `UserMenu.tsx`.
 4. Add `layout.test.ts`'s new rule.
@@ -142,7 +142,7 @@ The intent's success criteria:
 
 1. `npm run check` passes, at the end of Phase 4.
 2. The settings can be changed and saved, and everyone who signs in sees the same ones: `e2e/settings.spec.ts`, "saved settings are what every teammate sees".
-3. Values out of range are refused with a clear message, through the page or the API: `test_company.py`'s rule cases, `companySettings.test.ts`, and the two refusal tests in `e2e/settings.spec.ts`.
+3. Values out of range are refused with a clear message, through the page or the API: `test_company.py`'s rule cases, `settings.test.ts`, and the two refusal tests in `e2e/settings.spec.ts`.
 4. The page shows who last changed the settings and when: `e2e/settings.spec.ts`, the first two tests, and `CompanySettings.test.tsx`.
 
 ### Unit tests: backend (pytest)
@@ -163,7 +163,7 @@ The intent's success criteria:
 
 | File | What it proves | Requirements |
 |---|---|---|
-| `company/companySettings.test.ts` | The Zod schema passes and refuses each case in the shared file with the same message as the backend. The `PATCH` body holds only the changed fields, with the tax rate as the string typed. A reply turns into form values with blank optional fields as empty text | B3, B4, B8 |
+| `company/settings.test.ts` | The Zod schema passes and refuses each case in the shared file with the same message as the backend. The `PATCH` body holds only the changed fields, with the tax rate as the string typed. A reply turns into form values with blank optional fields as empty text | B3, B4, B8 |
 | `company/CompanySettings.test.tsx` | The fields in their three groups, filled from the API. Each B3 message shows beside its field, and nothing is sent. A save sends only the changed fields once however fast it's clicked, shows "Settings saved." and the reply's values. A 422 from the API puts its messages beside their fields. A failed save keeps what was typed and says so. A new reply arriving while a field has unsaved changes keeps that field and updates the others and the B7 line. A failed read shows Try again and no form. "Last changed by Dana Whitfield on Nov 20, 2026" and "Nobody has changed these yet." each show when they should. Enter in a one-line field saves, and Enter in the address adds a line | B3, B5 to B10 |
 | `components/UserMenu.test.tsx` | Company settings is in the menu above Sign out, with or without a name read, and choosing it goes to `/settings` and closes the menu | N7, B2 |
 | `lib/server-errors.test.ts` | Moved, unchanged, still passing | |

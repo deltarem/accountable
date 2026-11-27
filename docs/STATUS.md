@@ -265,6 +265,23 @@ A third review of the `mvp` branch against `main` using `docs/REVIEW.md` found t
 
 `npm test` now runs 1,368 tests.
 
+## Company settings
+
+Built on the `company-settings` branch, following `docs/changes/company-settings/plan.md`. Company settings, in the menu under your initials, opens a page at `/settings` with the business's details for its documents: the company name, address, email and phone, a tax label and rate, the payment terms in days, and the quote and invoice prefixes. The team shares one set, anyone can change them, and the page says who changed them last and when. Nothing uses them yet: quotes and invoices come later.
+
+- **Where it lives:** `backend/accountable/company.py` holds the one-row `company_settings` table and `GET` and `PATCH /api/settings`, and `frontend/src/company/` holds the page. Every area that makes documents will need them, so they sit beside `crm/`, not in it. The checks they share with the CRM, such as the email check and the guard against text a database can't store, moved from `crm/schemas.py` to `backend/accountable/fields.py`, and the helper that puts the API's messages beside a form's fields moved to `frontend/src/lib/server-errors.ts`. Nothing about the CRM changed.
+- **The tax rate stays exact:** it's stored as thousandths of a percent, so 8.875% is 8875, and travels as text, such as `"8.875"`, so it never passes through a floating-point number. `shared/company-settings-cases.json` gives the backend and frontend tests the same cases.
+- **Starting settings:** migration `0004` adds the table with placeholder settings, "Your company" with nobody recorded, so the team's existing database in Supabase gets those, never the made-up company. A new database then gets Fieldstone Digital, a made-up software firm that fits the sample deals. `npm run seed` puts it back, and says so in its question. `npm run empty` and the Supabase clearing steps leave the settings alone.
+- **Found while building:** in React Hook Form 7.91, a manual `reset()` also takes the form's `resetOptions`. The page keeps typed values when a teammate's save arrives, so after a save the form kept "8.50" in place of the saved "8.5", still counted it as changed, and a second press saved it again. The reset after a save now turns that option off, and a test holds the reply back to prove a double press saves once.
+- **Windows:** `companySettings.ts` beside `CompanySettings.tsx` broke the type check, because Windows doesn't tell file names apart by case, so the rules file is `company/settings.ts`.
+
+`npm run check` on this Windows computer ran 3,159 tests: 3,150 passed and 9 failed. One was this change's: the menu test visits `/settings` too, and took 30.8s against a 30s limit, so it's now marked slow, as the contrast sweep is. It passed on its own. The other eight fail in code this change didn't touch. They weren't run on the commit before it, and this is the first time the end-to-end tests have run on Windows:
+
+- **Starting and stopping a copy of the app on Windows:** `data.spec.ts:84` and four tests in `start.spec.ts`. Stopping a copy with `child.kill("SIGINT")` ends `dev.mjs` but leaves its Vite and Uvicorn running, so the next start finds the port taken, and the copy's folder can't be deleted (EPERM). `dataCommand` in `e2e/helpers.ts` runs `npm` with `execFileSync`, which can't find `npm.cmd` on Windows, so the seed and empty tests get no output. The rest of `data.spec.ts` didn't run, including the new check that `npm run empty` keeps the settings, which `backend/tests/test_cli.py` covers.
+- **Speed:** Deals opened in 1,021ms against 1s, the top bar's search took 319ms against 300ms, and the worst drag task was 638ms against 250ms. None of the code they time changed, and the limits were set on a Mac.
+
+Not yet checked: the shared app against Supabase, by hand, as `docs/specs/testing.md` sets out.
+
 ## Running Accountable
 
 Accountable runs two ways:
@@ -299,7 +316,7 @@ It opens on a sign-in screen listing four made-up teammates: Alex Rivera, Dana W
 
 If it says a port is in use, Accountable is probably already running in another window.
 
-The search box in the top bar finds organizations, contacts and deals by any part of their name. The round button at the top right, with your initials, opens a menu with your name, the theme and Sign out. The theme can be Light, Dark, or System, which follows your computer's own setting as it changes. This browser remembers your choice.
+The search box in the top bar finds organizations, contacts and deals by any part of their name. The round button at the top right, with your initials, opens a menu with your name, the theme, Company settings and Sign out. Company settings holds the business's own details for its quotes and invoices, which come later: its name, address, email and phone, its tax label and rate, its payment terms, and how quote and invoice numbers start. The whole team shares one set, and anyone can change them. The theme can be Light, Dark, or System, which follows your computer's own setting as it changes. This browser remembers your choice.
 
 ### Stop it
 
@@ -312,7 +329,7 @@ Accountable comes with made-up sample data so you can look around.
 - `npm run seed` replaces everything with fresh sample data.
 - `npm run empty` removes everything, so you can type in your own records.
 
-Both tell you what will be lost and only go ahead if you type `yes`. Both are safe with the app running: refresh the browser to see the result. Both keep the four teammates, so there's still someone to sign in as. They only ever touch the local copy, never the team's data in Supabase.
+Both tell you what will be lost and only go ahead if you type `yes`. Both are safe with the app running: refresh the browser to see the result. Both keep the four teammates, so there's still someone to sign in as. `npm run seed` also puts the made-up company's settings back, and `npm run empty` leaves the company settings as they are. They only ever touch the local copy, never the team's data in Supabase.
 
 ### Back up your data
 
@@ -368,13 +385,13 @@ The first start against an empty Supabase project builds the tables and fills th
 
 #### Clear the sample data
 
-When the team is ready to type in its own records, run this in Supabase's SQL Editor. It removes every organization, contact, deal, activity and stage change, and leaves the people and the tables in place:
+When the team is ready to type in its own records, run this in Supabase's SQL Editor. It removes every organization, contact, deal, activity and stage change, and leaves the people, the company settings and the tables in place:
 
 ```sql
 truncate table activities, stage_changes, deals, contacts, organizations;
 ```
 
-New records carry on from the next id, so an old address never opens a different record. There's no undo.
+New records carry on from the next id, so an old address never opens a different record. There's no undo. Then put your own business's details in Company settings, in the menu under your initials.
 
 #### Put it on Render
 

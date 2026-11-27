@@ -23,7 +23,7 @@ async function recordPaths(request: APIRequestContext) {
 for (const size of SIZES) {
   test(`no screen scrolls sideways at ${size.width} by ${size.height}`, async ({ page, request }) => {
     await page.setViewportSize(size);
-    for (const path of [...SECTIONS, ...(await recordPaths(request))]) {
+    for (const path of [...SECTIONS, "/settings", ...(await recordPaths(request))]) {
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -53,6 +53,11 @@ test("a walk through every screen and main action logs no console errors", async
   await page.getByRole("dialog").getByLabel("Description").fill("Walked through it");
   await page.getByRole("dialog").getByRole("button", { name: "Save activity" }).click();
   await expect(page.getByTestId("timeline-entry").first()).toContainText("Walked through it");
+
+  await page.goto("/settings");
+  await page.getByLabel("Payment terms").fill("400");
+  await page.getByRole("button", { name: "Save settings" }).click();
+  await expect(page.getByText("Enter a whole number of days from 0 to 365")).toBeVisible();
 
   await page.goto("/pipeline");
   await expect(card(page, "Walked")).toBeVisible();
@@ -114,6 +119,12 @@ test("every control can be reached by Tab and shows a focus ring", async ({ page
   const board = await tabThrough(page, 12);
   expect([...board].some((name) => name.startsWith("BUTTON Add deal to "))).toBe(true);
   expect([...board].some((name) => name.startsWith("A $"))).toBe(true);
+
+  await page.goto("/settings");
+  await expect(page.getByLabel("Company name")).toHaveValue(/.+/);
+  const settings = await tabThrough(page, 17);
+  expect([...settings]).toContain("BUTTON Save settings");
+  expect([...settings]).toContain("TEXTAREA ");
 });
 
 /** Opens the dashboard from another screen and records the revenue line on every frame while it mounts. */

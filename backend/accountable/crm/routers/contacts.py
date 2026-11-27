@@ -5,6 +5,7 @@ from accountable import db
 from accountable.auth import CurrentUser
 from accountable.crm import schemas, timeline, who
 from accountable.crm.tables import activities, contacts, deals, organizations
+from accountable.fields import Now
 
 router = APIRouter(prefix="/contacts")
 
@@ -74,7 +75,7 @@ def list_contacts() -> list[schemas.ContactRow]:
 
 
 @router.post("", status_code=201)
-def add_contact(body: schemas.ContactCreate, user: CurrentUser, now: schemas.Now) -> schemas.ContactDetail:
+def add_contact(body: schemas.ContactCreate, user: CurrentUser, now: Now) -> schemas.ContactDetail:
     with db.writing() as conn:
         _check_organization(conn, body.organization_id)
         new_id = conn.execute(
@@ -91,7 +92,7 @@ def get_contact(contact_id: schemas.PathId) -> schemas.ContactDetail:
 
 @router.patch("/{contact_id}")
 def edit_contact(
-    contact_id: schemas.PathId, body: schemas.ContactUpdate, user: CurrentUser, now: schemas.Now
+    contact_id: schemas.PathId, body: schemas.ContactUpdate, user: CurrentUser, now: Now
 ) -> schemas.ContactDetail:
     fields = body.model_dump(exclude_unset=True)
     with db.writing() as conn:

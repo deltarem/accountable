@@ -23,6 +23,14 @@ describe("the plan's layout rules", () => {
       expect(readFileSync(file, "utf8"), file).not.toMatch(/from "[^"]*\/crm\//);
     }
   });
+
+  it("keeps the company settings apart from the sales CRM, since every area will use them", () => {
+    const files = filesIn(path.join(SOURCE, "company")).filter((file) => /\.tsx?$/.test(file));
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/from "[^"]*\/crm\//);
+    }
+  });
 });
 
 describe("talking to the backend", () => {

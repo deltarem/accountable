@@ -7,19 +7,10 @@ from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
 from fastapi import Depends, Path, Query
-from pydantic import (
-    MISSING,
-    AfterValidator,
-    BaseModel,
-    ConfigDict,
-    Field,
-    PlainSerializer,
-    StrictBool,
-    StrictInt,
-    field_validator,
-)
+from pydantic import MISSING, AfterValidator, BaseModel, Field, StrictBool, StrictInt
 
 from accountable import db
+from accountable.fields import Email, OptionalText, Request, UtcTime, blank_to_none
 from accountable.users import Person
 
 Stage = Literal["new", "qualified", "proposal", "negotiation", "won", "lost"]
@@ -81,28 +72,12 @@ def _description(value: str) -> str:
     return value
 
 
-def _blank_to_none(value: str | None) -> str | None:
-    if value is None:
-        return None
-    return value.strip() or None
-
-
-EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
-
-def _email(value: str | None) -> str | None:
-    value = _blank_to_none(value)
-    if value is not None and not EMAIL.match(value):
-        raise ValueError("Enter a valid email address")
-    return value
-
-
 HAS_SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*:(?!\d)", re.IGNORECASE)
 WEBSITE_MESSAGE = "Enter a website address, such as https://example.com"
 
 
 def _website(value: str | None) -> str | None:
-    value = _blank_to_none(value)
+    value = blank_to_none(value)
     if value is None:
         return None
     if not HAS_SCHEME.match(value):
@@ -132,58 +107,18 @@ def _to_utc(value: datetime) -> datetime:
         raise ValueError(FIELD_MESSAGES["occurred_at"]) from error
 
 
-def _with_z(value: datetime) -> str:
-    """SQLite stores no zone, so without this the browser would read UTC as local."""
-    return value.replace(tzinfo=UTC).isoformat().replace("+00:00", "Z")
-
-
 Name = Annotated[str, AfterValidator(_name)]
 Description = Annotated[str, AfterValidator(_description)]
-OptionalText = Annotated[str | None, AfterValidator(_blank_to_none)]
-Email = Annotated[str | None, AfterValidator(_email)]
 Website = Annotated[str | None, AfterValidator(_website)]
 Id = Annotated[int, Field(ge=1, le=MAX_ID)]
 PathId = Annotated[int, Path(ge=1, le=MAX_ID)]
 PageLimit = Annotated[int, Query(ge=1, le=500)]
 PageOffset = Annotated[int, Query(ge=0, le=MAX_ID)]
-# Asked for per request, so tests can fix them.
+# Asked for per request, so tests can fix it, as fields.Now is.
 Today = Annotated[date, Depends(db.local_today)]
-Now = Annotated[datetime, Depends(db.utc_now)]
 Dollars = Annotated[StrictInt, Field(ge=0, le=MAX_VALUE)]
 Probability = Annotated[StrictInt, Field(ge=0, le=100)]
 IncomingTime = Annotated[datetime, AfterValidator(_to_utc)]
-UtcTime = Annotated[datetime, PlainSerializer(_with_z, return_type=str)]
-
-
-class Request(BaseModel):
-    """What a form sends. In an update, MISSING marks a field that wasn't sent, which keeps its value.
-
-    Who added or changed a record comes from the token, so a body naming someone
-    has it ignored, like any other field a form doesn't send.
-    """
-
-    model_config = ConfigDict(extra="ignore")
-
-    @field_validator("*")
-    @classmethod
-    def _storable(cls, value: Any) -> Any:
-        if isinstance(value, str) and not _is_storable(value):
-            raise ValueError("Use plain text here")
-        return value
-
-
-def _is_storable(text: str) -> bool:
-    """JSON can carry text a database can't store, which would crash the save: a
-    character with no valid encoding, or a NUL, which Postgres refuses in text."""
-    if "\x00" in text:
-        return False
-    if text.isascii():
-        return True
-    try:
-        text.encode()
-    except UnicodeEncodeError:
-        return False
-    return True
 
 
 class Authorship(BaseModel):

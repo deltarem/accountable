@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 from itertools import pairwise
 
 import pytest
-from accountable import db
+from accountable import company, db
 from accountable.crm import rules, sample_data
 from accountable.crm.tables import activities, contacts, deals, organizations, stage_changes
 from accountable.users import users
@@ -37,6 +37,7 @@ def seeded(request, rows_by_day, database):
                 "activities": rows_of(conn, activities),
                 "stage_changes": rows_of(conn, stage_changes),
                 "users": rows_of(conn, users),
+                "settings": conn.execute(select(company.company_settings)).one(),
             }
     return rows_by_day[today]
 
@@ -172,6 +173,37 @@ def test_every_deal_has_a_full_stage_history(seeded):
         for before, after in pairwise(steps):
             assert before.to_stage == after.from_stage
             assert before.changed_at < after.changed_at
+
+
+def test_the_company_settings_are_the_made_up_companys(seeded):
+    settings = seeded["settings"]
+    assert {name: getattr(settings, name) for name in sample_data.FIELDSTONE} == {
+        "company_name": "Fieldstone Digital",
+        "address": "48 Larkspur Avenue, Suite 210\nBrooklyn, NY 11201",
+        "email": "hello@fieldstone.example",
+        "phone": "(718) 555-0134",
+        "tax_label": "Sales tax",
+        "tax_rate": 8875,
+        "payment_terms_days": 30,
+        "quote_prefix": "QT-",
+        "invoice_prefix": "INV-",
+    }
+
+
+def test_the_company_settings_were_last_changed_by_a_teammate_a_few_days_ago(seeded):
+    settings = seeded["settings"]
+    assert settings.updated_by in TEAMMATE_IDS
+    assert settings.updated_at.date() < seeded["today"]
+    assert settings.updated_at.date() >= seeded["today"] - timedelta(days=4)
+
+
+def test_the_company_has_an_example_email_and_a_phone_number_set_aside_for_fiction(seeded):
+    assert seeded["settings"].email.endswith(".example")
+    assert "555-01" in seeded["settings"].phone
+
+
+def test_the_company_shares_no_name_with_a_sample_organization(seeded):
+    assert all("Fieldstone" not in row.name for row in seeded["organizations"])
 
 
 def test_only_example_addresses(seeded):

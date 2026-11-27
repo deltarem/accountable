@@ -2,7 +2,7 @@ import io
 from datetime import date, datetime
 
 import pytest
-from accountable import db
+from accountable import company, db
 from accountable.crm.tables import activities, contacts, deals, organizations, stage_changes
 from accountable.users import users
 from alembic import command, op
@@ -11,6 +11,7 @@ from alembic.config import Config
 from alembic.migration import MigrationContext
 from conftest import insert_row
 from sqlalchemy import column, delete, func, insert, inspect, select, table
+from sqlalchemy.exc import IntegrityError
 
 
 def live() -> dict:
@@ -106,6 +107,14 @@ def test_the_check_constraint_matches(database):
     actual, expected = live(), declared()
     assert actual["activities"]["checks"] == {"ck_activities_one_parent": "(contact_id IS NULL) != (deal_id IS NULL)"}
     assert list(actual["activities"]["checks"].values()) == list(expected["activities"]["checks"].values())
+
+
+def test_the_company_settings_are_kept_to_one_row(database):
+    assert live()["company_settings"]["checks"] == {"ck_company_settings_one_row": "id = 1"}
+    with db.reading() as conn:
+        assert conn.execute(select(func.count()).select_from(company.company_settings)).scalar_one() == 1
+    with pytest.raises(IntegrityError), db.writing() as conn:
+        conn.execute(insert(company.company_settings).values(id=2, **PLACEHOLDER_STORED))
 
 
 def test_foreign_keys_and_their_delete_rules_match(database):
@@ -300,6 +309,46 @@ def test_an_upgrade_that_stops_partway_changes_nothing(older_database, monkeypat
     assert "AUTOINCREMENT" in built_tables()["stage_changes"]
 
 
+@pytest.fixture
+def database_from_before_settings(tmp_path, monkeypatch):
+    path = tmp_path / "before-settings.db"
+    monkeypatch.setenv("ACCOUNTABLE_DB", str(path))
+    db.dispose()
+    fill_at(path, "0003")
+    yield path
+    db.dispose()
+
+
+# What 0004 gives a database that already holds the team's work (B12).
+PLACEHOLDER_STORED = {
+    "company_name": "Your company",
+    "address": None,
+    "email": None,
+    "phone": None,
+    "tax_label": "Sales tax",
+    "tax_rate": 0,
+    "payment_terms_days": 30,
+    "quote_prefix": "QT-",
+    "invoice_prefix": "INV-",
+}
+
+
+def test_upgrading_from_before_the_settings_keeps_every_row_and_adds_placeholder_settings(
+    database_from_before_settings,
+):
+    before = everything()
+
+    assert db.prepare_database(nothing) is False
+
+    assert all(before.values())
+    assert everything() == before
+    with db.reading() as conn:
+        settings = conn.execute(select(company.company_settings)).one()
+    assert {name: getattr(settings, name) for name in PLACEHOLDER_STORED} == PLACEHOLDER_STORED
+    assert settings.updated_by is None
+    assert "AUTOINCREMENT" in built_tables()["company_settings"]
+
+
 def test_upgrading_from_before_sign_in_keeps_every_row_with_no_one_recorded(database_from_before_sign_in):
     before = everything()
 
@@ -360,6 +409,12 @@ def test_on_postgres_the_sqlite_rebuilds_are_skipped(postgres_sql):
 
 def test_on_postgres_deal_values_are_64_bit(postgres_sql):
     assert "ALTER TABLE deals ALTER COLUMN value TYPE BIGINT" in postgres_sql
+
+
+def test_on_postgres_the_company_settings_get_their_row(postgres_sql):
+    assert "CREATE TABLE company_settings" in postgres_sql
+    assert "INSERT INTO company_settings" in postgres_sql
+    assert "'Your company'" in postgres_sql
 
 
 def test_on_postgres_every_table_gets_row_level_security(postgres_sql):

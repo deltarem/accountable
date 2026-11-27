@@ -15,7 +15,7 @@ import {
   type ActivityValues,
   type TimelineEntry,
 } from "../queries";
-import { showSaveError } from "./server-errors";
+import { showSaveError } from "../../lib/server-errors";
 
 const TYPES: ActivityType[] = ["note", "call", "email"];
 

@@ -7,7 +7,7 @@ import { Field } from "../../components/Field";
 import { FormDialog } from "../../components/FormDialog";
 import { WEBSITE_MESSAGE, isWebsite } from "../../lib/validate";
 import { useSaveOrganization, type Organization, type OrganizationDetail } from "../queries";
-import { showSaveError } from "./server-errors";
+import { showSaveError } from "../../lib/server-errors";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Enter a name"),

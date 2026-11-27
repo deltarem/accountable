@@ -8,6 +8,7 @@ from accountable import db
 from accountable.auth import CurrentUser
 from accountable.crm import rules, schemas, timeline, who
 from accountable.crm.tables import activities, contacts, deals, organizations, stage_changes
+from accountable.fields import Now
 
 router = APIRouter(prefix="/deals")
 
@@ -68,7 +69,7 @@ def list_deals() -> list[schemas.Deal]:
 
 
 @router.post("", status_code=201)
-def add_deal(body: schemas.DealCreate, user: CurrentUser, today: schemas.Today, now: schemas.Now) -> schemas.DealDetail:
+def add_deal(body: schemas.DealCreate, user: CurrentUser, today: schemas.Today, now: Now) -> schemas.DealDetail:
     values = body.model_dump()
     if values["close_date"] is None and values["stage"] in rules.OPEN_STAGES:
         raise schemas.FieldError({"close_date": schemas.FIELD_MESSAGES["close_date"]})
@@ -90,7 +91,7 @@ def edit_deal(
     body: schemas.DealUpdate,
     user: CurrentUser,
     today: schemas.Today,
-    now: schemas.Now,
+    now: Now,
 ) -> schemas.DealDetail:
     fields = body.model_dump(exclude_unset=True)
     with db.writing() as conn:
@@ -120,7 +121,7 @@ def move_deal(
     body: schemas.DealMove,
     user: CurrentUser,
     today: schemas.Today,
-    now: schemas.Now,
+    now: Now,
 ) -> schemas.MoveResult:
     with db.writing() as conn:
         _get(conn, deal_id)

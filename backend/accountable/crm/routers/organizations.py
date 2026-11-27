@@ -20,6 +20,7 @@ from accountable import db
 from accountable.auth import CurrentUser
 from accountable.crm import rules, schemas, timeline, who
 from accountable.crm.tables import contacts, deals, organizations
+from accountable.fields import Now
 
 router = APIRouter(prefix="/organizations")
 
@@ -131,9 +132,7 @@ def list_organizations() -> list[schemas.OrganizationRow]:
 
 
 @router.post("", status_code=201)
-def add_organization(
-    body: schemas.OrganizationCreate, user: CurrentUser, now: schemas.Now
-) -> schemas.OrganizationDetail:
+def add_organization(body: schemas.OrganizationCreate, user: CurrentUser, now: Now) -> schemas.OrganizationDetail:
     with db.writing() as conn:
         new_id = conn.execute(
             insert(organizations).values(**body.model_dump(), **who.added(user, now)).returning(organizations.c.id)
@@ -149,7 +148,7 @@ def get_organization(organization_id: schemas.PathId) -> schemas.OrganizationDet
 
 @router.patch("/{organization_id}")
 def edit_organization(
-    organization_id: schemas.PathId, body: schemas.OrganizationUpdate, user: CurrentUser, now: schemas.Now
+    organization_id: schemas.PathId, body: schemas.OrganizationUpdate, user: CurrentUser, now: Now
 ) -> schemas.OrganizationDetail:
     fields = body.model_dump(exclude_unset=True)
     with db.writing() as conn:

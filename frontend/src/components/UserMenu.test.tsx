@@ -179,4 +179,28 @@ describe("the menu", () => {
 
     expect(await screen.findByText("At /, signed-out")).toBeTruthy();
   });
+
+  it("opens the Company settings page and closes, from the item just above Sign out", async () => {
+    startSignedIn();
+    mockApi({ "GET /me": ALEX });
+    openMenuAt("/deals/7");
+    const clicks = user();
+    await clicks.click(await menuButton());
+
+    const items = menu()
+      .getAllByRole("menuitem")
+      .map((item) => item.textContent);
+    expect(items).toEqual(["Company settings", "Sign out"]);
+    await clicks.click(menu().getByRole("menuitem", { name: "Company settings" }));
+
+    expect(await screen.findByText("At /settings, signed-in")).toBeTruthy();
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("offers Company settings when the backend can't say who's signed in", async () => {
+    mockApi({});
+    openMenuAt();
+    await user().click(screen.getByRole("button", { name: "Menu" }));
+    expect(menu().getByRole("menuitem", { name: "Company settings" })).toBeTruthy();
+  });
 });

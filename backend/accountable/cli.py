@@ -4,7 +4,8 @@
 Both delete rows inside one transaction and leave the file and tables in place,
 which is why they're safe with the app running and why an emptied database isn't
 treated as new. They leave the users table alone, so the made-up teammates are
-still there to sign in as.
+still there to sign in as. The company settings aren't records, so empty leaves
+them too, and seed writes the made-up company's over them (B13).
 
 They only ever touch the local copy. npm run seed and npm run empty already leave
 the shared app's settings out, and refusing here as well means no slip in a script
@@ -84,6 +85,8 @@ def main(arguments: list[str] | None = None) -> int:
     outcome = "replaced with the sample data" if seeding else "removed for good"
     lost = ", ".join(_plural(count, name) for name, count in counts.items())
     print(f"This will delete {lost}. They'll be {outcome}, and this can't be undone.")
+    if seeding:
+        print("The company settings will go back to the sample company's.")
 
     if not options.yes and not _confirmed():
         print("Nothing was changed.")

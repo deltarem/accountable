@@ -1,7 +1,7 @@
 import io
 
 import pytest
-from accountable import cli, db, users
+from accountable import cli, company, db, users
 from accountable.crm import sample_data
 from accountable.crm.tables import activities, contacts, deals, organizations, stage_changes
 from sqlalchemy import func, select
@@ -52,6 +52,37 @@ def test_seed_replaces_everything_with_the_sample_data(with_records, monkeypatch
     cli.main(["seed"])
     after = counts()
     assert (after["organizations"], after["contacts"], after["deals"], after["activities"]) == (24, 75, 80, 300)
+
+
+def settings_name() -> str:
+    with db.reading() as conn:
+        return conn.execute(select(company.company_settings.c.company_name)).scalar_one()
+
+
+def change_the_settings() -> None:
+    with db.writing() as conn:
+        company.replace(conn, {"company_name": "Harbor Works"}, None, db.utc_now())
+
+
+def test_seed_puts_back_the_made_up_companys_settings(with_records):
+    change_the_settings()
+    cli.main(["seed", "--yes"])
+    assert settings_name() == "Fieldstone Digital"
+
+
+def test_empty_leaves_the_company_settings_as_they_are(with_records):
+    change_the_settings()
+    cli.main(["empty", "--yes"])
+    assert settings_name() == "Harbor Works"
+
+
+def test_seed_says_the_company_settings_go_back_and_empty_doesnt(with_records, monkeypatch, capsys):
+    answer(monkeypatch, "no\n")
+    cli.main(["seed"])
+    assert "The company settings will go back to the sample company's." in capsys.readouterr().out
+    answer(monkeypatch, "no\n")
+    cli.main(["empty"])
+    assert "company settings" not in capsys.readouterr().out
 
 
 def test_empty_removes_every_record(with_records, monkeypatch):

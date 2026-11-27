@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 import { describe, expect, it, vi } from "vitest";
 
-import { ApiError } from "../../lib/api";
+import { ApiError } from "./api";
 import { showSaveError } from "./server-errors";
 
 function form() {
